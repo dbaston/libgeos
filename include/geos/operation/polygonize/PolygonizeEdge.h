@@ -51,7 +51,7 @@ public:
 	PolygonizeEdge(const geom::LineString *newLine);
 
 	// Just return what it was given initially
-	const geom::LineString* getLine();
+	const geom::LineString* getLine() const;
 };
 
 } // namespace geos::operation::polygonize

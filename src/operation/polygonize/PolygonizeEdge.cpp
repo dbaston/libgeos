@@ -26,12 +26,12 @@ namespace geos {
 namespace operation { // geos.operation
 namespace polygonize { // geos.operation.polygonize
 
-PolygonizeEdge::PolygonizeEdge(const LineString *newLine) {
-	line=newLine;
+PolygonizeEdge::PolygonizeEdge(const LineString *newLine) :
+	line(newLine) {
 }
 
 const LineString *
-PolygonizeEdge::getLine() {
+PolygonizeEdge::getLine() const {
 	return line;
 }
 
