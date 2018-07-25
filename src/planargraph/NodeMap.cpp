@@ -14,25 +14,14 @@
  **********************************************************************/
 
 #include <geos/planargraph/NodeMap.h>
+
+/* for std::pair */
+#include <utility>
+
 #include <geos/planargraph/Node.h>
-
-#include <map>
-
-using namespace std;
 
 namespace geos {
 namespace planargraph {
-
-/**
- * Constructs a NodeMap without any Nodes.
- */
-NodeMap::NodeMap()
-{
-}
-
-NodeMap::~NodeMap()
-{
-}
 
 NodeMap::container&
 NodeMap::getNodeMap()
@@ -47,7 +36,7 @@ NodeMap::getNodeMap()
 Node*
 NodeMap::add(Node *n)
 {
-	nodeMap.insert(pair<geom::Coordinate, Node*>(n->getCoordinate(),n));
+	nodeMap.insert(std::pair<geom::Coordinate, Node*> (n->getCoordinate(), n));
 	return n;
 }
 
@@ -55,38 +44,46 @@ NodeMap::add(Node *n)
  * Removes the Node at the given location, and returns it
  * (or null if no Node was there).
  */
-Node *
+Node*
 NodeMap::remove(geom::Coordinate& pt)
 {
-	Node *n=find(pt);
+	Node *n = find(pt);
 	nodeMap.erase(pt);
 	return n;
 }
 
 /* public */
-void
-NodeMap::getNodes(vector<Node*>& values) const
+std::vector<Node*>
+NodeMap::getNodes() const
 {
-	NodeMap::container::const_iterator it=nodeMap.begin(), itE=nodeMap.end();
-	while (it != itE) {
-		values.push_back(it->second);
-		++it;
+	std::vector<Node*> values;
+
+	for (const auto e : nodeMap) {
+		values.push_back(e.second);
 	}
+
+	return values;
+}
+
+// [[deprecated]]
+void
+NodeMap::getNodes(std::vector<Node*>& values) const
+{
+	values = getNodes();
 }
 
 /**
- * Returns the Node at the given location, or null if no Node was there.
+ * Returns the Node ptr at the given location, or null if no Node was there.
  */
 Node*
-NodeMap::find(const geom::Coordinate& coord)
+NodeMap::find(const geom::Coordinate& coord) const
 {
-	container::iterator found=nodeMap.find(coord);
-	if (found==nodeMap.end())
-		return nullptr;
-	else
-		return found->second;
+	auto found = nodeMap.find(coord);
+	return (found == nodeMap.end()) ?
+		nullptr :
+		found->second;
 }
 
-} //namespace planargraph
-} //namespace geos
+}  // namespace planargraph
+}  // namespace geos
 

@@ -27,38 +27,40 @@
 #pragma warning(disable: 4251) // warning C4251: needs to have dll-interface to be used by clients of class
 #endif
 
-// Forward declarations
 namespace geos {
-	namespace planargraph {
-		class DirectedEdgeStar;
-		class DirectedEdge;
-		class Edge;
-		class Node;
-	}
-}
+namespace planargraph {
 
-namespace geos {
-namespace planargraph { // geos.planargraph
+// Forward declarations
+class Node;
 
 /**
  * \brief
  * A map of Node, indexed by the coordinate of the node.
  *
+ * Will not:
+ *  - create a new node
+ *  - destroy the nodes
+ *
+ * Classes using this NodeMap are responsible to do
+ * - pointer cleanup when needed
+ * - pass the responability to another class
  */
 class GEOS_DLL NodeMap {
 public:
 	typedef std::map<geom::Coordinate, Node*, geom::CoordinateLessThen> container;
+
 private:
 	container nodeMap;
+
 public:
 	/**
 	 * \brief Constructs a NodeMap without any Nodes.
 	 */
-	NodeMap();
+	NodeMap() = default;
+	~NodeMap() = default;
 
 	container& getNodeMap();
 
-	virtual ~NodeMap();
 
 	/**
 	 * \brief
@@ -80,7 +82,7 @@ public:
 	 * Returns the Node at the given location,
 	 * or null if no Node was there.
 	 */
-	Node* find(const geom::Coordinate& coord);
+	Node* find(const geom::Coordinate& coord) const;
 
 	/**
 	 * \brief
@@ -111,14 +113,24 @@ public:
 	 * Returns the Nodes in this NodeMap, sorted in ascending order
 	 * by angle with the positive x-axis.
 	 *
+	 * @return a vector of Node pointers
+	 */
+	std::vector<Node*> getNodes() const;
+
+	/**
+	 * \brief
+	 * Returns the Nodes in this NodeMap, sorted in ascending order
+	 * by angle with the positive x-axis.
+	 *
 	 * @param nodes : the nodes are push_back'ed here
 	 */
+	// [[deprecated]]
 	void getNodes(std::vector<Node*>& nodes) const;
 };
 
 
-} // namespace geos::planargraph
-} // namespace geos
+}  // namespace planargraph
+}  // namespace geos
 
 #ifdef _MSC_VER
 #pragma warning(pop)
