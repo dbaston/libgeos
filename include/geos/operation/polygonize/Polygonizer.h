@@ -71,57 +71,6 @@ namespace polygonize { // geos::operation::polygonize
  *
  */
 class GEOS_DLL Polygonizer {
-private:
-	/**
-	 * Add every linear element in a geometry into the polygonizer graph.
-	 */
-	class GEOS_DLL LineStringAdder: public geom::GeometryComponentFilter {
-	public:
-		Polygonizer *pol;
-		LineStringAdder(Polygonizer *p);
-		//void filter_rw(geom::Geometry *g);
-		void filter_ro(const geom::Geometry * g) override;
-	};
-
-	// default factory
-	LineStringAdder lineStringAdder;
-
-	/**
-	 * Add a linestring to the graph of polygon edges.
-	 *
-	 * @param line the {@link LineString} to add
-	 */
-	void add(const geom::LineString *line);
-
-	/**
-	 * Perform the polygonization, if it has not already been carried out.
-	 */
-	void polygonize();
-
-	void findValidRings(const std::vector<EdgeRing*>& edgeRingList,
-			std::vector<EdgeRing*>& validEdgeRingList,
-			std::vector<geom::LineString*>& invalidRingList);
-
-	void findShellsAndHoles(const std::vector<EdgeRing*>& edgeRingList);
-
-	static void assignHolesToShells(const std::vector<EdgeRing*>& holeList,
-			std::vector<EdgeRing*>& shellList);
-
-	static void assignHoleToShell(EdgeRing *holeER,
-			std::vector<EdgeRing*>& shellList);
-
-protected:
-
-	PolygonizeGraph *graph;
-
-	// initialize with empty collections, in case nothing is computed
-	std::vector<const geom::LineString*> dangles;
-	std::vector<const geom::LineString*> cutEdges;
-	std::vector<geom::LineString*> invalidRingLines;
-
-	std::vector<EdgeRing*> holeList;
-	std::vector<EdgeRing*> shellList;
-	std::vector<geom::Polygon*> *polyList;
 
 public:
 
@@ -143,14 +92,14 @@ public:
 	 */
 	void add(std::vector<geom::Geometry*> *geomList);
 
-        /** \brief
-         * Add a collection of geometries to be polygonized.
-         * May be called multiple times.
-         * Any dimension of Geometry may be added;
-         * the constituent linework will be extracted and used
-         *
-         * @param geomList a list of Geometry with linework to be polygonized
-         */
+	/** \brief
+	 * Add a collection of geometries to be polygonized.
+	 * May be called multiple times.
+	 * Any dimension of Geometry may be added;
+	 * the constituent linework will be extracted and used
+	 *
+	 * @param geomList a list of Geometry with linework to be polygonized
+	 */
 	void add(std::vector<const geom::Geometry*> *geomList);
 
 	/**
@@ -163,14 +112,14 @@ public:
 	 */
 	void add(geom::Geometry *g);
 
-        /**
-         * Add a geometry to the linework to be polygonized.
-         * May be called multiple times.
-         * Any dimension of Geometry may be added;
-         * the constituent linework will be extracted and used
-         *
-         * @param g a Geometry with linework to be polygonized
-         */
+	/**
+	 * Add a geometry to the linework to be polygonized.
+	 * May be called multiple times.
+	 * Any dimension of Geometry may be added;
+	 * the constituent linework will be extracted and used
+	 *
+	 * @param g a Geometry with linework to be polygonized
+	 */
 	void add(const geom::Geometry *g);
 
 	/** \brief
@@ -211,8 +160,62 @@ public:
 	 */
 	const std::vector<geom::LineString*>& getInvalidRingLines();
 
-// This seems to be needed by    GCC 2.95.4
-friend class Polygonizer::LineStringAdder;
+
+private:
+	/**
+	 * Add every linear element in a geometry into the polygonizer graph.
+	 */
+	class GEOS_DLL LineStringAdder: public geom::GeometryComponentFilter {
+	public:
+		Polygonizer *pol;
+		LineStringAdder(Polygonizer *p);
+		//void filter_rw(geom::Geometry *g);
+		void filter_ro(const geom::Geometry * g) override;
+	};
+
+	// This seems to be needed by    GCC 2.95.4
+	friend class Polygonizer::LineStringAdder;
+
+	// default factory
+	LineStringAdder lineStringAdder;
+
+	/**
+	 * Add a linestring to the graph of polygon edges.
+	 *
+	 * @param line the {@link LineString} to add
+	 */
+	void add(const geom::LineString *line);
+
+	/**
+	 * Perform the polygonization, if it has not already been carried out.
+	 */
+	void polygonize();
+
+	void findValidRings(const std::vector<EdgeRing*>& edgeRingList,
+			std::vector<EdgeRing*>& validEdgeRingList,
+			std::vector<geom::LineString*>& invalidRingList);
+
+	void findShellsAndHoles(const std::vector<EdgeRing*>& edgeRingList);
+
+	static void assignHolesToShells(const std::vector<EdgeRing*>& holeList,
+			std::vector<EdgeRing*>& shellList);
+
+	static void assignHoleToShell(EdgeRing *holeER,
+			std::vector<EdgeRing*>& shellList);
+
+	/*
+	 * Data
+	 */
+	PolygonizeGraph *graph;
+
+	// initialize with empty collections, in case nothing is computed
+	std::vector<const geom::LineString*> dangles;
+	std::vector<const geom::LineString*> cutEdges;
+	std::vector<geom::LineString*> invalidRingLines;
+
+	std::vector<EdgeRing*> holeList;
+	std::vector<EdgeRing*> shellList;
+	std::vector<geom::Polygon*> *polyList;
 };
 
 } // namespace geos::operation::polygonize
