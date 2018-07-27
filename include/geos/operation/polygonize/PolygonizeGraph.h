@@ -74,7 +74,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * \brief
 	 * Deletes all edges at a node
 	 */
-	void deleteAllEdges(planargraph::Node *node);
+	//void deleteAllEdges(planargraph::Node *node);
 
 	/**
 	 * \brief

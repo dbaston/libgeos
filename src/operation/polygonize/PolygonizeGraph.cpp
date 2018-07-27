@@ -70,7 +70,7 @@ PolygonizeGraph::getDegree(Node *node, long label) const {
  * marks them as Deleted
  */
 void
-PolygonizeGraph::deleteAllEdges(Node *node) {
+deleteAllEdges(Node *node) {
 	auto edges(node->getOutEdges()->getEdges());
   for (auto e : edges) {
 		auto de = dynamic_cast<PolygonizeDirectedEdge*>(e);
