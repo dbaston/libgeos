@@ -82,6 +82,23 @@ public:
 
 	~Polygonizer();
 
+	/**@{*/
+	/** \brief
+	 *
+	 * Add a collection of geometries to be polygonized.
+	 * May be called multiple times.
+	 * Any dimension of Geometry may be added;
+	 * the constituent linework will be extracted and used
+	 *
+	 * C++ Interface
+	 *
+	 * @param geomList a list of Geometry with linework to be polygonized
+	 */
+	void add(const std::vector<geom::Geometry*> geomList);
+	void add(const std::vector<const geom::Geometry*> geomList);
+	/**@}*/
+
+
 	/** \brief
 	 * Add a collection of geometries to be polygonized.
 	 * May be called multiple times.
@@ -102,6 +119,7 @@ public:
 	 */
 	void add(std::vector<const geom::Geometry*> *geomList);
 
+#if 0
 	/**
 	 * Add a geometry to the linework to be polygonized.
 	 * May be called multiple times.
@@ -111,7 +129,7 @@ public:
 	 * @param g a Geometry with linework to be polygonized
 	 */
 	void add(geom::Geometry *g);
-
+#endif
 	/**
 	 * Add a geometry to the linework to be polygonized.
 	 * May be called multiple times.
@@ -174,18 +192,19 @@ private:
 	};
 
 	// This seems to be needed by    GCC 2.95.4
-	friend class Polygonizer::LineStringAdder;
+	//friend class Polygonizer::LineStringAdder;
 
 	// default factory
 	LineStringAdder lineStringAdder;
 
+#if 1
 	/**
 	 * Add a linestring to the graph of polygon edges.
 	 *
 	 * @param line the {@link LineString} to add
 	 */
 	void add(const geom::LineString *line);
-
+#endif
 	/**
 	 * Perform the polygonization, if it has not already been carried out.
 	 */

@@ -43,11 +43,13 @@ namespace geos {
 namespace operation { // geos.operation
 namespace polygonize { // geos.operation.polygonize
 
+/* private */
 Polygonizer::LineStringAdder::LineStringAdder(Polygonizer *p):
 	pol(p)
 {
 }
 
+/* private */
 void
 Polygonizer::LineStringAdder::filter_ro(const Geometry *g)
 {
@@ -85,6 +87,19 @@ Polygonizer::~Polygonizer()
 	}
 }
 
+
+void
+Polygonizer::add(vector<Geometry*> geomList)
+{
+	for (const auto g : (geomList)) add(g);
+}
+
+void
+Polygonizer::add(const vector<const Geometry*> geomList)
+{
+	for (const auto g : (geomList)) add(g);
+}
+
 /*
  * Add a collection of geometries to be polygonized.
  * May be called multiple times.
@@ -96,7 +111,7 @@ Polygonizer::~Polygonizer()
 void
 Polygonizer::add(vector<Geometry*> *geomList)
 {
-	for (auto &g : (*geomList)) add(g);
+	for (const auto g : (*geomList)) add(g);
 }
 
 /*
@@ -113,6 +128,7 @@ Polygonizer::add(vector<const Geometry*> *geomList)
 	for (auto &g : (*geomList)) add(g);
 }
 
+#if 0
 /*
  * Add a geometry to the linework to be polygonized.
  * May be called multiple times.
@@ -126,6 +142,7 @@ Polygonizer::add(Geometry *g)
 {
 	g->apply_ro(&lineStringAdder);
 }
+#endif
 
 /*
  * Add a geometry to the linework to be polygonized.
@@ -141,6 +158,7 @@ Polygonizer::add(const Geometry *g)
 	g->apply_ro(&lineStringAdder);
 }
 
+
 /*
  * Add a linestring to the graph of polygon edges.
  *
@@ -150,8 +168,8 @@ void
 Polygonizer::add(const LineString *line)
 {
 	// create a new graph using the factory from the input Geometry
-	if (graph==nullptr)
-		graph=new PolygonizeGraph(line->getFactory());
+	if (!graph)
+		graph = new PolygonizeGraph(line->getFactory());
 	graph->addEdge(line);
 }
 
@@ -192,7 +210,7 @@ Polygonizer::getInvalidRingLines()
 	return invalidRingLines;
 }
 
-/* public */
+/* private */
 void
 Polygonizer::polygonize()
 {
@@ -288,9 +306,9 @@ void
 Polygonizer::assignHoleToShell(EdgeRing *holeER,
 		vector<EdgeRing*>& shellList)
 {
-	EdgeRing *shell = EdgeRing::findEdgeRingContaining(holeER, &shellList);
+	auto shell = EdgeRing::findEdgeRingContaining(holeER, &shellList);
 
-	if (shell!=nullptr)
+	if (shell)
 		shell->addHole(holeER->getRingOwnership());
 }
 
