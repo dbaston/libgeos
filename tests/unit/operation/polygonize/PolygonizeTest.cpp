@@ -117,6 +117,20 @@ namespace tut
           std::unique_ptr< std::vector<Poly*> > retGeoms;
           retGeoms.reset( polygonizer.getPolygons() );
 
+					auto cutEdges(polygonizer.getCutEdges());
+#if 0
+					auto dangles(polygonizer.getDangles());
+					auto invalidRings(polygonizer.getInvalidRingLines());
+
+          polygonizer.add(&inputGeoms);
+
+          std::unique_ptr< std::vector<Poly*> > extra_retGeoms;
+          retGeoms.reset(polygonizer.getPolygons());
+
+					auto extra_cutEdges(polygonizer.getCutEdges());
+					auto extra_dangles(polygonizer.getDangles());
+					auto extra_invalidRings(polygonizer.getInvalidRingLines());
+#endif
           delAll(inputGeoms);
 
           bool ok = compare(expectGeoms, *retGeoms);
