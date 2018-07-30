@@ -114,9 +114,13 @@ namespace tut
           readWKT(inputWKT, inputGeoms);
           readWKT(expectWKT, expectGeoms);
 
-          Polygonizer polygonizer(inputGeoms);
+          Polygonizer p1(inputGeoms);
+          Polygonizer p2;
+					for (const auto g : inputGeoms) p2.add(g);
 
-          auto retGeoms(polygonizer.getPolygons());
+          auto r1(p1.getPolygons());
+          auto r2 = p2.getPolygons();
+					auto r3 = Polygonizer(inputGeoms).getPolygons();
 
 #if 0
           auto cutEdges(polygonizer.getCutEdges());
@@ -134,17 +138,17 @@ namespace tut
 #endif
           delAll(inputGeoms);
 
-          bool ok = compare(expectGeoms, *retGeoms);
+          bool ok = compare(expectGeoms, *r1);
           if  ( ! ok ) {
-            cout << "OBTAINED(" << retGeoms->size() << "): ";
-            printAll(cout, *retGeoms);
+            cout << "OBTAINED(" << r1->size() << "): ";
+            printAll(cout, *r1);
             cout << endl;
 
-            ensure( "not all expected geometries in the obtained set", 0 );
+            ensure( "r1 not all expected geometries in the obtained set", 0 );
           }
 
           delAll(expectGeoms);
-          delAll(*retGeoms);
+          delAll(*r1);
 
           return ok;
         }
@@ -198,7 +202,8 @@ namespace tut
 
         bool doTest(const char* const* inputWKT, const char* const* expectWKT)
         {
-          return doTest1(inputWKT, expectWKT) && doTest2(inputWKT, expectWKT);
+          return doTest1(inputWKT, expectWKT)
+            && doTest2(inputWKT, expectWKT);
         }
 
     };

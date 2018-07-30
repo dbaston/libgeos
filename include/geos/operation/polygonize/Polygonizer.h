@@ -79,7 +79,6 @@ public:
 	 * as the input Geometry
 	 */
 	Polygonizer();
-	Polygonizer(const std::vector<geom::Geometry*> geomList);
 
 	~Polygonizer();
 
@@ -95,6 +94,10 @@ public:
 	 *
 	 * @param geomList a list of Geometry with linework to be polygonized
 	 */
+	explicit Polygonizer(const std::vector<geom::Geometry*> geomList);
+	explicit Polygonizer(const std::vector<const geom::Geometry*> geomList);
+	explicit Polygonizer(const geom::Geometry *g);
+
 	void add(const std::vector<geom::Geometry*> geomList);
 	void add(const std::vector<const geom::Geometry*> geomList);
 	/**@}*/
@@ -198,14 +201,14 @@ private:
 	// default factory
 	LineStringAdder lineStringAdder;
 
-#if 1
+
 	/**
 	 * Add a linestring to the graph of polygon edges.
 	 *
 	 * @param line the {@link LineString} to add
 	 */
 	void add(const geom::LineString *line);
-#endif
+
 	/**
 	 * Perform the polygonization, if it has not already been carried out.
 	 */

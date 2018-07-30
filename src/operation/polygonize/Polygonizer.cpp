@@ -74,11 +74,28 @@ Polygonizer::Polygonizer():
 {
 }
 
+/* C++ interface constructors */
+
 Polygonizer::Polygonizer(const std::vector<geom::Geometry*> geomList) :
 	Polygonizer()
 {
 	for (const auto g : (geomList)) add(g);
 }
+
+Polygonizer::Polygonizer(const std::vector<const geom::Geometry*> geomList) :
+	Polygonizer()
+{
+	for (const auto g : (geomList)) add(g);
+}
+
+Polygonizer::Polygonizer(const geom::Geometry *g) :
+	Polygonizer()
+{
+	add(g);
+}
+
+
+
 
 Polygonizer::~Polygonizer()
 {
