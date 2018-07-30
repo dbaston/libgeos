@@ -49,6 +49,12 @@ namespace geos {
 		class Polygon;
 		class PrecisionModel;
 	}
+	namespace operation {
+		namespace polygonize {
+			class PolygonizeGraph;
+		}
+	}
+
 }
 
 namespace geos {
@@ -462,7 +468,7 @@ protected:
 	GeometryFactory(const GeometryFactory &gf);
 
 	/// Destructor
-	virtual ~GeometryFactory();
+	~GeometryFactory();
 
 private:
 
@@ -474,6 +480,7 @@ private:
 	bool _autoDestroy;
 
 friend class Geometry;
+friend class geos::operation::polygonize::PolygonizeGraph;
 
 	void addRef() const;
 	void dropRef() const;
