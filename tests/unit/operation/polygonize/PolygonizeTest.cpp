@@ -121,22 +121,29 @@ namespace tut
           auto r1(p1.getPolygons());
           auto r2 = p2.getPolygons();
 					auto r3 = Polygonizer(inputGeoms).getPolygons();
+#if 0
+					/**
+					 * trying to get for a second time the polygons:
+					 * Assertion `de == startDE || !de->isInRing()' failed
+					 */
+          auto r4 = p1.getPolygons();
+#endif
 
 #if 0
-          auto cutEdges(polygonizer.getCutEdges());
-          auto dangles(polygonizer.getDangles());
-          auto invalidRings(polygonizer.getInvalidRingLines());
+					/**
+					 * trying to get additional info:
+					 * Assertion `de == startDE || !de->isInRing()' failed
+					 */
+          auto cutEdges(p1.getCutEdges());
+          auto dangles(p1.getDangles());
+          auto invalidRings(p1.getInvalidRingLines());
 
-          polygonizer.add(&inputGeoms);
+          p1.add(inputGeoms);
 
-          std::unique_ptr< std::vector<Poly*> > extra_retGeoms;
-          retGeoms.reset(polygonizer.getPolygons());
-
-          auto extra_cutEdges(polygonizer.getCutEdges());
-          auto extra_dangles(polygonizer.getDangles());
-          auto extra_invalidRings(polygonizer.getInvalidRingLines());
+          auto extra_cutEdges(p1.getCutEdges());
+          auto extra_dangles(p1.getDangles());
+          auto extra_invalidRings(p1.getInvalidRingLines());
 #endif
-          delAll(inputGeoms);
 
           bool ok = compare(expectGeoms, *r1);
           if  ( ! ok ) {
@@ -147,8 +154,12 @@ namespace tut
             ensure( "r1 not all expected geometries in the obtained set", 0 );
           }
 
+          delAll(inputGeoms);
           delAll(expectGeoms);
-          delAll(*r1);
+          delAll(*r1); delete r1;
+          delAll(*r2); delete r2;
+          delAll(*r3); delete r3;
+
 
           return ok;
         }
