@@ -101,7 +101,10 @@ namespace tut
 
         }
 
-        bool doTest(const char* const* inputWKT, const char* const* expectWKT)
+        /**
+         * C++ Interfacte test
+         */
+        bool doTest1(const char* const* inputWKT, const char* const* expectWKT)
         {
           using std::cout;
           using std::endl;
@@ -111,25 +114,23 @@ namespace tut
           readWKT(inputWKT, inputGeoms);
           readWKT(expectWKT, expectGeoms);
 
-          Polygonizer polygonizer;
-          polygonizer.add(&inputGeoms);
+          Polygonizer polygonizer(inputGeoms);
 
-          std::unique_ptr< std::vector<Poly*> > retGeoms;
-          retGeoms.reset( polygonizer.getPolygons() );
+          auto retGeoms(polygonizer.getPolygons());
 
-					auto cutEdges(polygonizer.getCutEdges());
 #if 0
-					auto dangles(polygonizer.getDangles());
-					auto invalidRings(polygonizer.getInvalidRingLines());
+          auto cutEdges(polygonizer.getCutEdges());
+          auto dangles(polygonizer.getDangles());
+          auto invalidRings(polygonizer.getInvalidRingLines());
 
           polygonizer.add(&inputGeoms);
 
           std::unique_ptr< std::vector<Poly*> > extra_retGeoms;
           retGeoms.reset(polygonizer.getPolygons());
 
-					auto extra_cutEdges(polygonizer.getCutEdges());
-					auto extra_dangles(polygonizer.getDangles());
-					auto extra_invalidRings(polygonizer.getInvalidRingLines());
+          auto extra_cutEdges(polygonizer.getCutEdges());
+          auto extra_dangles(polygonizer.getDangles());
+          auto extra_invalidRings(polygonizer.getInvalidRingLines());
 #endif
           delAll(inputGeoms);
 
@@ -146,6 +147,58 @@ namespace tut
           delAll(*retGeoms);
 
           return ok;
+        }
+
+        bool doTest2(const char* const* inputWKT, const char* const* expectWKT)
+        {
+          using std::cout;
+          using std::endl;
+
+          std::vector<Geom*> inputGeoms, expectGeoms;
+
+          readWKT(inputWKT, inputGeoms);
+          readWKT(expectWKT, expectGeoms);
+
+          Polygonizer polygonizer;
+          polygonizer.add(&inputGeoms);
+
+          std::unique_ptr< std::vector<Poly*> > retGeoms;
+          retGeoms.reset( polygonizer.getPolygons() );
+
+#if 0
+          auto cutEdges(polygonizer.getCutEdges());
+          auto dangles(polygonizer.getDangles());
+          auto invalidRings(polygonizer.getInvalidRingLines());
+
+          polygonizer.add(&inputGeoms);
+
+          std::unique_ptr< std::vector<Poly*> > extra_retGeoms;
+          retGeoms.reset(polygonizer.getPolygons());
+
+          auto extra_cutEdges(polygonizer.getCutEdges());
+          auto extra_dangles(polygonizer.getDangles());
+          auto extra_invalidRings(polygonizer.getInvalidRingLines());
+#endif
+          delAll(inputGeoms);
+
+          bool ok = compare(expectGeoms, *retGeoms);
+          if  ( ! ok ) {
+            cout << "OBTAINED(" << retGeoms->size() << "): ";
+            printAll(cout, *retGeoms);
+            cout << endl;
+
+            ensure( "not all expected geometries in the obtained set", 0 );
+          }
+
+          delAll(expectGeoms);
+          delAll(*retGeoms);
+
+          return ok;
+        }
+
+        bool doTest(const char* const* inputWKT, const char* const* expectWKT)
+        {
+          return doTest1(inputWKT, expectWKT) && doTest2(inputWKT, expectWKT);
         }
 
     };
@@ -195,14 +248,14 @@ namespace tut
     template<>
     void object::test<3>() {
         static char const* const inp[] = {
-					"LINESTRING (100 180, 20 20, 160 20, 100 180)",
-					nullptr
-				};
+          "LINESTRING (100 180, 20 20, 160 20, 100 180)",
+          nullptr
+        };
 
-				static char const* const exp[] = {
-					"POLYGON ((100 180, 160 20, 20 20, 100 180))",
-					nullptr
-				};
+        static char const* const exp[] = {
+          "POLYGON ((100 180, 160 20, 20 20, 100 180))",
+          nullptr
+        };
 
         doTest(inp, exp);
     }
@@ -212,11 +265,11 @@ namespace tut
     void object::test<4>() {
         static char const* const inp[] = {
             "LINESTRING EMPTY",
-						nullptr
+            nullptr
         };
 
         static char const* const exp[] = {
-						nullptr
+            nullptr
         };
 
         doTest(inp, exp);
@@ -226,11 +279,11 @@ namespace tut
     template<>
     void object::test<5>() {
         static char const* const inp[] = {
-						nullptr
+            nullptr
         };
 
         static char const* const exp[] = {
-						nullptr
+            nullptr
         };
 
         doTest(inp, exp);
@@ -242,11 +295,11 @@ namespace tut
         static char const* const inp[] = {
             "LINESTRING (100 180, 20 20, 160 20, 100 180)",
             "LINESTRING (100 180, 20 20, 160 20, 100 180)",
-						nullptr
+            nullptr
         };
 
         static char const* const exp[] = {
-						nullptr
+            nullptr
         };
 
         doTest(inp, exp);
@@ -256,13 +309,13 @@ namespace tut
     template<>
     void object::test<7>() {
         static char const* const inp[] = {
-					"POLYGON ((100 180, 160 20, 20 20, 100 180))",
-					nullptr
-				};
+          "POLYGON ((100 180, 160 20, 20 20, 100 180))",
+          nullptr
+        };
 
         static char const* const exp[] = {
-					"POLYGON ((100 180, 160 20, 20 20, 100 180))",
-						nullptr
+          "POLYGON ((100 180, 160 20, 20 20, 100 180))",
+            nullptr
         };
 
         doTest(inp, exp);
@@ -272,13 +325,13 @@ namespace tut
     template<>
     void object::test<8>() {
         static char const* const inp[] = {
-					"POLYGON EMPTY",
-					nullptr
-				};
+          "POLYGON EMPTY",
+          nullptr
+        };
 
         static char const* const exp[] = {
-					nullptr
-				};
+          nullptr
+        };
 
         doTest(inp, exp);
     }
@@ -287,38 +340,38 @@ namespace tut
     template<>
     void object::test<9>() {
         static char const* const inp[] = {
-					"POLYGON EMPTY",
-					nullptr
-				};
+          "POLYGON EMPTY",
+          nullptr
+        };
 
         static char const* const exp[] = {
-					nullptr
-				};
+          nullptr
+        };
 
         doTest(inp, exp);
     }
 
-		template<>
-		template<>
-		void object::test<10>() {
-			static char const* const inp[] = {
-				"LINESTRING (0 0 , 10 10)",   // isolated edge
-				"LINESTRING (185 221, 100 100)",  //dangling edge
-				"LINESTRING (185 221, 88 275, 180 316)",
-				"LINESTRING (185 221, 292 281, 180 316)",
-				"LINESTRING (189 98, 83 187, 185 221)",
-				"LINESTRING (189 98, 325 168, 185 221)",
-				nullptr
-			};
+    template<>
+    template<>
+    void object::test<10>() {
+      static char const* const inp[] = {
+        "LINESTRING (0 0 , 10 10)",   // isolated edge
+        "LINESTRING (185 221, 100 100)",  //dangling edge
+        "LINESTRING (185 221, 88 275, 180 316)",
+        "LINESTRING (185 221, 292 281, 180 316)",
+        "LINESTRING (189 98, 83 187, 185 221)",
+        "LINESTRING (189 98, 325 168, 185 221)",
+        nullptr
+      };
 
-			static char const* const exp[] = {
-				"POLYGON ((185 221, 88 275, 180 316, 292 281, 185 221))",
-				"POLYGON ((189 98, 83 187, 185 221, 325 168, 189 98))",
-				nullptr
-			};
+      static char const* const exp[] = {
+        "POLYGON ((185 221, 88 275, 180 316, 292 281, 185 221))",
+        "POLYGON ((189 98, 83 187, 185 221, 325 168, 189 98))",
+        nullptr
+      };
 
-			doTest(inp, exp);
-		}
+      doTest(inp, exp);
+    }
 
 } // namespace tut
 

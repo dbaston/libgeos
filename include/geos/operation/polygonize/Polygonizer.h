@@ -79,6 +79,7 @@ public:
 	 * as the input Geometry
 	 */
 	Polygonizer();
+	Polygonizer(const std::vector<geom::Geometry*> geomList);
 
 	~Polygonizer();
 
@@ -107,7 +108,7 @@ public:
 	 *
 	 * @param geomList a list of Geometry with linework to be polygonized
 	 */
-	void add(std::vector<geom::Geometry*> *geomList);
+	void add(const std::vector<geom::Geometry*> *geomList);
 
 	/** \brief
 	 * Add a collection of geometries to be polygonized.
@@ -117,7 +118,7 @@ public:
 	 *
 	 * @param geomList a list of Geometry with linework to be polygonized
 	 */
-	void add(std::vector<const geom::Geometry*> *geomList);
+	void add(const std::vector<const geom::Geometry*> *geomList);
 
 #if 0
 	/**

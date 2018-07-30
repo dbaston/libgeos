@@ -74,6 +74,12 @@ Polygonizer::Polygonizer():
 {
 }
 
+Polygonizer::Polygonizer(const std::vector<geom::Geometry*> geomList) :
+	Polygonizer()
+{
+	for (const auto g : (geomList)) add(g);
+}
+
 Polygonizer::~Polygonizer()
 {
 	delete graph;
@@ -89,7 +95,7 @@ Polygonizer::~Polygonizer()
 
 
 void
-Polygonizer::add(vector<Geometry*> geomList)
+Polygonizer::add(const vector<Geometry*> geomList)
 {
 	for (const auto g : (geomList)) add(g);
 }
@@ -109,7 +115,7 @@ Polygonizer::add(const vector<const Geometry*> geomList)
  * @param geomList a list of {@link Geometry}s with linework to be polygonized
  */
 void
-Polygonizer::add(vector<Geometry*> *geomList)
+Polygonizer::add(const vector<Geometry*> *geomList)
 {
 	for (const auto g : (*geomList)) add(g);
 }
@@ -123,7 +129,7 @@ Polygonizer::add(vector<Geometry*> *geomList)
  * @param geomList a list of {@link Geometry}s with linework to be polygonized
  */
 void
-Polygonizer::add(vector<const Geometry*> *geomList)
+Polygonizer::add(const vector<const Geometry*> *geomList)
 {
 	for (auto &g : (*geomList)) add(g);
 }
