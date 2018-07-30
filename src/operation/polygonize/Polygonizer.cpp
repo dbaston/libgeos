@@ -64,7 +64,7 @@ Polygonizer::LineStringAdder::filter_ro(const Geometry *g)
  */
 Polygonizer::Polygonizer():
 	lineStringAdder(this),
-	graph(nullptr),
+	graph(),
 	dangles(),
 	cutEdges(),
 	invalidRingLines(),
@@ -75,21 +75,41 @@ Polygonizer::Polygonizer():
 }
 
 /* C++ interface constructors */
-
 Polygonizer::Polygonizer(const std::vector<geom::Geometry*> geomList) :
-	Polygonizer()
+	lineStringAdder(this),
+	graph(geomList.empty()? PolygonizeGraph() : PolygonizeGraph(geomList[0]->getFactory())),
+	dangles(),
+	cutEdges(),
+	invalidRingLines(),
+	holeList(),
+	shellList(),
+	polyList(nullptr)
 {
 	for (const auto g : (geomList)) add(g);
 }
 
 Polygonizer::Polygonizer(const std::vector<const geom::Geometry*> geomList) :
-	Polygonizer()
+	lineStringAdder(this),
+	graph(geomList.empty()? PolygonizeGraph() : PolygonizeGraph(geomList[0]->getFactory())),
+	dangles(),
+	cutEdges(),
+	invalidRingLines(),
+	holeList(),
+	shellList(),
+	polyList(nullptr)
 {
 	for (const auto g : (geomList)) add(g);
 }
 
 Polygonizer::Polygonizer(const geom::Geometry *g) :
-	Polygonizer()
+	lineStringAdder(this),
+	graph(g? PolygonizeGraph(g->getFactory()) : PolygonizeGraph()),
+	dangles(),
+	cutEdges(),
+	invalidRingLines(),
+	holeList(),
+	shellList(),
+	polyList(nullptr)
 {
 	add(g);
 }
@@ -99,7 +119,7 @@ Polygonizer::Polygonizer(const geom::Geometry *g) :
 
 Polygonizer::~Polygonizer()
 {
-	delete graph;
+	//delete graph;
 
 	for (auto &r : invalidRingLines) delete r;
 
@@ -123,7 +143,7 @@ Polygonizer::add(const vector<const Geometry*> geomList)
 	for (const auto g : (geomList)) add(g);
 }
 
-/*
+/* public
  * Add a collection of geometries to be polygonized.
  * May be called multiple times.
  * Any dimension of Geometry may be added;
@@ -137,7 +157,7 @@ Polygonizer::add(const vector<Geometry*> *geomList)
 	for (const auto g : (*geomList)) add(g);
 }
 
-/*
+/* public
  * Add a collection of geometries to be polygonized.
  * May be called multiple times.
  * Any dimension of Geometry may be added;
@@ -167,7 +187,7 @@ Polygonizer::add(Geometry *g)
 }
 #endif
 
-/*
+/* public
  * Add a geometry to the linework to be polygonized.
  * May be called multiple times.
  * Any dimension of Geometry may be added;
@@ -182,7 +202,7 @@ Polygonizer::add(const Geometry *g)
 }
 
 
-/*
+/* private
  * Add a linestring to the graph of polygon edges.
  *
  * @param line the LineString to add
@@ -190,10 +210,12 @@ Polygonizer::add(const Geometry *g)
 void
 Polygonizer::add(const LineString *line)
 {
+#if 0
 	// create a new graph using the factory from the input Geometry
 	if (!graph)
 		graph = new PolygonizeGraph(line->getFactory());
-	graph->addEdge(line);
+#endif
+	graph.addEdge(line);
 }
 
 /*
@@ -243,13 +265,13 @@ Polygonizer::polygonize()
 	polyList=new vector<Polygon*>();
 
 	// if no geometries were supplied it's possible graph could be null
-	if (graph==nullptr) return;
+	if (graph.empty()) return;
 
-	graph->deleteDangles(dangles);
+	graph.deleteDangles(dangles);
 
-	graph->deleteCutEdges(cutEdges);
+	graph.deleteCutEdges(cutEdges);
 
-	auto edgeRingList(graph->getEdgeRings());
+	auto edgeRingList(graph.getEdgeRings());
 
 #if GEOS_DEBUG
 	cerr<<"Polygonizer::polygonize(): "<<edgeRingList.size()<<" edgeRings in graph"<<endl;

@@ -23,6 +23,7 @@
 
 #include <geos/export.h>
 #include <geos/geom/GeometryComponentFilter.h> // for LineStringAdder inheritance
+#include <geos/operation/polygonize/PolygonizeGraph.h>
 
 #include <vector>
 
@@ -41,7 +42,6 @@ namespace geos {
 	namespace operation {
 		namespace polygonize {
 			class EdgeRing;
-			class PolygonizeGraph;
 		}
 	}
 }
@@ -229,7 +229,7 @@ private:
 	/*
 	 * Data
 	 */
-	PolygonizeGraph *graph;
+	PolygonizeGraph graph;
 
 	// initialize with empty collections, in case nothing is computed
 	std::vector<const geom::LineString*> dangles;

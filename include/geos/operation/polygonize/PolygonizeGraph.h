@@ -25,6 +25,7 @@
 #include <geos/export.h>
 
 #include <geos/planargraph/PlanarGraph.h>  // for inheritance
+#include <geos/geom/GeometryFactory.h>
 
 #include <vector>
 
@@ -70,6 +71,7 @@ class PolygonizeDirectedEdge;
  */
 class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
  public:
+	bool empty() const {return newNodes.empty();}
 	/**
 	 * \brief
 	 * Deletes all edges at a node
@@ -80,6 +82,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * \brief
 	 * Create a new polygonization graph.
 	 */
+	PolygonizeGraph() {factory = new geom::GeometryFactory();};
 	explicit PolygonizeGraph(const geom::GeometryFactory *newFactory);
 
 	/**
