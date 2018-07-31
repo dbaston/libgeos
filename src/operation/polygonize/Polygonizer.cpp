@@ -70,46 +70,25 @@ Polygonizer::Polygonizer():
 	invalidRingLines(),
 	holeList(),
 	shellList(),
-	polyList(nullptr)
+	polyList()
 {
 }
 
 /* C++ interface constructors */
 Polygonizer::Polygonizer(const std::vector<geom::Geometry*> geomList) :
-	lineStringAdder(this),
-	graph(geomList.empty()? PolygonizeGraph() : PolygonizeGraph(geomList[0]->getFactory())),
-	dangles(),
-	cutEdges(),
-	invalidRingLines(),
-	holeList(),
-	shellList(),
-	polyList(nullptr)
+	Polygonizer()
 {
 	for (const auto g : (geomList)) add(g);
 }
 
 Polygonizer::Polygonizer(const std::vector<const geom::Geometry*> geomList) :
-	lineStringAdder(this),
-	graph(geomList.empty()? PolygonizeGraph() : PolygonizeGraph(geomList[0]->getFactory())),
-	dangles(),
-	cutEdges(),
-	invalidRingLines(),
-	holeList(),
-	shellList(),
-	polyList(nullptr)
+	Polygonizer()
 {
 	for (const auto g : (geomList)) add(g);
 }
 
 Polygonizer::Polygonizer(const geom::Geometry *g) :
-	lineStringAdder(this),
-	graph(g? PolygonizeGraph(g->getFactory()) : PolygonizeGraph()),
-	dangles(),
-	cutEdges(),
-	invalidRingLines(),
-	holeList(),
-	shellList(),
-	polyList(nullptr)
+	Polygonizer()
 {
 	add(g);
 }
@@ -119,27 +98,28 @@ Polygonizer::Polygonizer(const geom::Geometry *g) :
 
 Polygonizer::~Polygonizer()
 {
-	//delete graph;
-
-	for (auto &r : invalidRingLines) delete r;
-
-	if ( polyList )
-	{
-		for (auto &p : (*polyList)) delete p;
-		delete polyList;
-	}
+	clear();
 }
 
+void Polygonizer::clear() {
+	for (auto &p : polyList) delete p;
+	polyList.clear();
+
+	for (auto &r : invalidRingLines) delete r;
+	invalidRingLines.clear();
+}
 
 void
 Polygonizer::add(const vector<Geometry*> geomList)
 {
+	clear();
 	for (const auto g : (geomList)) add(g);
 }
 
 void
 Polygonizer::add(const vector<const Geometry*> geomList)
 {
+	clear();
 	for (const auto g : (geomList)) add(g);
 }
 
@@ -154,6 +134,7 @@ Polygonizer::add(const vector<const Geometry*> geomList)
 void
 Polygonizer::add(const vector<Geometry*> *geomList)
 {
+	clear();
 	for (const auto g : (*geomList)) add(g);
 }
 
@@ -168,6 +149,7 @@ Polygonizer::add(const vector<Geometry*> *geomList)
 void
 Polygonizer::add(const vector<const Geometry*> *geomList)
 {
+	clear();
 	for (auto &g : (*geomList)) add(g);
 }
 
@@ -198,6 +180,7 @@ Polygonizer::add(Geometry *g)
 void
 Polygonizer::add(const Geometry *g)
 {
+	clear();
 	g->apply_ro(&lineStringAdder);
 }
 
@@ -210,11 +193,9 @@ Polygonizer::add(const Geometry *g)
 void
 Polygonizer::add(const LineString *line)
 {
-#if 0
 	// create a new graph using the factory from the input Geometry
-	if (!graph)
-		graph = new PolygonizeGraph(line->getFactory());
-#endif
+	if (graph.empty())
+		graph = PolygonizeGraph(line->getFactory());
 	graph.addEdge(line);
 }
 
@@ -222,13 +203,11 @@ Polygonizer::add(const LineString *line)
  * Gets the list of polygons formed by the polygonization.
  * @return a collection of Polygons
  */
-vector<Polygon*>*
+vector<Polygon*>
 Polygonizer::getPolygons()
 {
 	polygonize();
-	vector<Polygon *> *ret = polyList;
-	polyList = nullptr;
-	return ret;
+	return polyList;
 }
 
 /* public */
@@ -260,9 +239,9 @@ void
 Polygonizer::polygonize()
 {
 	// check if already computed
-	if (polyList!=nullptr) return;
+	if (!polyList.empty()) return;
 
-	polyList=new vector<Polygon*>();
+	polyList.clear();
 
 	// if no geometries were supplied it's possible graph could be null
 	if (graph.empty()) return;
@@ -294,7 +273,7 @@ Polygonizer::polygonize()
 
 	for (const auto &er : shellList)
 	{
-		polyList->push_back(er->getPolygon());
+		polyList.push_back(er->getPolygon());
 	}
 }
 

@@ -151,7 +151,7 @@ public:
 	 * calls will return NULL.
 	 * @return a collection of Polygons
 	 */
-	std::vector<geom::Polygon*>* getPolygons();
+	std::vector<geom::Polygon*> getPolygons();
 
 	/** \brief
 	 * Get the list of dangling lines found during polygonization.
@@ -213,6 +213,7 @@ private:
 	 * Perform the polygonization, if it has not already been carried out.
 	 */
 	void polygonize();
+	void clear();
 
 	void findValidRings(const std::vector<EdgeRing*>& edgeRingList,
 			std::vector<EdgeRing*>& validEdgeRingList,
@@ -238,7 +239,7 @@ private:
 
 	std::vector<EdgeRing*> holeList;
 	std::vector<EdgeRing*> shellList;
-	std::vector<geom::Polygon*> *polyList;
+	std::vector<geom::Polygon*> polyList;
 };
 
 } // namespace geos::operation::polygonize

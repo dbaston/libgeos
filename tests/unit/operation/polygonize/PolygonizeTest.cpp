@@ -46,7 +46,7 @@ namespace tut
         template <class T>
         void delAll(T& cnt)
         {
-          for (const auto i : cnt) delete i;
+          for (auto &i : cnt) delete i;
         }
 
         template <class T>
@@ -121,6 +121,7 @@ namespace tut
           auto r1(p1.getPolygons());
           auto r2 = p2.getPolygons();
 					auto r3 = Polygonizer(inputGeoms).getPolygons();
+
 #if 0
 					/**
 					 * trying to get for a second time the polygons:
@@ -145,10 +146,10 @@ namespace tut
           auto extra_invalidRings(p1.getInvalidRingLines());
 #endif
 
-          bool ok = compare(expectGeoms, *r1);
+          bool ok = compare(expectGeoms, r1);
           if  ( ! ok ) {
-            cout << "OBTAINED(" << r1->size() << "): ";
-            printAll(cout, *r1);
+            cout << "OBTAINED(" << r1.size() << "): ";
+            printAll(cout, r1);
             cout << endl;
 
             ensure( "r1 not all expected geometries in the obtained set", 0 );
@@ -156,10 +157,6 @@ namespace tut
 
           delAll(inputGeoms);
           delAll(expectGeoms);
-          delAll(*r1); delete r1;
-          delAll(*r2); delete r2;
-          delAll(*r3); delete r3;
-
 
           return ok;
         }
@@ -177,8 +174,7 @@ namespace tut
           Polygonizer polygonizer;
           polygonizer.add(&inputGeoms);
 
-          std::unique_ptr< std::vector<Poly*> > retGeoms;
-          retGeoms.reset( polygonizer.getPolygons() );
+          auto retGeoms(polygonizer.getPolygons());
 
 #if 0
           auto cutEdges(polygonizer.getCutEdges());
@@ -196,17 +192,16 @@ namespace tut
 #endif
           delAll(inputGeoms);
 
-          bool ok = compare(expectGeoms, *retGeoms);
+          bool ok = compare(expectGeoms, retGeoms);
           if  ( ! ok ) {
-            cout << "OBTAINED(" << retGeoms->size() << "): ";
-            printAll(cout, *retGeoms);
+            cout << "OBTAINED(" << retGeoms.size() << "): ";
+            printAll(cout, retGeoms);
             cout << endl;
 
             ensure( "not all expected geometries in the obtained set", 0 );
           }
 
           delAll(expectGeoms);
-          delAll(*retGeoms);
 
           return ok;
         }

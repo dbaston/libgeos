@@ -3514,8 +3514,7 @@ GEOSPolygonize_r(GEOSContextHandle_t extHandle, const Geometry * const * g, unsi
         handle->NOTICE_MESSAGE("geometry vector added to polygonizer");
 #endif
 
-        std::vector<Polygon*> *polys = plgnzr.getPolygons();
-        assert(0 != polys);
+        auto polys = plgnzr.getPolygons();
 
 #if GEOS_DEBUG
         handle->NOTICE_MESSAGE("output polygons got");
@@ -3530,14 +3529,7 @@ GEOSPolygonize_r(GEOSContextHandle_t extHandle, const Geometry * const * g, unsi
         // vector of polygons or extend Polygonizer to return list of Geometry*
         // or add a wrapper which semantic is similar to:
         // std::vector<as_polygon<Geometry*> >
-        std::vector<Geometry*> *polyvec = new std::vector<Geometry *>(polys->size());
-
-        for (std::size_t i = 0; i < polys->size(); ++i)
-        {
-            (*polyvec)[i] = (*polys)[i];
-        }
-        delete polys;
-        polys = 0;
+        auto polyvec = new std::vector<Geometry *>(polys.begin(), polys.end());
 
         const GeometryFactory *gf = handle->geomFactory;
 
@@ -3697,13 +3689,8 @@ GEOSPolygonize_full_r(GEOSContextHandle_t extHandle, const Geometry* g,
 		*invalid = gf->createGeometryCollection(linevec);
 	}
 
-        std::vector<Polygon*> *polys = plgnzr.getPolygons();
-        std::vector<Geometry*> *polyvec = new std::vector<Geometry *>(polys->size());
-        for (std::size_t i = 0; i < polys->size(); ++i)
-	{
-            (*polyvec)[i] = (*polys)[i];
-	}
-        delete polys;
+        auto polys = plgnzr.getPolygons();
+        auto polyvec = new std::vector<Geometry *>(polys.begin(), polys.end());
 
         return gf->createGeometryCollection(polyvec);
 

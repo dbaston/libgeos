@@ -1268,11 +1268,8 @@ XMLTester::parseTest(const TiXmlNode* node)
             plgnzr.add(gA);
 
 
-            std::vector<geos::geom::Polygon *>*polys = plgnzr.getPolygons();
-            std::vector<geom::Geometry *>*newgeoms = new std::vector<geom::Geometry *>;
-            for (unsigned int i=0; i<polys->size(); i++)
-                newgeoms->push_back((*polys)[i]);
-            delete polys;
+            auto polys = plgnzr.getPolygons();
+            auto newgeoms = new std::vector<geom::Geometry *>(polys.begin(), polys.end());
 
             GeomPtr gRealRes(factory->createGeometryCollection(newgeoms));
             gRealRes->normalize();
