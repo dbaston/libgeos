@@ -390,8 +390,7 @@ PolygonizeGraph::findEdgeRing(PolygonizeDirectedEdge *startDE) const {
 /* public */
 void
 PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines) {
-	std::vector<Node*> nodeStack;
-	findNodesOfDegree(1, nodeStack);
+	auto nodeStack = findNodesOfDegree(1);
 
 	std::set<const LineString*> uniqueDangles;
 

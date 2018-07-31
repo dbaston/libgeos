@@ -125,25 +125,23 @@ PlanarGraph::remove(Node *node)
 }
 
 /*public*/
-vector<Node*>*
-PlanarGraph::findNodesOfDegree(size_t degree)
+void
+PlanarGraph::findNodesOfDegree(size_t degree, vector<Node*>& nodesFound) const
 {
-	vector<Node*> *nodesFound=new vector<Node*>();
-	findNodesOfDegree(degree, *nodesFound);
-	return nodesFound;
+	nodesFound = findNodesOfDegree(degree);
 }
 
 /*public*/
-void
-PlanarGraph::findNodesOfDegree(size_t degree, vector<Node*>& nodesFound)
+vector<Node*>
+PlanarGraph::findNodesOfDegree(size_t degree) const
 {
-	NodeMap::container &nm=nodeMap.getNodeMap();
-	for (NodeMap::container::iterator it=nm.begin(), itEnd=nm.end();
-			it!=itEnd; ++it)
+	vector<Node*> nodesFound;
+	for (const auto &n : nodeMap)
 	{
-		Node *node=it->second;
-		if (node->getDegree()==degree) nodesFound.push_back(node);
+		auto node = n.second;
+		if (node->getDegree() == degree) nodesFound.push_back(node);
 	}
+	return nodesFound;
 }
 
 } // namespace planargraph
