@@ -31,6 +31,17 @@ using namespace std;
 namespace geos {
 namespace planargraph {
 
+template <typename T>
+void
+find_and_erase(T* what, vector<T*> &where) {
+	if (!what) return;
+	auto ptr = where.begin();
+	while (ptr != where.end()) {
+		if (*ptr == what) where.erase(ptr);
+		else ++ptr;
+	}
+}
+
 
 /*
  * Adds the Edge and its DirectedEdges with this PlanarGraph.
@@ -59,13 +70,7 @@ PlanarGraph::remove(Edge *edge)
 {
 	remove(edge->getDirEdge(0));
 	remove(edge->getDirEdge(1));
-	for(unsigned int i=0; i<edges.size();++i)
-	{
-		if(edges[i]==edge) {
-			edges.erase(edges.begin()+i);
-			--i;
-		}
-	}
+	find_and_erase(edge, edges);
 }
 
 /*
@@ -80,12 +85,7 @@ PlanarGraph::remove(DirectedEdge *de)
 	DirectedEdge *sym = de->getSym();
 	if (sym!=nullptr) sym->setSym(nullptr);
 	de->getFromNode()->getOutEdges()->remove(de);
-	for(unsigned int i=0; i<dirEdges.size(); ++i) {
-		if(dirEdges[i]==de) {
-			dirEdges.erase(dirEdges.begin()+i);
-			--i;
-		}
-	}
+	find_and_erase(de, dirEdges);
 }
 
 /*
@@ -97,27 +97,12 @@ PlanarGraph::remove(Node *node)
 {
 	// unhook all directed edges
 	vector<DirectedEdge*> &outEdges=node->getOutEdges()->getEdges();
-	for(unsigned int i=0; i<outEdges.size(); ++i) {
-		DirectedEdge *de =outEdges[i];
+	for(auto de : outEdges) {
 		DirectedEdge *sym = de->getSym();
 		// remove the diredge that points to this node
-		if (sym!=nullptr) remove(sym);
-		// remove this diredge from the graph collection
-		for(unsigned int j=0; j<dirEdges.size(); ++j) {
-			if (dirEdges[j]==de) {
-				dirEdges.erase(dirEdges.begin()+j);
-				--j;
-			}
-		}
-		Edge *edge=de->getEdge();
-		if (edge!=nullptr) {
-			for(unsigned int k=0; k<edges.size(); ++k) {
-				if(edges[k]==edge) {
-					edges.erase(edges.begin()+k);
-					--k;
-				}
-			}
-		}
+		if (sym) remove(sym);
+		find_and_erase(de, dirEdges);
+		find_and_erase(de->getEdge(), edges);
 	}
 	// remove the node from the graph
 	nodeMap.remove(node->getCoordinate());
