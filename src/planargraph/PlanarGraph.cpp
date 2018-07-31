@@ -23,6 +23,7 @@
 #include <geos/planargraph/Node.h>
 #include <geos/planargraph/DirectedEdge.h>
 
+#include <algorithm>
 #include <vector>
 #include <map>
 
@@ -33,13 +34,9 @@ namespace planargraph {
 
 template <typename T>
 void
-find_and_erase(T* what, vector<T*> &where) {
+find_and_erase(T what, vector<T> &where) {
 	if (!what) return;
-	auto ptr = where.begin();
-	while (ptr != where.end()) {
-		if (*ptr == what) where.erase(ptr);
-		else ++ptr;
-	}
+	where.erase(std::remove(where.begin(), where.end(), what), where.end());
 }
 
 
