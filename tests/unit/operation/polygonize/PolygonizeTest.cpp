@@ -122,15 +122,11 @@ namespace tut
           auto r2 = p2.getPolygons();
 					auto r3 = Polygonizer(inputGeoms).getPolygons();
 
-#if 0
 					/**
 					 * trying to get for a second time the polygons:
-					 * Assertion `de == startDE || !de->isInRing()' failed
 					 */
           auto r4 = p1.getPolygons();
-#endif
 
-#if 0
 					/**
 					 * trying to get additional info:
 					 * Assertion `de == startDE || !de->isInRing()' failed
@@ -139,6 +135,7 @@ namespace tut
           auto dangles(p1.getDangles());
           auto invalidRings(p1.getInvalidRingLines());
 
+#if 0
           p1.add(inputGeoms);
 
           auto extra_cutEdges(p1.getCutEdges());

@@ -129,10 +129,8 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 *                   cut edges will be pushed here.
 	 */
 	std::vector<const geom::LineString*> deleteCutEdges();
-#if 0
 	// [[deprecated]]
 	void deleteCutEdges(std::vector<const geom::LineString*> &cutLines);
-#endif
 
 	/** \brief
 	 * Marks all edges from the graph which are "dangles".

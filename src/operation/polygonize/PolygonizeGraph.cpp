@@ -253,9 +253,10 @@ PolygonizeGraph::findLabeledEdgeRings(
 
 /* public */
 std::vector<const LineString*>
-PolygonizeGraph::deleteCutEdges(std::vector<const LineString*> &cutLines) {
-	computeNextCWEdges();
+PolygonizeGraph::deleteCutEdges() {
 	std::vector<const LineString*> cutLines;
+
+	computeNextCWEdges();
 
 	// label the current set of edgerings
 	/* even that is a find it has side efects on the labels */
@@ -285,13 +286,11 @@ PolygonizeGraph::deleteCutEdges(std::vector<const LineString*> &cutLines) {
 	return cutLines;
 }
 
-#if 0
 /* deprecated */
 void
 PolygonizeGraph::deleteCutEdges(std::vector<const LineString*> &cutLines) {
 	cutLines = deleteCutEdges();
 }
-#endif
 
 void
 PolygonizeGraph::label(

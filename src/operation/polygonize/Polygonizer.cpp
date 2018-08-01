@@ -247,23 +247,23 @@ Polygonizer::polygonize()
 	if (graph.empty()) return;
 
 	dangles = graph.deleteDangles();
-
-	graph.deleteCutEdges(cutEdges);
+	cutEdges = graph.deleteCutEdges();
 
 	auto edgeRingList = graph.getEdgeRings();
 
 #if GEOS_DEBUG
 	cerr<<"Polygonizer::polygonize(): "<<edgeRingList.size()<<" edgeRings in graph"<<endl;
 #endif
-	vector<EdgeRing*> validEdgeRingList;
-	invalidRingLines.clear(); /* what if it was populated already ? we should clean ! */
-	findValidRings(edgeRingList, validEdgeRingList, invalidRingLines);
+
+	auto validEdgeRingList = findValidRings(edgeRingList);
+
 #if GEOS_DEBUG
 	cerr<<"                           "<<validEdgeRingList.size()<<" valid"<<endl;
 	cerr<<"                           "<<invalidRingLines.size()<<" invalid"<<endl;
 #endif
 
 	findShellsAndHoles(validEdgeRingList);
+
 #if GEOS_DEBUG
 	cerr<<"                           "<<holeList.size()<<" holes"<<endl;
 	cerr<<"                           "<<shellList.size()<<" shells"<<endl;
@@ -278,11 +278,10 @@ Polygonizer::polygonize()
 }
 
 /* private */
-void
-Polygonizer::findValidRings(const vector<EdgeRing*>& edgeRingList,
-	vector<EdgeRing*>& validEdgeRingList,
-	vector<LineString*>& invalidRingList)
+vector<EdgeRing*>
+Polygonizer::findValidRings(const vector<EdgeRing*>& edgeRingList) const
 {
+	vector<EdgeRing*> validEdgeRingList;
 	for (const auto &er : edgeRingList)
 	{
 		if (er->isValid())
@@ -291,12 +290,11 @@ Polygonizer::findValidRings(const vector<EdgeRing*>& edgeRingList,
 		}
 		else
 		{
-			// NOTE: polygonize::EdgeRing::getLineString
-			// returned LineString ownership is transferred.
-			invalidRingList.push_back(er->getLineString());
+			invalidRingLines.push_back(er->getLineString());
 		}
 		GEOS_CHECK_FOR_INTERRUPTS();
 	}
+	return validEdgeRingList;
 }
 
 /* private */

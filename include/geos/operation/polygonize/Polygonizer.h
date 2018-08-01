@@ -195,13 +195,6 @@ private:
 		void filter_ro(const geom::Geometry * g) override;
 	};
 
-	// This seems to be needed by    GCC 2.95.4
-	//friend class Polygonizer::LineStringAdder;
-
-	// default factory
-	LineStringAdder lineStringAdder;
-
-
 	/**
 	 * Add a linestring to the graph of polygon edges.
 	 *
@@ -215,9 +208,8 @@ private:
 	void polygonize();
 	void clear();
 
-	void findValidRings(const std::vector<EdgeRing*>& edgeRingList,
-			std::vector<EdgeRing*>& validEdgeRingList,
-			std::vector<geom::LineString*>& invalidRingList);
+
+	std::vector<EdgeRing*> findValidRings(const std::vector<EdgeRing*>& edgeRingList) const;
 
 	void findShellsAndHoles(const std::vector<EdgeRing*>& edgeRingList);
 
@@ -230,12 +222,14 @@ private:
 	/*
 	 * Data
 	 */
+	// default factory
+	LineStringAdder lineStringAdder;
 	PolygonizeGraph graph;
 
 	// initialize with empty collections, in case nothing is computed
 	std::vector<const geom::LineString*> dangles;
 	std::vector<const geom::LineString*> cutEdges;
-	std::vector<geom::LineString*> invalidRingLines;
+	mutable std::vector<geom::LineString*> invalidRingLines;
 
 	std::vector<EdgeRing*> holeList;
 	std::vector<EdgeRing*> shellList;
