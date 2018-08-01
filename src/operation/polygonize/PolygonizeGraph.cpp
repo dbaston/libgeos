@@ -388,8 +388,10 @@ PolygonizeGraph::findEdgeRing(PolygonizeDirectedEdge *startDE) const {
 }
 
 /* public */
-void
-PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines) {
+std::vector<const LineString*>
+PolygonizeGraph::deleteDangles() {
+	std::vector<const LineString*> dangleLines;
+
 	auto nodeStack = findNodesOfDegree(1);
 
 	std::set<const LineString*> uniqueDangles;
@@ -399,6 +401,7 @@ PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines) {
 		nodeStack.pop_back();
 		deleteAllEdges(node);
 
+		/* get sorted edges in ascending order by angle with the positive x-axis */
 		auto nodeOutEdges(node->getOutEdges().getEdges());
 
 		for(auto oe : nodeOutEdges) {
@@ -422,6 +425,13 @@ PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines) {
 			}
 		}
 	}
+	return dangleLines;
+}
+
+/* deprecated */
+void
+PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines) {
+	dangleLines = deleteDangles();
 }
 
 }  // namespace polygonize

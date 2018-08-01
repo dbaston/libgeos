@@ -246,11 +246,11 @@ Polygonizer::polygonize()
 	// if no geometries were supplied it's possible graph could be null
 	if (graph.empty()) return;
 
-	graph.deleteDangles(dangles);
+	dangles = graph.deleteDangles();
 
 	graph.deleteCutEdges(cutEdges);
 
-	auto edgeRingList(graph.getEdgeRings());
+	auto edgeRingList = graph.getEdgeRings();
 
 #if GEOS_DEBUG
 	cerr<<"Polygonizer::polygonize(): "<<edgeRingList.size()<<" edgeRings in graph"<<endl;

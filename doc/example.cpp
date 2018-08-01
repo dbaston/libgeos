@@ -1054,18 +1054,15 @@ cout<<"-------------------------------------------------------------------------
 	/////////////////////////////////////////////
 	Polygonizer plgnzr;
 	plgnzr.add(geoms);
-	vector<Polygon *> *polys = plgnzr.getPolygons();
-	newgeoms = new vector<Geometry *>;
-	for (unsigned int i=0; i<polys->size(); i++)
-		newgeoms->push_back((*polys)[i]);
-	delete polys;
+	auto polys = plgnzr.getPolygons();
+	newgeoms = new vector<Geometry *>(polys.begin(), polys.end());
 
 	cout<<endl<<"----- HERE IS POLYGONIZE OUTPUT ------"<<endl;
 	wkt_print_geoms(newgeoms);
 
 	// Delete the resulting geoms
-	for (unsigned int i=0; i<newgeoms->size(); i++) {
-		delete (*newgeoms)[i];
+	for (auto g : newgeoms) {
+		delete g;
 	}
 	delete newgeoms;
 

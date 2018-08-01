@@ -144,6 +144,8 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * @param dangleLines : the LineStrings that formed dangles will
 	 *                      be push_back'ed here
 	 */
+	std::vector<const geom::LineString*> deleteDangles();
+	// [[deprecated]]
 	void deleteDangles(std::vector<const geom::LineString*> &dangleLines);
 
  private:
