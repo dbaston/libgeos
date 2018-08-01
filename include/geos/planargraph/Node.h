@@ -49,7 +49,7 @@ protected:
 	geom::Coordinate pt;
 
 	/// The collection of DirectedEdges that leave this Node
-	DirectedEdgeStar *deStar;
+	DirectedEdgeStar deStar;
 
 public:
 
@@ -69,10 +69,9 @@ public:
 	Node(const geom::Coordinate& newPt)
 		:
 		pt(newPt)
-		{ deStar=new DirectedEdgeStar(); }
+		{ }
 
 	~Node() override {
-		delete deStar;
 	}
 
 	/**
@@ -81,7 +80,7 @@ public:
 	 * collection of outgoing DirectedEdges.
 	 * Takes ownership of the given DirectedEdgeStar!!
 	 */
-	Node(geom::Coordinate& newPt, DirectedEdgeStar *newDeStar)
+	Node(geom::Coordinate& newPt, DirectedEdgeStar newDeStar)
 		:
 		pt(newPt),
 		deStar(newDeStar)
@@ -98,21 +97,21 @@ public:
 	 * \brief Adds an outgoing DirectedEdge to this Node.
 	 */
 	void addOutEdge(DirectedEdge *de) {
-		deStar->add(de);
+		deStar.add(de);
 	}
 
 	/**
 	 * \brief Returns the collection of DirectedEdges that
 	 * leave this Node.
 	 */
-	DirectedEdgeStar* getOutEdges() { return deStar; }
-	const DirectedEdgeStar* getOutEdges() const { return deStar; }
+	DirectedEdgeStar getOutEdges() { return deStar; }
+	const DirectedEdgeStar& getOutEdges() const { return deStar; }
 
 	/**
 	 * \brief Returns the number of edges around this Node.
 	 */
 	size_t getDegree() const {
-		return deStar->getDegree();
+		return deStar.getDegree();
 	}
 
 	/**
@@ -121,7 +120,7 @@ public:
 	 * the positive x-axis.
 	 */
 	int getIndex(Edge *edge) {
-		return deStar->getIndex(edge);
+		return deStar.getIndex(edge);
 	}
 
 };

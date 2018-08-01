@@ -280,13 +280,9 @@ LineSequencer::findUnvisitedBestOrientedDE(const planargraph::Node* node)
 
 	const DirectedEdge* wellOrientedDE = nullptr;
 	const DirectedEdge* unvisitedDE = nullptr;
-	const DirectedEdgeStar* des=node->getOutEdges();
-	for (DirectedEdge::NonConstVect::const_iterator i=des->begin(),
-		e=des->end();
-		i!=e;
-		++i)
+	const auto des = node->getOutEdges();
+	for (const auto de : des)
 	{
-		planargraph::DirectedEdge* de = *i;
 		if (! de->getEdge()->isVisited()) {
 			unvisitedDE = de;
 			if (de->getEdgeDirection()) wellOrientedDE = de;
@@ -344,7 +340,7 @@ LineSequencer::findSequence(planargraph::Subgraph& graph)
 
 	const Node* startNode = findLowestDegreeNode(graph);
 
-	const DirectedEdge *startDE = *(startNode->getOutEdges()->begin());
+	const auto startDE = *(startNode->getOutEdges().begin());
 	const DirectedEdge *startDESym = startDE->getSym();
 
 	DirectedEdge::NonConstList *seq = new DirectedEdge::NonConstList();

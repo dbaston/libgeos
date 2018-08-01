@@ -48,7 +48,7 @@ namespace polygonize {  // geos.operation.polygonize
 
 int
 PolygonizeGraph::getDegreeNonDeleted(Node *node) const {
-	auto edges(node->getOutEdges()->getEdges());
+	auto edges(node->getOutEdges().getEdges());
 	int degree = 0;
 	for (auto e : edges) {
 		if (!dynamic_cast<PolygonizeDirectedEdge*>(e)->isMarked()) ++degree;
@@ -58,7 +58,7 @@ PolygonizeGraph::getDegreeNonDeleted(Node *node) const {
 
 int
 PolygonizeGraph::getDegree(Node *node, long label) const {
-	auto edges(node->getOutEdges()->getEdges());
+	auto edges(node->getOutEdges().getEdges());
 	int degree = 0;
 	for (auto e : edges) {
 		if (dynamic_cast<PolygonizeDirectedEdge*>(e)->getLabel() == label) ++degree;
@@ -71,7 +71,7 @@ PolygonizeGraph::getDegree(Node *node, long label) const {
  */
 void
 PolygonizeGraph::deleteAllEdges(Node *node) {
-	auto edges(node->getOutEdges()->getEdges());
+	auto edges(node->getOutEdges().getEdges());
   for (auto e : edges) {
 		auto de = dynamic_cast<PolygonizeDirectedEdge*>(e);
 		de->setMarked(true);
@@ -294,12 +294,12 @@ PolygonizeGraph::label(
 
 void
 PolygonizeGraph::computeNextCWEdges(Node *node) const {
-	DirectedEdgeStar *deStar = node->getOutEdges();
+	auto deStar = node->getOutEdges();
 	PolygonizeDirectedEdge *startDE = nullptr;
 	PolygonizeDirectedEdge *prevDE = nullptr;
 
 	// the edges are stored in CCW order around the star
-	auto pde = deStar->getEdges();
+	auto pde = deStar.getEdges();
 	for (auto e : pde) {
 		auto outDE = dynamic_cast<PolygonizeDirectedEdge*>(e);
 		if (outDE->isMarked()) continue;
@@ -328,7 +328,7 @@ PolygonizeGraph::computeNextCCWEdges(Node *node, long label) const {
 	PolygonizeDirectedEdge *prevInDE = nullptr;
 
 	// the edges are stored in CCW order around the star
-	auto edges = deStar->getEdges();
+	auto edges = deStar.getEdges();
 
 	/*
 	 * Cycling in reverse order.
@@ -399,7 +399,7 @@ PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines) {
 		nodeStack.pop_back();
 		deleteAllEdges(node);
 
-		auto nodeOutEdges(node->getOutEdges()->getEdges());
+		auto nodeOutEdges(node->getOutEdges().getEdges());
 
 		for(auto oe : nodeOutEdges) {
 			auto de(dynamic_cast<PolygonizeDirectedEdge*>(oe));

@@ -51,12 +51,12 @@ LineMergeDirectedEdge::getNext()
 	if (getToNode()->getDegree()!=2) {
 		return nullptr;
 	}
-	if (getToNode()->getOutEdges()->getEdges()[0]==getSym()) {
-		return (LineMergeDirectedEdge*) getToNode()->getOutEdges()->getEdges()[1];
+	if (getToNode()->getOutEdges().getEdges()[0]==getSym()) {
+		return (LineMergeDirectedEdge*) getToNode()->getOutEdges().getEdges()[1];
 	}
-	assert(getToNode()->getOutEdges()->getEdges()[1]==getSym());
+	assert(getToNode()->getOutEdges().getEdges()[1]==getSym());
 
-	LineMergeDirectedEdge* nextedge = dynamic_cast<LineMergeDirectedEdge*>(getToNode()->getOutEdges()->getEdges()[0]);
+	LineMergeDirectedEdge* nextedge = dynamic_cast<LineMergeDirectedEdge*>(getToNode()->getOutEdges().getEdges()[0]);
 	assert(nextedge);
 
 	return nextedge;

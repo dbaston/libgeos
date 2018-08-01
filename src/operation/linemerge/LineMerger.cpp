@@ -190,7 +190,7 @@ LineMerger::buildEdgeStringsForNonDegree2Nodes()
 void
 LineMerger::buildEdgeStringsStartingAt(Node *node)
 {
-	vector<planargraph::DirectedEdge*> &edges=node->getOutEdges()->getEdges();
+	auto edges = node->getOutEdges().getEdges();
 	size_t size = edges.size();
 	for (size_t i=0; i<size; i++)
 	{

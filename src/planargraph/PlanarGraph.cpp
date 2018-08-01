@@ -81,7 +81,7 @@ PlanarGraph::remove(DirectedEdge *de)
 {
 	DirectedEdge *sym = de->getSym();
 	if (sym!=nullptr) sym->setSym(nullptr);
-	de->getFromNode()->getOutEdges()->remove(de);
+	de->getFromNode()->getOutEdges().remove(de);
 	find_and_erase(de, dirEdges);
 }
 
@@ -93,7 +93,7 @@ void
 PlanarGraph::remove(Node *node)
 {
 	// unhook all directed edges
-	vector<DirectedEdge*> &outEdges=node->getOutEdges()->getEdges();
+	auto & outEdges=node->getOutEdges().getEdges();
 	for(auto de : outEdges) {
 		DirectedEdge *sym = de->getSym();
 		// remove the diredge that points to this node

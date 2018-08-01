@@ -30,10 +30,10 @@ vector<Edge*>*
 Node::getEdgesBetween(Node *node0, Node *node1)
 {
 	std::vector<Edge*> edges0;
-	DirectedEdge::toEdges(node0->getOutEdges()->getEdges(), edges0);
+	DirectedEdge::toEdges(node0->getOutEdges().getEdges(), edges0);
 
 	std::vector<Edge*> edges1;
-	DirectedEdge::toEdges(node1->getOutEdges()->getEdges(), edges1);
+	DirectedEdge::toEdges(node1->getOutEdges().getEdges(), edges1);
 
 	// Sort edge lists (needed for set_intersection below
 	std::sort( edges0.begin(), edges0.end() );
