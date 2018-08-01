@@ -51,7 +51,6 @@ config.status
 config.sub
 configure
 depcomp
-doc/Doxyfile
 doc/example
 include/config.h
 include/config.h.in
