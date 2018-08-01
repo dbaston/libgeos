@@ -125,12 +125,14 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * \brief
 	 * Finds and removes all cut edges from the graph.
 	 *
-	 * @param cutLines : the list of the LineString forming the removed
+	 * @return  vector with the list of the LineString forming the removed
 	 *                   cut edges will be pushed here.
-	 *
-	 * TODO: document ownership of the returned LineStrings
 	 */
+	std::vector<const geom::LineString*> deleteCutEdges();
+#if 0
+	// [[deprecated]]
 	void deleteCutEdges(std::vector<const geom::LineString*> &cutLines);
+#endif
 
 	/** \brief
 	 * Marks all edges from the graph which are "dangles".
