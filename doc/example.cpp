@@ -1061,7 +1061,7 @@ cout<<"-------------------------------------------------------------------------
 	wkt_print_geoms(newgeoms);
 
 	// Delete the resulting geoms
-	for (auto g : newgeoms) {
+	for (auto g : *newgeoms) {
 		delete g;
 	}
 	delete newgeoms;
