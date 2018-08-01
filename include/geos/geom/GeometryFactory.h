@@ -467,8 +467,11 @@ protected:
 	 */
 	GeometryFactory(const GeometryFactory &gf);
 
-	/// Destructor
-	~GeometryFactory();
+	/** @brief Destructor
+	 *
+	 * Virtual on purpose: don't allow users to contsruct a GeometryFactory
+	 */
+	virtual ~GeometryFactory();
 
 private:
 
