@@ -73,6 +73,10 @@ public:
 	bool isEmpty() const override { return empty(); }
 
 	bool empty() const { return vect->empty(); }
+	std::vector<Coordinate>::iterator begin() {return vect->begin();}
+	std::vector<Coordinate>::iterator end() {return vect->end();}
+	std::vector<Coordinate>::const_iterator begin() const {return vect->begin();}
+	std::vector<Coordinate>::const_iterator end() const {return vect->end();}
 
 	/// Reset this CoordinateArraySequence to the empty state
 	void clear() { vect->clear(); }

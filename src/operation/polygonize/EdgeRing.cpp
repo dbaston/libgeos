@@ -21,6 +21,7 @@
 #include <geos/operation/polygonize/PolygonizeEdge.h>
 #include <geos/planargraph/DirectedEdge.h>
 #include <geos/geom/CoordinateSequence.h>
+#include <geos/geom/CoordinateArraySequence.h>
 #include <geos/geom/LinearRing.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/Envelope.h>
@@ -95,16 +96,14 @@ EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
 }
 
 /*public static*/
-const Coordinate&
+const Coordinate
 EdgeRing::ptNotInList(const CoordinateSequence *testPts,
                       const CoordinateSequence *pts)
 {
-    const std::size_t npts = testPts->getSize();
-    for (std::size_t i = 0; i < npts; ++i)
-    {
-        const Coordinate& testPt = testPts->getAt(i);
-        // TODO: shouldn't this be ! isInList ?
-        if (isInList(testPt, pts))
+		auto points_to_test = dynamic_cast<const CoordinateArraySequence*>(testPts);
+    for (const auto testPt : *points_to_test)
+		{
+        if (!isInList(testPt, pts))
             return testPt;
     }
     return Coordinate::getNull();
@@ -115,13 +114,12 @@ bool
 EdgeRing::isInList(const Coordinate& pt,
                    const CoordinateSequence *pts)
 {
-    const std::size_t npts = pts->getSize();
-    for (std::size_t i = 0; i < npts; ++i)
-    {
-        if (pt == pts->getAt(i))
-            return false;
-    }
-    return true;
+	auto coords = dynamic_cast<const CoordinateArraySequence*>(pts);
+	for (const auto &p : *coords)
+	{
+		if (pt == p) return true;
+	}
+	return false;
 }
 
 /*public*/
@@ -169,8 +167,8 @@ EdgeRing::isHole(){
 void
 EdgeRing::addHole(LinearRing *hole)
 {
-    if (holes==nullptr)
-        holes=new vector<Geometry*>();
+    if (!holes)
+        holes = new vector<Geometry*>();
     holes->push_back(hole);
 }
 

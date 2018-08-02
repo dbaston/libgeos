@@ -113,7 +113,7 @@ public:
 	 * @return a Coordinate reference from <code>testPts</code> which is
 	 * not in <code>pts</code>, or <code>Coordinate::nullCoord</code>
 	 */
-	static const geom::Coordinate& ptNotInList(
+	static const geom::Coordinate ptNotInList(
 			const geom::CoordinateSequence *testPts,
 			const geom::CoordinateSequence *pts);
 

@@ -105,7 +105,9 @@ void Polygonizer::clear() {
 	for (auto &p : polyList) delete p;
 	polyList.clear();
 
+#if 0
 	for (auto &r : invalidRingLines) delete r;
+#endif
 	invalidRingLines.clear();
 }
 
