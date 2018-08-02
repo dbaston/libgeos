@@ -147,7 +147,7 @@ public:
 	 * Tests if the LinearRing ring formed by this edge ring
 	 * is topologically valid.
 	 */
-	bool isValid();
+	bool isValid() const;
 
 	/** \brief
 	 * Gets the coordinates for this ring as a LineString.
@@ -166,7 +166,7 @@ public:
 	 * Ownership of ring is retained by the object.
 	 * Details of problems are written to standard output.
 	 */
-	geom::LinearRing* getRingInternal();
+	geom::LinearRing* getRingInternal() const;
 
 	/** \brief
 	 * Returns this ring as a LinearRing, or null if an Exception
@@ -178,15 +178,6 @@ public:
 	geom::LinearRing* getRingOwnership();
 
 private:
-	const geom::GeometryFactory factory;
-
-	DeList deList;
-
-	// cache the following data for efficiency
-	geom::LinearRing *ring;
-	geom::CoordinateSequence *ringPts;
-
-	std::vector<geom::Geometry*> holes;
 
 	/** \brief
 	 * Computes the list of coordinates which are contained in this ring.
@@ -194,11 +185,24 @@ private:
 	 *
 	 * @return an array of the Coordinate in this ring
 	 */
-	geom::CoordinateSequence* getCoordinates();
+	geom::CoordinateSequence* getCoordinates() const;
 
 	static void addEdge(const geom::CoordinateSequence *coords,
 			bool isForward,
 			geom::CoordinateSequence *coordList);
+
+	/*
+	 * Data members
+	 */
+	const geom::GeometryFactory factory;
+
+	std::vector<const planargraph::DirectedEdge*> deList;
+
+	// cache the following data for efficiency
+	mutable geom::LinearRing *ring;
+	mutable geom::CoordinateSequence *ringPts;
+
+	std::vector<geom::Geometry*> holes;
 };
 
 } // namespace geos::operation::polygonize

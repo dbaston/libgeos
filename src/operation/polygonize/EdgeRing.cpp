@@ -177,7 +177,7 @@ EdgeRing::getPolygon()
 
 /*public*/
 bool
-EdgeRing::isValid()
+EdgeRing::isValid() const
 {
     if ( ! getRingInternal() ) return false; // computes cached ring
     return ring->isValid();
@@ -185,7 +185,7 @@ EdgeRing::isValid()
 
 /*private*/
 CoordinateSequence*
-EdgeRing::getCoordinates()
+EdgeRing::getCoordinates() const
 {
     if (ringPts==nullptr)
     {
@@ -211,7 +211,7 @@ EdgeRing::getLineString()
 
 /*public*/
 LinearRing *
-EdgeRing::getRingInternal()
+EdgeRing::getRingInternal() const
 {
     if (ring!=nullptr) return ring;
 
@@ -244,19 +244,16 @@ void
 EdgeRing::addEdge(const CoordinateSequence *coords, bool isForward,
                   CoordinateSequence *coordList)
 {
-    const std::size_t npts=coords->getSize();
+		auto edge_coords = dynamic_cast<const CoordinateArraySequence*>(coords);
     if (isForward)
     {
-        for (std::size_t i = 0; i < npts; ++i)
-        {
-            coordList->add(coords->getAt(i), false);
-        }
+        for (auto &e : *edge_coords) coordList->add(e, false);
     }
     else
     {
-        for (std::size_t i = npts; i > 0; --i)
+        for (std::size_t i = coords->getSize(); i > 0; --i)
         {
-            coordList->add(coords->getAt(i-1), false);
+            coordList->add(coords->getAt(i - 1), false);
         }
     }
 }
