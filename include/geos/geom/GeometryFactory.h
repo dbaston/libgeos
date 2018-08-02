@@ -52,6 +52,7 @@ namespace geos {
 	namespace operation {
 		namespace polygonize {
 			class PolygonizeGraph;
+			class EdgeRing;
 		}
 	}
 
@@ -484,6 +485,7 @@ private:
 
 friend class Geometry;
 friend class geos::operation::polygonize::PolygonizeGraph;
+friend class geos::operation::polygonize::EdgeRing;
 
 	void addRef() const;
 	void dropRef() const;

@@ -123,7 +123,7 @@ EdgeRing::isInList(const Coordinate& pt,
 }
 
 /*public*/
-EdgeRing::EdgeRing(const GeometryFactory *newFactory)
+EdgeRing::EdgeRing(const GeometryFactory newFactory)
     :
     factory(newFactory),
     ring(nullptr),
@@ -176,7 +176,7 @@ EdgeRing::addHole(LinearRing *hole)
 Polygon*
 EdgeRing::getPolygon()
 {
-    Polygon *poly=factory->createPolygon(ring, holes);
+    Polygon *poly=factory.createPolygon(ring, holes);
     ring=nullptr;
     holes=nullptr;
     return poly;
@@ -196,7 +196,7 @@ EdgeRing::getCoordinates()
 {
     if (ringPts==nullptr)
     {
-        ringPts=factory->getCoordinateSequenceFactory()->create();
+        ringPts=factory.getCoordinateSequenceFactory()->create();
         for (DeList::size_type i=0, e=deList.size(); i<e; ++i) {
             const DirectedEdge *de=deList[i];
             assert(dynamic_cast<PolygonizeEdge*>(de->getEdge()));
@@ -213,7 +213,7 @@ LineString*
 EdgeRing::getLineString()
 {
     getCoordinates();
-    return factory->createLineString(*ringPts);
+    return factory.createLineString(*ringPts);
 }
 
 /*public*/
@@ -224,7 +224,7 @@ EdgeRing::getRingInternal()
 
     getCoordinates();
     try {
-        ring=factory->createLinearRing(*ringPts);
+        ring=factory.createLinearRing(*ringPts);
     } catch (const geos::util::IllegalArgumentException& e) {
 #if GEOS_DEBUG
         // FIXME: print also ringPts

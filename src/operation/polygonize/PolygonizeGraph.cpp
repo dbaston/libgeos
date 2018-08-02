@@ -383,7 +383,7 @@ PolygonizeGraph::findDirEdgesInRing(PolygonizeDirectedEdge *startDE) const {
 EdgeRing *
 PolygonizeGraph::findEdgeRing(PolygonizeDirectedEdge *startDE) const {
 	auto de = startDE;
-	EdgeRing *er = new EdgeRing(factory);
+	EdgeRing *er = new EdgeRing(*factory);
 	// Now, when will we delete those EdgeRings ?
 	newEdgeRings.push_back(er);
 	do {

@@ -24,6 +24,7 @@
 #include <geos/export.h>
 
 #include <vector>
+#include "geos/geom/GeometryFactory.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -38,7 +39,6 @@ namespace geos {
 		class Polygon;
 		class CoordinateSequence;
 		class Geometry;
-		class GeometryFactory;
 		class Coordinate;
 	}
 	namespace planargraph {
@@ -55,30 +55,8 @@ namespace polygonize { // geos::operation::polygonize
  * a ring of a polygon.  The ring may be either an outer shell or a hole.
  */
 class GEOS_DLL EdgeRing {
-private:
-	const geom::GeometryFactory *factory;
-
 	typedef std::vector<const planargraph::DirectedEdge*> DeList;
-	DeList deList;
-
-	// cache the following data for efficiency
-	geom::LinearRing *ring;
-	geom::CoordinateSequence *ringPts;
-
 	typedef std::vector<geom::Geometry*> GeomVect;
-	GeomVect *holes;
-
-	/** \brief
-	 * Computes the list of coordinates which are contained in this ring.
-	 * The coordinatea are computed once only and cached.
-	 *
-	 * @return an array of the Coordinate in this ring
-	 */
-	geom::CoordinateSequence* getCoordinates();
-
-	static void addEdge(const geom::CoordinateSequence *coords,
-			bool isForward,
-			geom::CoordinateSequence *coordList);
 
 public:
 	/**
@@ -128,7 +106,7 @@ public:
 	static bool isInList(const geom::Coordinate &pt,
 			const geom::CoordinateSequence *pts);
 
-	EdgeRing(const geom::GeometryFactory *newFactory);
+	explicit EdgeRing(const geom::GeometryFactory newFactory);
 
 	~EdgeRing();
 
@@ -198,6 +176,29 @@ public:
 	 * Caller gets ownership of ring.
 	 */
 	geom::LinearRing* getRingOwnership();
+
+private:
+	const geom::GeometryFactory factory;
+
+	DeList deList;
+
+	// cache the following data for efficiency
+	geom::LinearRing *ring;
+	geom::CoordinateSequence *ringPts;
+
+	GeomVect *holes;
+
+	/** \brief
+	 * Computes the list of coordinates which are contained in this ring.
+	 * The coordinatea are computed once only and cached.
+	 *
+	 * @return an array of the Coordinate in this ring
+	 */
+	geom::CoordinateSequence* getCoordinates();
+
+	static void addEdge(const geom::CoordinateSequence *coords,
+			bool isForward,
+			geom::CoordinateSequence *coordList);
 };
 
 } // namespace geos::operation::polygonize
