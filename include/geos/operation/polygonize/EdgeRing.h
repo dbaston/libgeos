@@ -186,7 +186,7 @@ private:
 	geom::LinearRing *ring;
 	geom::CoordinateSequence *ringPts;
 
-	GeomVect *holes;
+	std::vector<geom::Geometry*> holes;
 
 	/** \brief
 	 * Computes the list of coordinates which are contained in this ring.

@@ -102,13 +102,13 @@ Polygonizer::~Polygonizer()
 }
 
 void Polygonizer::clear() {
+#if 0
 	for (auto &p : polyList) delete p;
 	polyList.clear();
 
-#if 0
 	for (auto &r : invalidRingLines) delete r;
-#endif
 	invalidRingLines.clear();
+#endif
 }
 
 void

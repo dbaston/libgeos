@@ -128,7 +128,7 @@ EdgeRing::EdgeRing(const GeometryFactory newFactory)
     factory(newFactory),
     ring(nullptr),
     ringPts(nullptr),
-    holes(nullptr)
+    holes()
 {
 #ifdef DEBUG_ALLOC
     cerr<<"["<<this<<"] EdgeRing(factory)"<<endl;
@@ -140,12 +140,7 @@ EdgeRing::~EdgeRing()
 #ifdef DEBUG_ALLOC
     cerr<<"["<<this<<"] ~EdgeRing()"<<endl;
 #endif // DEBUG_ALLOC
-    if ( holes )
-    {
-        for (GeomVect::size_type i=0, e=holes->size(); i<e; ++i)
-            delete (*holes)[i];
-        delete holes;
-    }
+    for (auto h : holes) delete h;
     delete ring;
     delete ringPts;
 }
@@ -167,18 +162,16 @@ EdgeRing::isHole(){
 void
 EdgeRing::addHole(LinearRing *hole)
 {
-    if (!holes)
-        holes = new vector<Geometry*>();
-    holes->push_back(hole);
+    holes.push_back(hole);
 }
 
 /*public*/
 Polygon*
 EdgeRing::getPolygon()
 {
-    Polygon *poly=factory.createPolygon(ring, holes);
+    Polygon *poly=factory.createPolygon(ring, &holes);
     ring=nullptr;
-    holes=nullptr;
+    holes.empty();
     return poly;
 }
 
