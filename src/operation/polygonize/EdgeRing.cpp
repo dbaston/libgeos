@@ -32,6 +32,7 @@
 #include <geos/util.h> // TODO: drop this, includes too much
 
 #include <vector>
+#include <algorithm>
 #include <cassert>
 
 //#define DEBUG_ALLOC 1
@@ -244,18 +245,16 @@ void
 EdgeRing::addEdge(const CoordinateSequence *coords, bool isForward,
                   CoordinateSequence *coordList)
 {
-		auto edge_coords = dynamic_cast<const CoordinateArraySequence*>(coords);
+		auto edge_coords = *(dynamic_cast<const CoordinateArraySequence*>(coords));
     if (isForward)
     {
-        for (auto &e : *edge_coords) coordList->add(e, false);
+        for (auto &e : edge_coords) coordList->add(e, false);
     }
     else
     {
-        for (std::size_t i = coords->getSize(); i > 0; --i)
-        {
-            coordList->add(coords->getAt(i - 1), false);
-        }
-    }
+			std::reverse(edge_coords.begin(), edge_coords.end());
+			for (auto &e : edge_coords) coordList->add(e, false);
+		}
 }
 
 } // namespace geos.operation.polygonize
