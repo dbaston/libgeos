@@ -56,22 +56,22 @@ LinearLocation::pointAlongSegmentByFraction(const Coordinate& p0, const Coordina
 }
 
 /* public */
-LinearLocation::LinearLocation(unsigned int segmentIndex,
-		double segmentFraction)
+LinearLocation::LinearLocation(unsigned int p_segmentIndex,
+		double p_segmentFraction)
 	:
 	componentIndex(0),
-	segmentIndex(segmentIndex),
-	segmentFraction(segmentFraction)
+	segmentIndex(p_segmentIndex),
+	segmentFraction(p_segmentFraction)
 {}
 
 
 /* public */
-LinearLocation::LinearLocation(unsigned int componentIndex,
-		unsigned int segmentIndex, double segmentFraction)
+LinearLocation::LinearLocation(unsigned int p_componentIndex,
+		unsigned int p_segmentIndex, double p_segmentFraction)
 	:
-	componentIndex(componentIndex),
-	segmentIndex(segmentIndex),
-	segmentFraction(segmentFraction)
+	componentIndex(p_componentIndex),
+	segmentIndex(p_segmentIndex),
+	segmentFraction(p_segmentFraction)
 {
 	normalize();
 }

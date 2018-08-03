@@ -227,11 +227,11 @@ SegmentIntersector::isBoundaryPoint(LineIntersector *p_li,
 
 /*private*/
 bool
-SegmentIntersector::isBoundaryPoint(LineIntersector *li,
+SegmentIntersector::isBoundaryPoint(LineIntersector *p_li,
 		vector<vector<Node*>*>& tstBdyNodes)
 {
-	if (isBoundaryPoint(li, tstBdyNodes[0])) return true;
-	if (isBoundaryPoint(li, tstBdyNodes[1])) return true;
+	if (isBoundaryPoint(p_li, tstBdyNodes[0])) return true;
+	if (isBoundaryPoint(p_li, tstBdyNodes[1])) return true;
 	return false;
 }
 
