@@ -317,23 +317,23 @@ Polygonizer::findShellsAndHoles(const vector<EdgeRing*>& edgeRingList)
 
 /* private */
 void
-Polygonizer::assignHolesToShells(const vector<EdgeRing*>& holeList, vector<EdgeRing*>& shellList)
+Polygonizer::assignHolesToShells(const vector<EdgeRing*>& holeList, const vector<EdgeRing*>& shellList)
 {
 	for (const auto &holeER : holeList) {
-		assignHoleToShell(holeER, shellList);
+		assignHoleToShell(*holeER, shellList);
 		GEOS_CHECK_FOR_INTERRUPTS();
 	}
 }
 
 /* private */
 void
-Polygonizer::assignHoleToShell(EdgeRing *holeER,
-		vector<EdgeRing*>& shellList)
+Polygonizer::assignHoleToShell(EdgeRing &holeER,
+		const vector<EdgeRing*>& shellList)
 {
-	auto shell = EdgeRing::findEdgeRingContaining(holeER, &shellList);
+	auto shell = holeER.findEdgeRingContaining(shellList);
 
 	if (shell)
-		shell->addHole(holeER->getRingOwnership());
+		shell->addHole(holeER.getRingOwnership());
 }
 
 

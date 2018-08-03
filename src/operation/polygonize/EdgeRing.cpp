@@ -49,23 +49,24 @@ namespace polygonize { // geos.operation.polygonize
 
 /*public*/
 EdgeRing *
-EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
-    vector<EdgeRing*> *shellList)
+EdgeRing::findEdgeRingContaining(
+    const vector<EdgeRing*> shellList)
 {
-    const LinearRing *testRing=testEr->getRingInternal();
-    if ( ! testRing ) return nullptr;
-    const Envelope *testEnv=testRing->getEnvelopeInternal();
-    Coordinate testPt=testRing->getCoordinateN(0);
-    EdgeRing *minShell=nullptr;
-    const Envelope *minEnv=nullptr;
+    if ( !getRingInternal()) return nullptr;
 
-    typedef std::vector<EdgeRing*> ERList;
-    for(ERList::size_type i=0, e=shellList->size(); i<e; ++i) {
-        EdgeRing *tryShell=(*shellList)[i];
-        LinearRing *tryRing=tryShell->getRingInternal();
-        const Envelope *tryEnv=tryRing->getEnvelopeInternal();
-        if (minShell!=nullptr) minEnv=minShell->getRingInternal()->getEnvelopeInternal();
-        bool isContained=false;
+    const Envelope *testEnv = ring->getEnvelopeInternal();
+    Coordinate testPt = ring->getCoordinateN(0);
+
+    EdgeRing *minShell = nullptr;
+    const Envelope *minEnv = nullptr;
+
+    for(auto tryShell : shellList) {
+        auto tryRing = tryShell->getRingInternal();
+        const Envelope *tryEnv = tryRing->getEnvelopeInternal();
+
+        if (minShell) minEnv = minShell->getRingInternal()->getEnvelopeInternal();
+
+        bool isContained = false;
 
         // the hole envelope cannot equal the shell envelope
 
@@ -77,7 +78,7 @@ EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
         if ( tryEnv->contains(testEnv) ) {
 
             // TODO: don't copy testPt !
-            testPt = ptNotInList(testRing->getCoordinatesRO(), tryCoords);
+            testPt = ptNotInList(ring->getCoordinatesRO(), tryCoords);
 
             if ( CGAlgorithms::isPointInRing(testPt, tryCoords) ) {
                 isContained=true;
@@ -88,12 +89,20 @@ EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
         // check if this new containing ring is smaller
         // than the current minimum ring
         if (isContained) {
-            if (minShell==nullptr || minEnv->contains(tryEnv)) {
-                minShell=tryShell;
+            if (!minShell || minEnv->contains(tryEnv)) {
+                minShell = tryShell;
             }
         }
     }
     return minShell;
+}
+
+
+/*public static deprecated*/
+EdgeRing *
+EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
+    vector<EdgeRing*> *shellList) {
+	return testEr->findEdgeRingContaining(*shellList);
 }
 
 /*public static*/
@@ -171,7 +180,7 @@ Polygon*
 EdgeRing::getPolygon()
 {
     Polygon *poly=factory.createPolygon(ring, &holes);
-    ring=nullptr;
+    ring = nullptr;
     holes.empty();
     return poly;
 }
@@ -180,7 +189,7 @@ EdgeRing::getPolygon()
 bool
 EdgeRing::isValid() const
 {
-    if ( ! getRingInternal() ) return false; // computes cached ring
+    if ( !getRingInternal() ) return false; // computes cached ring
     return ring->isValid();
 }
 
@@ -188,13 +197,11 @@ EdgeRing::isValid() const
 CoordinateSequence*
 EdgeRing::getCoordinates() const
 {
-    if (ringPts==nullptr)
+    if (!ringPts)
     {
-        ringPts=factory.getCoordinateSequenceFactory()->create();
-        for (DeList::size_type i=0, e=deList.size(); i<e; ++i) {
-            const DirectedEdge *de=deList[i];
-            assert(dynamic_cast<PolygonizeEdge*>(de->getEdge()));
-            PolygonizeEdge *edge=static_cast<PolygonizeEdge*>(de->getEdge());
+        ringPts = factory.getCoordinateSequenceFactory()->create();
+        for (const auto de : deList) {
+            auto edge= dynamic_cast<PolygonizeEdge*>(de->getEdge());
             addEdge(edge->getLine()->getCoordinatesRO(),
                 de->getEdgeDirection(), ringPts);
         }
@@ -214,11 +221,11 @@ EdgeRing::getLineString()
 LinearRing *
 EdgeRing::getRingInternal() const
 {
-    if (ring!=nullptr) return ring;
+    if (ring) return ring;
 
     getCoordinates();
     try {
-        ring=factory.createLinearRing(*ringPts);
+        ring = factory.createLinearRing(*ringPts);
     } catch (const geos::util::IllegalArgumentException& e) {
 #if GEOS_DEBUG
         // FIXME: print also ringPts

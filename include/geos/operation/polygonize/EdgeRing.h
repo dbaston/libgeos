@@ -77,6 +77,11 @@ public:
 	 * @return containing EdgeRing, if there is one
 	 * @return null if no containing EdgeRing is found
 	 */
+
+	EdgeRing* findEdgeRingContaining(
+			const std::vector<EdgeRing*> shellList);
+
+	//[[deprecated]]
 	static EdgeRing* findEdgeRingContaining(
 			EdgeRing *testEr,
 			std::vector<EdgeRing*> *shellList);

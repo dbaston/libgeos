@@ -214,10 +214,11 @@ private:
 	void findShellsAndHoles(const std::vector<EdgeRing*>& edgeRingList);
 
 	static void assignHolesToShells(const std::vector<EdgeRing*>& holeList,
-			std::vector<EdgeRing*>& shellList);
+			const std::vector<EdgeRing*>& shellList);
 
-	static void assignHoleToShell(EdgeRing *holeER,
-			std::vector<EdgeRing*>& shellList);
+	static void assignHoleToShell(
+			EdgeRing &holeER,
+			const std::vector<EdgeRing*>& shellList);
 
 	/*
 	 * Data
