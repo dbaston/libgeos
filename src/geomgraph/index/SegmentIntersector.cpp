@@ -230,8 +230,13 @@ bool
 SegmentIntersector::isBoundaryPoint(LineIntersector *p_li,
 		vector<vector<Node*>*>& p_tstBdyNodes)
 {
+<<<<<<< Updated upstream
 	if (isBoundaryPoint(p_li, p_tstBdyNodes[0])) return true;
 	if (isBoundaryPoint(p_li, p_tstBdyNodes[1])) return true;
+=======
+	if (isBoundaryPoint(li, p_tstBdyNodes[0])) return true;
+	if (isBoundaryPoint(li, p_tstBdyNodes[1])) return true;
+>>>>>>> Stashed changes
 	return false;
 }
 
