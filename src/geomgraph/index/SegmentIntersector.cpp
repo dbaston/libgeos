@@ -211,7 +211,7 @@ SegmentIntersector::addIntersections(Edge *e0,int segIndex0,Edge *e1,int segInde
 
 /*private*/
 bool
-SegmentIntersector::isBoundaryPoint(LineIntersector *li,
+SegmentIntersector::isBoundaryPoint(LineIntersector *p_li,
 		vector<Node*> *tstBdyNodes)
 {
 	if ( ! tstBdyNodes ) return false;
@@ -219,7 +219,7 @@ SegmentIntersector::isBoundaryPoint(LineIntersector *li,
 	for(vector<Node*>::iterator i=tstBdyNodes->begin();i<tstBdyNodes->end();i++) {
 		Node *node=*i;
 		const Coordinate& pt=node->getCoordinate();
-		if (li->isIntersection(pt)) return true;
+		if (p_li->isIntersection(pt)) return true;
 	}
 	return false;
 }
