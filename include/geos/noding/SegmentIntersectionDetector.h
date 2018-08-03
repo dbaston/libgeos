@@ -57,9 +57,9 @@ private:
 
 protected:
 public:
-	SegmentIntersectionDetector( LineIntersector * li)
+	SegmentIntersectionDetector( LineIntersector * p_li)
 		:
-		li( li),
+		li( p_li),
 		findProper(false),
 		findAllTypes(false),
 		_hasIntersection(false),
@@ -76,14 +76,14 @@ public:
 	}
 
 
-	void setFindProper( bool findProper)
+	void setFindProper( bool p_findProper)
 	{
-		this->findProper = findProper;
+		this->findProper = p_findProper;
 	}
 
-	void setFindAllIntersectionTypes( bool findAllTypes)
+	void setFindAllIntersectionTypes( bool p_findAllTypes)
 	{
-		this->findAllTypes = findAllTypes;
+		this->findAllTypes = p_findAllTypes;
 	}
 
 	/**
