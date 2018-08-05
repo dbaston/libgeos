@@ -38,29 +38,29 @@ size_t LinearIterator::segmentEndVertexIndex(const LinearLocation& loc)
 	return loc.getSegmentIndex();
 }
 
-LinearIterator::LinearIterator(const Geometry* linear) :
+LinearIterator::LinearIterator(const Geometry* p_linear) :
 		vertexIndex(0),
 		componentIndex(0),
-		linear(linear),
+		linear(p_linear),
 		numLines(linear->getNumGeometries())
 {
 	loadCurrentLine();
 }
 
 
-LinearIterator::LinearIterator(const Geometry* linear, const LinearLocation& start):
+LinearIterator::LinearIterator(const Geometry* p_linear, const LinearLocation& start):
 		vertexIndex(segmentEndVertexIndex(start)),
 		componentIndex(start.getComponentIndex()),
-		linear(linear),
+		linear(p_linear),
 		numLines(linear->getNumGeometries())
 {
 	loadCurrentLine();
 }
 
-LinearIterator::LinearIterator(const Geometry* linear, size_t componentIndex, size_t vertexIndex) :
-		vertexIndex(vertexIndex),
-		componentIndex(componentIndex),
-		linear(linear),
+LinearIterator::LinearIterator(const Geometry* p_linear, unsigned int p_componentIndex, unsigned int p_vertexIndex) :
+		vertexIndex(p_vertexIndex),
+		componentIndex(p_componentIndex),
+		linear(p_linear),
 		numLines(linear->getNumGeometries())
 {
 	loadCurrentLine();
