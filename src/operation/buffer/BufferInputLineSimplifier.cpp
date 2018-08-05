@@ -173,25 +173,15 @@ BufferInputLineSimplifier::isShallowConcavity(const geom::Coordinate& p0,
 bool
 BufferInputLineSimplifier::isShallowSampled(const geom::Coordinate& p0,
                                             const geom::Coordinate& p2,
-<<<<<<< HEAD
                                             size_t i0, size_t i2,
-                                            double distanceTol) const
-=======
-                                            int i0, int i2,
                                             double p_distanceTol) const
->>>>>>> fix-shadow
 {
 	// check every n'th point to see if it is within tolerance
 	auto inc = (i2 - i0) / NUM_PTS_TO_CHECK;
 	if (inc <= 0) inc = 1;
 
-<<<<<<< HEAD
 	for (size_t i = i0; i < i2; i += inc) {
-		if (! isShallow(p0, p2, inputLine[i], distanceTol))
-=======
-	for (int i = i0; i < i2; i += inc) {
 		if (! isShallow(p0, p2, inputLine[i], p_distanceTol))
->>>>>>> fix-shadow
 			return false;
 	}
 	return true;
