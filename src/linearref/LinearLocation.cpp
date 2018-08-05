@@ -66,7 +66,6 @@ LinearLocation::LinearLocation(size_t p_segmentIndex,
 
 
 /* public */
-		size_t segmentIndex, double segmentFraction)
 LinearLocation::LinearLocation(size_t p_componentIndex,
 		size_t p_segmentIndex, double p_segmentFraction)
 	:
