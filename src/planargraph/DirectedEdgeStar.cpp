@@ -129,7 +129,7 @@ DirectedEdgeStar::getIndex(const Edge *edge)
 	for (unsigned int i = 0; i<outEdges.size(); ++i)
 	{
 		DirectedEdge *de =outEdges[i];
-		if (de->getEdge() == edge)
+		if (de->parentEdge() == edge)
 		return i;
 	}
 	return -1;

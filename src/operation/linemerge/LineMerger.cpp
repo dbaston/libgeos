@@ -197,7 +197,7 @@ LineMerger::buildEdgeStringsStartingAt(Node *node)
 		assert(dynamic_cast<LineMergeDirectedEdge*>(edges[i]));
 		LineMergeDirectedEdge *directedEdge=\
 			static_cast<LineMergeDirectedEdge*> (edges[i]);
-		if (directedEdge->getEdge()->isMarked()) {
+		if (directedEdge->parentEdge()->isMarked()) {
 			continue;
 		}
 		edgeStrings.push_back(buildEdgeStringStartingWith(directedEdge));
@@ -211,7 +211,7 @@ LineMerger::buildEdgeStringStartingWith(LineMergeDirectedEdge *start)
 	LineMergeDirectedEdge *current=start;
 	do {
 		edgeString->add(current);
-		current->getEdge()->setMarked(true);
+		current->parentEdge()->setMarked(true);
 		current=current->getNext();
 	} while (current!=nullptr && current!=start);
 	return edgeString;

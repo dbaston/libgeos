@@ -275,7 +275,7 @@ PolygonizeGraph::deleteCutEdges() {
 			sym->setMarked(true);
 
 			// save the line as a cut edge
-			auto ce = dynamic_cast<PolygonizeEdge*>(de->getEdge());
+			auto ce = dynamic_cast<PolygonizeEdge*>(de->parentEdge());
 
 			cutLines.push_back(ce->getLine());
 		}
@@ -417,7 +417,7 @@ PolygonizeGraph::deleteDangles() {
 			auto sym(dynamic_cast<PolygonizeDirectedEdge*>(de->getSym()));
 			if (sym) sym->setMarked(true);
 			// save the line as a dangle
-			auto e(dynamic_cast<PolygonizeEdge*>(de->getEdge()));
+			auto e(dynamic_cast<PolygonizeEdge*>(de->parentEdge()));
 			auto ls(e->getLine());
 			if (uniqueDangles.insert(ls).second) {
 				dangleLines.push_back(ls);

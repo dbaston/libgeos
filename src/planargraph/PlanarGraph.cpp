@@ -99,7 +99,7 @@ PlanarGraph::remove(Node *node)
 		// remove the diredge that points to this node
 		if (sym) remove(sym);
 		find_and_erase(de, m_dirEdges);
-		find_and_erase(de->getEdge(), m_edges);
+		find_and_erase(de->parentEdge(), m_edges);
 	}
 	// remove the node from the graph
 	m_nodeMap.remove(node->getCoordinate());

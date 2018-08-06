@@ -213,8 +213,8 @@ LineSequencer::buildSequencedGeometry(const Sequences& sequences)
 			i2End=seq.end(); i2 != i2End; ++i2)
 		{
 			const planargraph::DirectedEdge* de = *i2;
-			assert(dynamic_cast<LineMergeEdge* >(de->getEdge()));
-			LineMergeEdge* e = static_cast<LineMergeEdge* >(de->getEdge());
+			assert(dynamic_cast<LineMergeEdge* >(de->parentEdge()));
+			LineMergeEdge* e = static_cast<LineMergeEdge* >(de->parentEdge());
 			const LineString* line = e->getLine();
 
 			// lineToAdd will be a *copy* of input things
@@ -283,7 +283,7 @@ LineSequencer::findUnvisitedBestOrientedDE(const planargraph::Node* node)
 	const auto des = node->getOutEdges();
 	for (const auto de : des)
 	{
-		if (! de->getEdge()->isVisited()) {
+		if (! de->parentEdge()->isVisited()) {
 			unvisitedDE = de;
 			if (de->getEdgeDirection()) wellOrientedDE = de;
 		}
@@ -310,7 +310,7 @@ LineSequencer::addReverseSubpath(const planargraph::DirectedEdge *de,
 	Node* fromNode = nullptr;
 	while (true) {
 		deList.insert(lit, de->getSym());
-		de->getEdge()->setVisited(true);
+		de->parentEdge()->setVisited(true);
 		fromNode = de->getFromNode();
 		const DirectedEdge* unvisitedOutDE = findUnvisitedBestOrientedDE(fromNode);
 

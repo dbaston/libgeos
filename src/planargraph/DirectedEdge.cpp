@@ -32,9 +32,9 @@ namespace planargraph {
 void
 DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges, vector<Edge*>& edges)
 {
-	for (size_t i=0, n=dirEdges.size(); i<n; ++i)
+	for (auto e : dirEdges)
 	{
-		edges.push_back(dirEdges[i]->parentEdge);
+		edges.push_back(e->m_parentEdge);
 	}
 }
 
@@ -51,86 +51,92 @@ DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges)
 DirectedEdge::DirectedEdge(Node* newFrom, Node* newTo,
 	const Coordinate &directionPt, bool newEdgeDirection)
 {
-	from=newFrom;
-	to=newTo;
-	edgeDirection=newEdgeDirection;
-	p0=from->getCoordinate();
-	p1=directionPt;
-	double dx = p1.x - p0.x;
-	double dy = p1.y - p0.y;
-	quadrant = geomgraph::Quadrant::quadrant(dx, dy);
-	angle=atan2(dy, dx);
+	m_from=newFrom;
+	m_to=newTo;
+	m_edgeDirection=newEdgeDirection;
+	m_p0=m_from->getCoordinate();
+	m_p1=directionPt;
+	double dx = m_p1.x - m_p0.x;
+	double dy = m_p1.y - m_p0.y;
+	m_quadrant = geomgraph::Quadrant::quadrant(dx, dy);
+	m_angle=atan2(dy, dx);
 	//Assert.isTrue(! (dx == 0 && dy == 0), "EdgeEnd with identical endpoints found");
 }
 
 /*public*/
 Edge*
+DirectedEdge::parentEdge() const
+{
+	return m_parentEdge;
+}
+#if 0
+Edge*
 DirectedEdge::getEdge() const
 {
-	return parentEdge;
+	return m_parentEdge;
 }
-
+#endif
 /*public*/
 void
 DirectedEdge::setEdge(Edge* newParentEdge)
 {
-	parentEdge=newParentEdge;
+	m_parentEdge=newParentEdge;
 }
 
 /*public*/
 int
 DirectedEdge::getQuadrant() const
 {
-	return quadrant;
+	return m_quadrant;
 }
 
 /*public*/
 const Coordinate&
 DirectedEdge::getDirectionPt() const
 {
-	return p1;
+	return m_p1;
 }
 
 /*public*/
 bool
 DirectedEdge::getEdgeDirection() const
 {
-	return edgeDirection;
+	return m_edgeDirection;
 }
 
 /*public*/
 Node*
 DirectedEdge::getFromNode() const
 {
-	return from;
+	return m_from;
 }
 
 /*public*/
 Node*
 DirectedEdge::getToNode() const
 {
-	return to;
+	return m_to;
 }
 
 /*public*/
 Coordinate&
 DirectedEdge::getCoordinate() const
 {
-	return from->getCoordinate();
+	return m_from->getCoordinate();
 }
 
 /*public*/
 double
 DirectedEdge::getAngle() const
 {
-	return angle;
+	return m_angle;
 }
 
 /*public*/
 DirectedEdge*
 DirectedEdge::getSym() const
 {
-	return sym;
+	return m_sym;
 }
 
 /*
@@ -140,7 +146,7 @@ DirectedEdge::getSym() const
 void
 DirectedEdge::setSym(DirectedEdge *newSym)
 {
-	sym = newSym;
+	m_sym = newSym;
 }
 
 /*public*/
@@ -155,11 +161,11 @@ int
 DirectedEdge::compareDirection(const DirectedEdge *e) const
 {
 // if the rays are in different quadrants, determining the ordering is trivial
-	if (quadrant > e->quadrant) return 1;
-	if (quadrant < e->quadrant) return -1;
+	if (m_quadrant > e->m_quadrant) return 1;
+	if (m_quadrant < e->m_quadrant) return -1;
 	// vectors are in the same quadrant - check relative orientation of direction vectors
 	// this is > e if it is CCW of e
-	return algorithm::CGAlgorithms::computeOrientation(e->p0,e->p1,p1);
+	return algorithm::CGAlgorithms::computeOrientation(e->m_p0, e->m_p1, m_p1);
 }
 
 /*public*/
@@ -174,8 +180,8 @@ DirectedEdge::print() const
 std::ostream&
 operator << (std::ostream& s, const DirectedEdge& de)
 {
-  s << typeid(de).name() << ": " << de.p0 << " - " << de.p1;
-  s << " " << de.quadrant << ":" << de.angle;
+  s << typeid(de).name() << ": " << de.m_p0 << " - " << de.m_p1;
+  s << " " << de.m_quadrant << ":" << de.m_angle;
   return s;
 }
 

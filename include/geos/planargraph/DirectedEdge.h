@@ -54,14 +54,15 @@ public:
 	typedef std::vector<DirectedEdge *> NonConstVect;
 
 protected:
-	Edge* parentEdge;
-	Node* from;
-	Node* to;
-	geom::Coordinate p0, p1;
-	DirectedEdge* sym;  // optional
-	bool edgeDirection;
-	int quadrant;
-	double angle;
+	Edge* m_parentEdge;
+	Node* m_from;
+	Node* m_to;
+	geom::Coordinate m_p0, m_p1;
+	DirectedEdge* m_sym;  // optional
+	bool m_edgeDirection;
+	int m_quadrant;
+	double m_angle;
+
 public:
 
 	typedef std::vector<const DirectedEdge *> ConstVect;
@@ -110,7 +111,8 @@ public:
 	 * \brief Returns this DirectedEdge's parent Edge,
 	 * or null if it has none.
 	 */
-	Edge* getEdge() const;
+	//Edge* getEdge() const;
+	Edge* parentEdge() const;
 
 	/**
 	 * \brief Associates this DirectedEdge with an Edge

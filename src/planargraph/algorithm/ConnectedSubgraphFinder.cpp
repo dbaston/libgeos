@@ -83,7 +83,7 @@ ConnectedSubgraphFinder::addEdges(Node* node,
 	auto des = node->getOutEdges();
 	for (auto de : des)
 	{
-		subgraph->add(de->getEdge());
+		subgraph->add(de->parentEdge());
 		Node *toNode = de->getToNode();
 		if ( ! toNode->isVisited() ) nodeStack.push(toNode);
 	}

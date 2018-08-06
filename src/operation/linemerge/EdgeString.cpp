@@ -74,8 +74,8 @@ EdgeString::getCoordinates()
 				reverseDirectedEdges++;
 			}
 
-			assert(dynamic_cast<LineMergeEdge*>(directedEdge->getEdge()));
-			LineMergeEdge* lme=static_cast<LineMergeEdge*>( directedEdge->getEdge());
+			assert(dynamic_cast<LineMergeEdge*>(directedEdge->parentEdge()));
+			LineMergeEdge* lme=static_cast<LineMergeEdge*>( directedEdge->parentEdge());
 
 			coordinates->add(lme->getLine()->getCoordinatesRO(),
 					false,

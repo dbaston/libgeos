@@ -201,7 +201,7 @@ EdgeRing::getCoordinates() const
     {
         ringPts = factory.getCoordinateSequenceFactory()->create();
         for (const auto de : deList) {
-            auto edge= dynamic_cast<PolygonizeEdge*>(de->getEdge());
+            auto edge= dynamic_cast<PolygonizeEdge*>(de->parentEdge());
             addEdge(edge->getLine()->getCoordinatesRO(),
                 de->getEdgeDirection(), ringPts);
         }
