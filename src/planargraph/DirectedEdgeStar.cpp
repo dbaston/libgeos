@@ -159,6 +159,12 @@ DirectedEdgeStar::getIndex(int i) const
 	return modi;
 }
 
+std::vector<geos::planargraph::DirectedEdge*>::iterator
+DirectedEdgeStar::findEdge(const DirectedEdge *dirEdge) const
+{
+	  return std::find(outEdges.begin(), outEdges.end(), dirEdge);
+}
+
 /*
  * Returns the DirectedEdge on the left-hand side of the given
  * DirectedEdge (which must be a member of this DirectedEdgeStar).
@@ -166,8 +172,8 @@ DirectedEdgeStar::getIndex(int i) const
 DirectedEdge*
 DirectedEdgeStar::getNextEdge(DirectedEdge *dirEdge)
 {
-	int i = getIndex(dirEdge);
-	return outEdges[getIndex(i + 1)];
+	auto it = findEdge(dirEdge);
+	return *(it + 1);
 }
 
 } // namespace planargraph

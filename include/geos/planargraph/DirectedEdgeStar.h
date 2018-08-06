@@ -124,6 +124,9 @@ public:
 	 */
 	int getIndex(int i) const;
 
+	std::vector<geos::planargraph::DirectedEdge*>::iterator
+	findEdge(const DirectedEdge *dirEdge) const;
+
 	/**
 	 * \brief Returns the DirectedEdge on the left-hand side
 	 * of the given DirectedEdge (which must be a member of this
