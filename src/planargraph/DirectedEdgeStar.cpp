@@ -96,10 +96,7 @@ DirectedEdgeStar::getEdges()
 bool
 pdeLessThan(DirectedEdge *first, DirectedEdge * second)
 {
-	if (first->compareTo(*second)<0)
-		return true;
-	else
-		return false;
+	return first->compareTo(*second) < 0;
 }
 
 /*private*/
