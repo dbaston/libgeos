@@ -241,6 +241,7 @@ public:
 	 *
  	 * Found nodes are pushed to the given vector
 	 */
+	// [[deprecated]]
 	void findNodesOfDegree(std::size_t degree, std::vector<Node*>& to) const;
 };
 
