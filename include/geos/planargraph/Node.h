@@ -122,15 +122,17 @@ public:
 	 */
 	bool hasDegree(size_t degree) const;
 
+#if 1
 	/**
 	 * \brief Returns the zero-based index of the given Edge,
 	 * after sorting in ascending order by angle with
 	 * the positive x-axis.
 	 */
+	// [[deprecated]]
 	int getIndex(Edge *edge) {
 		return deStar.getIndex(edge);
 	}
-
+#endif
 };
 
 /// Print a Node

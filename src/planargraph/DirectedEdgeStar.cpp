@@ -112,6 +112,7 @@ DirectedEdgeStar::sortEdges() const
 	}
 }
 
+#if 1
 /*
  * Returns the zero-based index of the given Edge, after sorting in
  * ascending order by angle with the positive x-axis.
@@ -158,6 +159,7 @@ DirectedEdgeStar::getIndex(int i) const
 	if (modi < 0) modi += (int)outEdges.size();
 	return modi;
 }
+#endif
 
 std::vector<geos::planargraph::DirectedEdge*>::iterator
 DirectedEdgeStar::findEdge(const DirectedEdge *dirEdge) const

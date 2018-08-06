@@ -104,11 +104,13 @@ public:
 	 */
 	std::vector<DirectedEdge*>& getEdges();
 
+#if 1
 	/**
 	 * \brief Returns the zero-based index of the given Edge,
 	 * after sorting in ascending order by angle with the
 	 * positive x-axis.
 	 */
+	// [[deprecated]]
 	int getIndex(const Edge *edge);
 
 	/**
@@ -116,14 +118,23 @@ public:
 	 * after sorting in ascending order
 	 * by angle with the positive x-axis.
 	 */
+	// [[deprecated]]
 	int getIndex(const DirectedEdge *dirEdge);
 
 	/**
 	 * \brief Returns the remainder when i is divided by the number of
 	 * edges in this DirectedEdgeStar.
 	 */
+	// [[deprecated]]
 	int getIndex(int i) const;
+#endif
 
+	/**
+	 * \brief Returns iterator ti position of dirEdge on the outEdges
+	 *
+	 * outEdges are sorting in ascending order by angle with the
+	 * positive x-axis.
+	 */
 	std::vector<geos::planargraph::DirectedEdge*>::iterator
 	findEdge(const DirectedEdge *dirEdge) const;
 
