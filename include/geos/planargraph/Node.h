@@ -118,6 +118,11 @@ public:
 	}
 
 	/**
+	 * \brief Returns the number of edges around this Node.
+	 */
+	bool hasDegree(size_t degree) const;
+
+	/**
 	 * \brief Returns the zero-based index of the given Edge,
 	 * after sorting in ascending order by angle with
 	 * the positive x-axis.

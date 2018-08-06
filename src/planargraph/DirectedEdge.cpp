@@ -157,6 +157,15 @@ DirectedEdge::setSym(DirectedEdge *newSym)
 	m_sym = newSym;
 }
 
+/*
+ * Resests the sym ptr to nullptr
+ */
+void
+DirectedEdge::resetSym()
+{
+	m_sym = nullptr;
+}
+
 /*public*/
 int
 DirectedEdge::compareTo(const DirectedEdge de) const

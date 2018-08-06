@@ -56,5 +56,10 @@ std::ostream& operator<<(std::ostream& os, const Node& n) {
 	return os;
 }
 
+bool Node::hasDegree(size_t degree) const {
+	return deStar.getDegree() == degree;
+}
+
+
 } // namespace planargraph
 } // namespace geos

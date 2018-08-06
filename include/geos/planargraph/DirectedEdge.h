@@ -178,6 +178,11 @@ public:
 	 * in the opposite direction.
 	 */
 	void setSym(DirectedEdge *newSym);
+	/**
+	 * \brief
+	 * Unsets this DirectedEdge's symmetric DirectedEdge
+	 */
+	void resetSym();
 
 	/**
 	 * \brief
