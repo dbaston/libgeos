@@ -43,7 +43,7 @@ namespace planargraph { // geos.planargraph
  *
  */
 class GEOS_DLL Node: public GraphComponent {
-protected:
+private:
 
 	/// The location of this Node
 	geom::Coordinate pt;
