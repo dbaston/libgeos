@@ -159,21 +159,21 @@ DirectedEdge::setSym(DirectedEdge *newSym)
 
 /*public*/
 int
-DirectedEdge::compareTo(const DirectedEdge* de) const
+DirectedEdge::compareTo(const DirectedEdge de) const
 {
 	return compareDirection(de);
 }
 
 /*public*/
 int
-DirectedEdge::compareDirection(const DirectedEdge *e) const
+DirectedEdge::compareDirection(const DirectedEdge e) const
 {
 // if the rays are in different quadrants, determining the ordering is trivial
-	if (m_quadrant > e->m_quadrant) return 1;
-	if (m_quadrant < e->m_quadrant) return -1;
+	if (m_quadrant > e.m_quadrant) return 1;
+	if (m_quadrant < e.m_quadrant) return -1;
 	// vectors are in the same quadrant - check relative orientation of direction vectors
 	// this is > e if it is CCW of e
-	return algorithm::CGAlgorithms::computeOrientation(e->m_p0, e->m_p1, m_p1);
+	return algorithm::CGAlgorithms::computeOrientation(e.m_p0, e.m_p1, m_p1);
 }
 
 /*public*/

@@ -198,7 +198,7 @@ public:
 	 *   the vectors.
 	 *
 	 */
-	int compareTo(const DirectedEdge* obj) const;
+	int compareTo(const DirectedEdge obj) const;
 
 	/**
 	 * \brief
@@ -219,7 +219,7 @@ public:
 	 *   the vectors.
 	 *
 	 */
-	int compareDirection(const DirectedEdge *e) const;
+	int compareDirection(const DirectedEdge e) const;
 
 	/**
 	 * \brief
