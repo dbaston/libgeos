@@ -136,7 +136,7 @@ SimpleSnapRounder::computeSnaps(NodedSegmentString* ss, vector<Coordinate>& snap
 	{
 		const Coordinate& snapPt = *it;
 		HotPixel hotPixel(snapPt, scaleFactor, li);
-		for (int i=0, n=ss->size()-1; i<n; ++i) {
+		for (size_t i = 0, n = ss->size() - 1; i < n; ++i) {
 			hotPixel.addSnappedNode(*ss, i);
 		}
 	}
@@ -149,12 +149,12 @@ SimpleSnapRounder::computeVertexSnaps(NodedSegmentString* e0, NodedSegmentString
 	const CoordinateSequence* pts0 = e0->getCoordinates();
 	const CoordinateSequence* pts1 = e1->getCoordinates();
 
-	for (unsigned int i0=0, n0=static_cast<unsigned int>(pts0->getSize()-1); i0<n0; i0++)
+	for (size_t i0 = 0, n0 = pts0->getSize() - 1; i0 < n0; ++i0)
 	{
 		const Coordinate& p0 = pts0->getAt(i0);
 
 		HotPixel hotPixel(p0, scaleFactor, li);
-		for (unsigned int i1=1, n1=static_cast<unsigned int>(pts1->getSize()-1); i1<n1; i1++)
+		for (size_t i1 = 1, n1 = pts1->getSize()-1; i1 < n1; ++i1)
 		{
         		// don't snap a vertex to itself
 			if (i0 == i1 && e0 == e1) {
@@ -196,12 +196,12 @@ SimpleSnapRounder::computeVertexSnaps(const SegmentString::NonConstVect& edges)
 /*private*/
 void
 SimpleSnapRounder::snapRound(SegmentString::NonConstVect* segStrings,
-		LineIntersector& li)
+		LineIntersector& p_li)
 {
 	assert(segStrings);
 
 	vector<Coordinate> intersections;
-	findInteriorIntersections(*segStrings, li, intersections);
+	findInteriorIntersections(*segStrings, p_li, intersections);
 	computeSnaps(*segStrings, intersections);
 	computeVertexSnaps(*segStrings);
 }
@@ -210,9 +210,9 @@ SimpleSnapRounder::snapRound(SegmentString::NonConstVect* segStrings,
 void
 SimpleSnapRounder::findInteriorIntersections(
 	SegmentString::NonConstVect& segStrings,
-	LineIntersector& li, vector<Coordinate>& ret)
+	LineIntersector& p_li, vector<Coordinate>& ret)
 {
-	IntersectionFinderAdder intFinderAdder(li, ret);
+	IntersectionFinderAdder intFinderAdder(p_li, ret);
 	MCIndexNoder noder;
 	noder.setSegmentIntersector(&intFinderAdder);
 	noder.computeNodes(&segStrings);

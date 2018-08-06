@@ -60,6 +60,11 @@ bool different(double x1, double y1, double x2, double y2)
 inline
 void clip_one_edge(double & x1, double & y1, double x2, double y2, double limit)
 {
+  if (x2 == limit) {
+  	y1 = y2;
+    x1 = x2;
+  }
+
   if(x1 != x2)
 	{
 	  y1 += (y2-y1)*(limit-x1)/(x2-x1);
@@ -121,7 +126,7 @@ RectangleIntersection::clip_linestring_parts(const geom::LineString * gi,
 {
   using namespace geos::geom;
 
-  int n = static_cast<int>(gi->getNumPoints());
+  auto n = gi->getNumPoints();
 
   if(gi == nullptr || n<1)
 	return false;
@@ -143,7 +148,7 @@ RectangleIntersection::clip_linestring_parts(const geom::LineString * gi,
 
   // Start iterating
 
-  int i = 0;
+  size_t i = 0;
 
   while(i<n)
 	{
@@ -252,7 +257,7 @@ RectangleIntersection::clip_linestring_parts(const geom::LineString * gi,
 		  // outside. We may have to output partial linestrings
 		  // while iterating until we go strictly outside
 
-		  int start_index = i;			// 1st valid original point
+		  auto start_index = i;			// 1st valid original point
 		  bool go_outside = false;
 
 		  while(!go_outside && ++i<n)
@@ -418,7 +423,7 @@ RectangleIntersection::clip_polygon_to_linestrings(const geom::Polygon * g,
   // - Clipped ones become linestrings
   // - Intact ones become new polygons without holes
 
-  for(int i=0, n= static_cast<int>(g->getNumInteriorRing()); i<n; ++i)
+  for(size_t i = 0, n = g->getNumInteriorRing(); i < n; ++i)
 	{
 	  if(clip_linestring_parts(g->getInteriorRingN(i), parts, rect))
 		{
@@ -494,7 +499,7 @@ RectangleIntersection::clip_polygon_to_polygons(const geom::Polygon * g,
   // - Intact ones become holes in new polygons formed by exterior parts
 
 
-  for(int i=0, n = static_cast<int>(g->getNumInteriorRing()); i<n; ++i)
+  for(size_t i = 0, n = g->getNumInteriorRing(); i < n; ++i)
 	{
 	  RectangleIntersectionBuilder holeparts(*_gf);
     const LineString *hole = g->getInteriorRingN(i);
@@ -579,7 +584,7 @@ RectangleIntersection::clip_multipoint(const geom::MultiPoint * g,
 {
   if(g == nullptr || g->isEmpty())
 	return;
-  for(int i=0, n=static_cast<int>(g->getNumGeometries()); i<n; ++i)
+  for(size_t i = 0, n = g->getNumGeometries(); i < n; ++i)
 	{
 	  clip_point(dynamic_cast<const geom::Point *>(g->getGeometryN(i)),
 				 parts, rect);
@@ -594,7 +599,7 @@ RectangleIntersection::clip_multilinestring(const geom::MultiLineString * g,
   if(g == nullptr || g->isEmpty())
 	return;
 
-  for(int i=0, n = static_cast<int>(g->getNumGeometries()); i<n; ++i)
+  for(size_t i = 0, n = g->getNumGeometries(); i < n; ++i)
 	{
 	  clip_linestring(dynamic_cast<const geom::LineString *>(g->getGeometryN(i)),
 					  parts, rect);
@@ -610,7 +615,7 @@ RectangleIntersection::clip_multipolygon(const geom::MultiPolygon * g,
   if(g == nullptr || g->isEmpty())
 	return;
 
-  for(int i=0, n = static_cast<int>(g->getNumGeometries()); i<n; ++i)
+  for(size_t i = 0, n = g->getNumGeometries(); i < n; ++i)
 	{
 	  clip_polygon(dynamic_cast<const geom::Polygon *>(g->getGeometryN(i)),
 				   parts, rect, keep_polygons);
@@ -624,10 +629,9 @@ RectangleIntersection::clip_geometrycollection(
 							 const Rectangle & rect,
 							 bool keep_polygons)
 {
-  if(g == nullptr || g->isEmpty())
-	return;
+  if(g == nullptr || g->isEmpty()) return;
 
-  for(int i=0, n=static_cast<int>(g->getNumGeometries()); i<n; ++i)
+  for(size_t i = 0, n = g->getNumGeometries(); i < n; ++i)
 	{
 	  clip_geom(g->getGeometryN(i),
 				parts, rect, keep_polygons);
@@ -640,20 +644,20 @@ RectangleIntersection::clip_geom(const geom::Geometry * g,
 			   const Rectangle & rect,
 			   bool keep_polygons)
 {
-	if ( const Point* p = dynamic_cast<const geom::Point *>(g) )
-	  return clip_point(p, parts, rect);
-	else if ( const MultiPoint* p = dynamic_cast<const geom::MultiPoint *>(g) )
-	  return clip_multipoint(p, parts, rect);
-	else if ( const LineString* p = dynamic_cast<const geom::LineString *>(g) )
-	  return clip_linestring(p, parts, rect);
-	else if ( const MultiLineString* p = dynamic_cast<const geom::MultiLineString *>(g) )
-	  return clip_multilinestring(p, parts, rect);
-	else if ( const Polygon* p = dynamic_cast<const geom::Polygon *>(g) )
-	  return clip_polygon(p, parts, rect, keep_polygons);
-	else if ( const MultiPolygon* p = dynamic_cast<const geom::MultiPolygon *>(g) )
-	  return clip_multipolygon(p, parts, rect, keep_polygons);
-	else if ( const GeometryCollection* p = dynamic_cast<const geom::GeometryCollection *>(g) )
-	  return clip_geometrycollection(p, parts, rect, keep_polygons);
+	if ( const Point* p1 = dynamic_cast<const geom::Point *>(g) )
+	  return clip_point(p1, parts, rect);
+	else if ( const MultiPoint* p2 = dynamic_cast<const geom::MultiPoint *>(g) )
+	  return clip_multipoint(p2, parts, rect);
+	else if ( const LineString* p3 = dynamic_cast<const geom::LineString *>(g) )
+	  return clip_linestring(p3, parts, rect);
+	else if ( const MultiLineString* p4 = dynamic_cast<const geom::MultiLineString *>(g) )
+	  return clip_multilinestring(p4, parts, rect);
+	else if ( const Polygon* p5 = dynamic_cast<const geom::Polygon *>(g) )
+	  return clip_polygon(p5, parts, rect, keep_polygons);
+	else if ( const MultiPolygon* p6 = dynamic_cast<const geom::MultiPolygon *>(g) )
+	  return clip_multipolygon(p6, parts, rect, keep_polygons);
+	else if ( const GeometryCollection* p7 = dynamic_cast<const geom::GeometryCollection *>(g) )
+	  return clip_geometrycollection(p7, parts, rect, keep_polygons);
   else {
     throw util::UnsupportedOperationException("Encountered an unknown geometry component when clipping polygons");
   }

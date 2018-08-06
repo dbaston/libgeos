@@ -31,21 +31,21 @@
 namespace geos {
 namespace simplify { // geos::simplify
 
-TaggedLineSegment::TaggedLineSegment(const geom::Coordinate& p0,
-			const geom::Coordinate& p1,
+TaggedLineSegment::TaggedLineSegment(const geom::Coordinate& p_p0,
+			const geom::Coordinate& p_p1,
 			const geom::Geometry* nParent,
-			unsigned int nIndex)
+			size_t nIndex)
 	:
-	LineSegment(p0, p1),
+	LineSegment(p_p0, p_p1),
 	parent(nParent),
 	index(nIndex)
 {
 }
 
-TaggedLineSegment::TaggedLineSegment(const geom::Coordinate& p0,
-			const geom::Coordinate& p1)
+TaggedLineSegment::TaggedLineSegment(const geom::Coordinate& p_p0,
+			const geom::Coordinate& p_p1)
 	:
-	LineSegment(p0, p1),
+	LineSegment(p_p0, p_p1),
 	parent(nullptr),
 	index(0)
 {
@@ -65,7 +65,7 @@ TaggedLineSegment::getParent() const
 	return parent;
 }
 
-unsigned int
+size_t
 TaggedLineSegment::getIndex() const
 {
 	return index;

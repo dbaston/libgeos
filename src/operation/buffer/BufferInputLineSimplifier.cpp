@@ -79,10 +79,10 @@ BufferInputLineSimplifier::deleteShallowConcavities()
 	 * Do not simplify end line segments of the line string.
 	 * This ensures that end caps are generated consistently.
 	 */
-	unsigned int index = 1;
+	size_t index = 1;
 
-	unsigned int midIndex = findNextNonDeletedIndex(index);
-	unsigned int lastIndex = findNextNonDeletedIndex(midIndex);
+	auto midIndex = findNextNonDeletedIndex(index);
+	auto lastIndex = findNextNonDeletedIndex(midIndex);
 
 	bool isChanged = false;
 	while (lastIndex < inputLine.size())
@@ -109,14 +109,14 @@ BufferInputLineSimplifier::deleteShallowConcavities()
 }
 
 /* private */
-unsigned int
-BufferInputLineSimplifier::findNextNonDeletedIndex(unsigned int index) const
+size_t
+BufferInputLineSimplifier::findNextNonDeletedIndex(size_t index) const
 {
 	std::size_t next = index + 1;
 	const std::size_t len = inputLine.size();
 	while (next < len && isDeleted[next] == DELETE)
 		next++;
-	return static_cast<unsigned int>(next);
+	return next;
 }
 
 /* private */
@@ -137,20 +137,20 @@ BufferInputLineSimplifier::collapseLine() const
 
 /* private */
 bool
-BufferInputLineSimplifier::isDeletable(int i0, int i1, int i2,
-                                       double distanceTol) const
+BufferInputLineSimplifier::isDeletable(size_t i0, size_t i1, size_t i2,
+                                       double p_distanceTol) const
 {
 	const Coordinate& p0 = inputLine[i0];
 	const Coordinate& p1 = inputLine[i1];
 	const Coordinate& p2 = inputLine[i2];
 
 	if (! isConcave(p0, p1, p2)) return false;
-	if (! isShallow(p0, p1, p2, distanceTol)) return false;
+	if (! isShallow(p0, p1, p2, p_distanceTol)) return false;
 
 	// MD - don't use this heuristic - it's too restricting
 	// if (p0.distance(p2) > distanceTol) return false;
 
-	return isShallowSampled(p0, p1, i0, i2, distanceTol);
+	return isShallowSampled(p0, p1, i0, i2, p_distanceTol);
 }
 
 /* private */
@@ -158,7 +158,7 @@ bool
 BufferInputLineSimplifier::isShallowConcavity(const geom::Coordinate& p0,
                                               const geom::Coordinate& p1,
                                               const geom::Coordinate& p2,
-                                              double distanceTol) const
+                                              double p_distanceTol) const
 {
 	int orientation = CGAlgorithms::computeOrientation(p0, p1, p2);
 	bool isAngleToSimplify = (orientation == angleOrientation);
@@ -166,22 +166,22 @@ BufferInputLineSimplifier::isShallowConcavity(const geom::Coordinate& p0,
 		return false;
 
 	double dist = CGAlgorithms::distancePointLine(p1, p0, p2);
-	return dist < distanceTol;
+	return dist < p_distanceTol;
 }
 
 /* private */
 bool
 BufferInputLineSimplifier::isShallowSampled(const geom::Coordinate& p0,
                                             const geom::Coordinate& p2,
-                                            int i0, int i2,
-                                            double distanceTol) const
+                                            size_t i0, size_t i2,
+                                            double p_distanceTol) const
 {
 	// check every n'th point to see if it is within tolerance
-	int inc = (i2 - i0) / NUM_PTS_TO_CHECK;
+	auto inc = (i2 - i0) / NUM_PTS_TO_CHECK;
 	if (inc <= 0) inc = 1;
 
-	for (int i = i0; i < i2; i += inc) {
-		if (! isShallow(p0, p2, inputLine[i], distanceTol))
+	for (size_t i = i0; i < i2; i += inc) {
+		if (! isShallow(p0, p2, inputLine[i], p_distanceTol))
 			return false;
 	}
 	return true;
@@ -192,10 +192,10 @@ bool
 BufferInputLineSimplifier::isShallow(const geom::Coordinate& p0,
                                      const geom::Coordinate& p1,
                                      const geom::Coordinate& p2,
-                                     double distanceTol) const
+                                     double p_distanceTol) const
 {
 	double dist = CGAlgorithms::distancePointLine(p1, p0, p2);
-	return dist < distanceTol;
+	return dist < p_distanceTol;
 }
 
 /* private */

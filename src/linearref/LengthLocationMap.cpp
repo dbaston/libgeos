@@ -41,8 +41,8 @@ double LengthLocationMap::getLength(const Geometry* linearGeom, const LinearLoca
 }
 
 
-LengthLocationMap::LengthLocationMap(const Geometry* linearGeom) :
-		linearGeom(linearGeom) {}
+LengthLocationMap::LengthLocationMap(const Geometry* p_linearGeom) :
+		linearGeom(p_linearGeom) {}
 
 LinearLocation
 LengthLocationMap::getLocation(double length) const
@@ -97,8 +97,8 @@ LengthLocationMap::getLocationForward(double length) const
 		 */
 		if (it.isEndOfLine()) {
 			if (totalLength == length) {
-				unsigned int compIndex = it.getComponentIndex();
-				unsigned int segIndex = it.getVertexIndex();
+				auto compIndex = it.getComponentIndex();
+				auto segIndex = it.getVertexIndex();
 				return LinearLocation(compIndex, segIndex, 0.0);
 			}
 		}
@@ -110,8 +110,8 @@ LengthLocationMap::getLocationForward(double length) const
 			if (totalLength + segLen > length)
 			{
 				double frac = (length - totalLength) / segLen;
-				unsigned int compIndex = it.getComponentIndex();
-				unsigned int segIndex = it.getVertexIndex();
+				auto compIndex = it.getComponentIndex();
+				auto segIndex = it.getVertexIndex();
 				return LinearLocation(compIndex, segIndex, frac);
 			}
 			totalLength += segLen;
@@ -129,7 +129,7 @@ LengthLocationMap::resolveHigher(const LinearLocation& loc) const
 {
   if (! loc.isEndpoint(*linearGeom)) return loc;
 
-  unsigned int compIndex = loc.getComponentIndex();
+  auto compIndex = loc.getComponentIndex();
   // if last component can't resolve any higher
   if (compIndex >= linearGeom->getNumGeometries() - 1) return loc;
 

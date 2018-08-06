@@ -71,13 +71,13 @@ HotPixel::getSafeEnvelope() const
 
 /*private*/
 void
-HotPixel::initCorners(const Coordinate& pt)
+HotPixel::initCorners(const Coordinate& p_pt)
 {
 	double tolerance = 0.5;
-	minx = pt.x - tolerance;
-	maxx = pt.x + tolerance;
-	miny = pt.y - tolerance;
-	maxy = pt.y + tolerance;
+	minx = p_pt.x - tolerance;
+	maxx = p_pt.x + tolerance;
+	miny = p_pt.y - tolerance;
+	maxy = p_pt.y + tolerance;
 
 	corner.resize(4);
 	corner[0] = Coordinate(maxx, maxy);
@@ -174,13 +174,13 @@ HotPixel::intersectsPixelClosure(const Coordinate& p0,
 bool
 HotPixel::addSnappedNode(NodedSegmentString& segStr, size_t segIndex)
 {
-	const Coordinate& p0 = segStr.getCoordinate(static_cast<unsigned int>(segIndex));
-	const Coordinate& p1 = segStr.getCoordinate(static_cast<unsigned int>(segIndex + 1));
+	const Coordinate& p0 = segStr.getCoordinate(segIndex);
+	const Coordinate& p1 = segStr.getCoordinate(segIndex + 1);
 
 	if (intersects(p0, p1))
 	{
 		//cout << "snapped: " <<  snapPt << endl;
-		segStr.addIntersection(getCoordinate(), static_cast<unsigned int>(segIndex));
+		segStr.addIntersection(getCoordinate(), segIndex);
 		return true;
 	}
 	return false;

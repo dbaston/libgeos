@@ -22,6 +22,7 @@
 #include <geos/geom/LineString.h>
 #include <geos/geom/LinearRing.h>
 #include <geos/algorithm/CGAlgorithms.h>
+#include <geos/util/IllegalArgumentException.h>
 
 #include <cmath> // for fabs()
 
@@ -184,6 +185,13 @@ double distance(const Rectangle & rect,
   Rectangle::Position pos = rect.position(x1,y1);
   Rectangle::Position endpos = rect.position(x2,y2);
 
+  if (pos & Rectangle::Position::Outside ||
+      endpos & Rectangle::Position::Outside ||
+	  pos & Rectangle::Position::Inside ||
+	  endpos & Rectangle::Position::Inside) {
+  	throw geos::util::IllegalArgumentException("Can't compute distance to non-boundary position.");
+  }
+
   while(true)
 	{
 	  // Close up when we have the same edge and the
@@ -250,7 +258,7 @@ double distance(const Rectangle & rect,
 /**
  * \brief Reverse given segment in a coordinate vector
  */
-void reverse_points(std::vector<Coordinate> &v, int start, int end)
+void reverse_points(std::vector<Coordinate> &v, size_t start, size_t end)
 {
   geom::Coordinate p1;
   geom::Coordinate p2;
@@ -276,9 +284,9 @@ normalize_ring(std::vector<Coordinate> &ring)
 
   // Find the "smallest" coordinate
 
-  int best_pos = 0;
-  int n = static_cast<int>(ring.size());
-  for(int pos = 0; pos<n; ++pos)
+  size_t best_pos = 0;
+  auto n = ring.size();
+  for(size_t pos = 0; pos < n; ++pos)
 	{
     // TODO: use CoordinateLessThan ?
 	  if(ring[pos].x < ring[best_pos].x)
@@ -289,15 +297,14 @@ normalize_ring(std::vector<Coordinate> &ring)
 	}
 
   // Quick exit if the ring is already normalized
-  if(best_pos == 0)
-	return;
+  if(best_pos == 0) return;
 
   // Flip hands -algorithm to the part without the
   // duplicate last coordinate at n-1:
 
-  reverse_points(ring,0,best_pos-1);
-  reverse_points(ring,best_pos,n-2);
-  reverse_points(ring,0,n-2);
+  reverse_points(ring,0, best_pos - 1);
+  reverse_points(ring,best_pos, n - 2);
+	reverse_points(ring,0, n - 2);
 
   // And make sure the ring is valid by duplicating the first coordinate
   // at the end:
@@ -468,9 +475,9 @@ RectangleIntersectionBuilder::reconnectPolygons(const Rectangle & rect)
       using geos::algorithm::CGAlgorithms;
 		  geom::Coordinate c;
 		  hole->getCoordinatesRO()->getAt(0, c);
-      for (ShellAndHolesList::iterator i=exterior.begin(), e=exterior.end(); i!=e; ++i)
+      for (ShellAndHolesList::iterator p_i=exterior.begin(), p_e=exterior.end(); p_i!=p_e; ++p_i)
 			{
-        ShellAndHoles &p = *i;
+        ShellAndHoles &p = *p_i;
         const CoordinateSequence *shell_cs = p.first->getCoordinatesRO();
         if( CGAlgorithms::isPointInRing(c, shell_cs) )
         {

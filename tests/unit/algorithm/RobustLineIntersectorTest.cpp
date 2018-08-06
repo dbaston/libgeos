@@ -58,7 +58,6 @@ namespace tut
 	template<>
 	void object::test<1>()
 	{
-    LineIntersector i;
     Coordinate p1(10, 10);
     Coordinate p2(20, 20);
     Coordinate q1(20, 10);
@@ -66,8 +65,8 @@ namespace tut
     Coordinate x(15, 15);
     i.computeIntersection(p1, p2, q1, q2);
 
-    ensure_equals(i.getIntersectionNum(), (int)LineIntersector::POINT_INTERSECTION);
-    ensure_equals(i.getIntersectionNum(), 1);
+    ensure_equals(i.getIntersectionNum(), LineIntersector::POINT_INTERSECTION);
+    ensure_equals(i.getIntersectionNum(), 1UL);
     ensure_equals(i.getIntersection(0), x);
     ensure("isProper", i.isProper());
     ensure("hasIntersection", i.hasIntersection());
@@ -78,15 +77,14 @@ namespace tut
 	template<>
 	void object::test<2>()
 	{
-    LineIntersector i;
     Coordinate p1(10, 10);
     Coordinate p2(20, 10);
     Coordinate q1(22, 10);
     Coordinate q2(30, 10);
     i.computeIntersection(p1, p2, q1, q2);
 
-    ensure_equals(i.getIntersectionNum(), (int)LineIntersector::NO_INTERSECTION);
-    ensure_equals(i.getIntersectionNum(), 0);
+    ensure_equals(i.getIntersectionNum(), LineIntersector::NO_INTERSECTION);
+    ensure_equals(i.getIntersectionNum(), 0UL);
     ensure("!isProper", !i.isProper());
     ensure("!hasIntersection", !i.hasIntersection());
 	}
@@ -96,15 +94,14 @@ namespace tut
 	template<>
 	void object::test<3>()
 	{
-    LineIntersector i;
     Coordinate p1(10, 10);
     Coordinate p2(20, 10);
     Coordinate q1(20, 10);
     Coordinate q2(30, 10);
     i.computeIntersection(p1, p2, q1, q2);
 
-    ensure_equals(i.getIntersectionNum(), (int)LineIntersector::POINT_INTERSECTION);
-    ensure_equals(i.getIntersectionNum(), 1);
+    ensure_equals(i.getIntersectionNum(), LineIntersector::POINT_INTERSECTION);
+    ensure_equals(i.getIntersectionNum(), 1UL);
     ensure("!isProper", !i.isProper());
     ensure("hasIntersection", i.hasIntersection());
 	}
@@ -114,15 +111,14 @@ namespace tut
 	template<>
 	void object::test<4>()
 	{
-    LineIntersector i;
     Coordinate p1(10, 10);
     Coordinate p2(20, 10);
     Coordinate q1(15, 10);
     Coordinate q2(30, 10);
     i.computeIntersection(p1, p2, q1, q2);
 
-    ensure_equals(i.getIntersectionNum(), (int)LineIntersector::COLLINEAR_INTERSECTION);
-    ensure_equals(i.getIntersectionNum(), 2);
+    ensure_equals(i.getIntersectionNum(), LineIntersector::COLLINEAR_INTERSECTION);
+    ensure_equals(i.getIntersectionNum(), 2UL);
     ensure("!isProper", !i.isProper());
     ensure("hasIntersection", i.hasIntersection());
 	}
@@ -132,15 +128,14 @@ namespace tut
 	template<>
 	void object::test<5>()
 	{
-    LineIntersector i;
     Coordinate p1(10, 10);
     Coordinate p2(20, 10);
     Coordinate q1(10, 10);
     Coordinate q2(30, 10);
     i.computeIntersection(p1, p2, q1, q2);
 
-    ensure_equals(i.getIntersectionNum(), (int)LineIntersector::COLLINEAR_INTERSECTION);
-    ensure_equals(i.getIntersectionNum(), 2);
+    ensure_equals(i.getIntersectionNum(), LineIntersector::COLLINEAR_INTERSECTION);
+    ensure_equals(i.getIntersectionNum(), 2UL);
     ensure("!isProper", !i.isProper());
     ensure("hasIntersection", i.hasIntersection());
 	}
@@ -153,7 +148,7 @@ namespace tut
     i.computeIntersection(Coordinate(100, 100), Coordinate(10, 100),
         Coordinate(100, 10), Coordinate(100, 100));
     ensure("hasIntersection", i.hasIntersection());
-    ensure_equals(i.getIntersectionNum(), 1);
+    ensure_equals(i.getIntersectionNum(), 1UL);
 	}
 
 	// 7 - testEndpointIntersection2
@@ -164,7 +159,7 @@ namespace tut
     i.computeIntersection(Coordinate(190, 50), Coordinate(120, 100),
         Coordinate(120, 100), Coordinate(50, 150));
     ensure("hasIntersection", i.hasIntersection());
-    ensure_equals(i.getIntersectionNum(), 1);
+    ensure_equals(i.getIntersectionNum(), 1UL);
     ensure_equals(i.getIntersection(1), Coordinate(120, 100));
 	}
 
@@ -176,7 +171,7 @@ namespace tut
     i.computeIntersection(Coordinate(180, 200), Coordinate(160, 180),
         Coordinate(220, 240), Coordinate(140, 160));
     ensure("hasIntersection", i.hasIntersection());
-    ensure_equals(i.getIntersectionNum(), 2);
+    ensure_equals(i.getIntersectionNum(), 2UL);
 	}
 
 	// 9 - testIsProper1
@@ -187,7 +182,7 @@ namespace tut
     i.computeIntersection(Coordinate(30, 10), Coordinate(30, 30),
         Coordinate(10, 10), Coordinate(90, 11));
     ensure("hasIntersection", i.hasIntersection());
-    ensure_equals(i.getIntersectionNum(), 1);
+    ensure_equals(i.getIntersectionNum(), 1UL);
     ensure("isProper", i.isProper());
 	}
 
@@ -199,7 +194,7 @@ namespace tut
     i.computeIntersection(Coordinate(10, 30), Coordinate(10, 0),
         Coordinate(11, 90), Coordinate(10, 10));
     ensure("hasIntersection", i.hasIntersection());
-    ensure_equals(i.getIntersectionNum(), 1);
+    ensure_equals(i.getIntersectionNum(), 1UL);
     ensure("!isProper", !i.isProper());
 	}
 

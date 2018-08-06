@@ -127,7 +127,7 @@ LineString::getCoordinatesRO() const
 }
 
 const Coordinate&
-LineString::getCoordinateN(int n) const
+LineString::getCoordinateN(size_t n) const
 {
 	assert(points.get());
 	return points->getAt(n);
@@ -202,7 +202,7 @@ LineString::isClosed() const
 	if (isEmpty()) {
 		return false;
 	}
-	return getCoordinateN(0).equals2D(getCoordinateN(static_cast<int>(getNumPoints()-1)));
+	return getCoordinateN(0).equals2D(getCoordinateN(getNumPoints() - 1));
 }
 
 bool
@@ -269,11 +269,11 @@ LineString::computeEnvelopeInternal() const
 	double maxy = c.y;
 	std::size_t npts=points->getSize();
 	for (std::size_t i=1; i<npts; i++) {
-		const Coordinate &c=points->getAt(i);
-		minx = minx < c.x ? minx : c.x;
-		maxx = maxx > c.x ? maxx : c.x;
-		miny = miny < c.y ? miny : c.y;
-		maxy = maxy > c.y ? maxy : c.y;
+		const Coordinate &c1=points->getAt(i);
+		minx = minx < c1.x ? minx : c1.x;
+		maxx = maxx > c1.x ? maxx : c1.x;
+		miny = miny < c1.y ? miny : c1.y;
+		maxy = maxy > c1.y ? maxy : c1.y;
 	}
 
 	// caller expects a newly allocated Envelope.
