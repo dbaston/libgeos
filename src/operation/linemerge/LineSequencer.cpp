@@ -111,14 +111,10 @@ bool
 LineSequencer::hasSequence(planargraph::Subgraph& p_graph)
 {
 	int oddDegreeCount = 0;
-	for (planargraph::NodeMap::container::const_iterator
-		it=p_graph.nodeBegin(), endIt=p_graph.nodeEnd();
-		it!=endIt;
-		++it)
+	for (auto n : p_graph.getNodes())
 	{
-		planargraph::Node* node = it->second;
-		if (node->getDegree() % 2 == 1)
-		oddDegreeCount++;
+		if (n.second->getDegree() % 2 == 1)
+			oddDegreeCount++;
 	}
 	return oddDegreeCount <= 2;
 }

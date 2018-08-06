@@ -127,6 +127,11 @@ public:
 		return nodeMap.begin();
 	}
 
+
+	NodeMap& getNodes() {
+		return nodeMap;
+	}
+
 	/**
 	 * Tests whether an {@link Edge} is contained in this subgraph
 	 * @param e the edge to test

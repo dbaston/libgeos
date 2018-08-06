@@ -195,8 +195,12 @@ public:
 	 * Returns the Edges that have been added to this PlanarGraph
 	 * @see #add(Edge)
 	 */
-	std::vector<Edge*>* getEdges() {
-		return &m_edges;
+	std::vector<Edge*>& getEdges() {
+		return m_edges;
+	}
+
+	NodeMap& getNodes() {
+		return m_nodeMap;
 	}
 
 	/**
