@@ -50,7 +50,7 @@ find_and_erase(T what, vector<T> &where) {
 void
 PlanarGraph::add(Edge *edge)
 {
-	edges.push_back(edge);
+	m_edges.push_back(edge);
 	add(edge->getDirEdge(0));
 	add(edge->getDirEdge(1));
 }
@@ -67,7 +67,7 @@ PlanarGraph::remove(Edge *edge)
 {
 	remove(edge->getDirEdge(0));
 	remove(edge->getDirEdge(1));
-	find_and_erase(edge, edges);
+	find_and_erase(edge, m_edges);
 }
 
 /*
@@ -82,7 +82,7 @@ PlanarGraph::remove(DirectedEdge *de)
 	DirectedEdge *sym = de->getSym();
 	if (sym!=nullptr) sym->setSym(nullptr);
 	de->getFromNode()->getOutEdges().remove(de);
-	find_and_erase(de, dirEdges);
+	find_and_erase(de, m_dirEdges);
 }
 
 /*
@@ -98,11 +98,11 @@ PlanarGraph::remove(Node *node)
 		DirectedEdge *sym = de->getSym();
 		// remove the diredge that points to this node
 		if (sym) remove(sym);
-		find_and_erase(de, dirEdges);
-		find_and_erase(de->getEdge(), edges);
+		find_and_erase(de, m_dirEdges);
+		find_and_erase(de->getEdge(), m_edges);
 	}
 	// remove the node from the graph
-	nodeMap.remove(node->getCoordinate());
+	m_nodeMap.remove(node->getCoordinate());
 	//nodes.remove(node);
 }
 
@@ -118,7 +118,7 @@ vector<Node*>
 PlanarGraph::findNodesOfDegree(size_t degree) const
 {
 	vector<Node*> nodesFound;
-	for (const auto &n : nodeMap)
+	for (const auto &n : m_nodeMap)
 	{
 		auto node = n.second;
 		if (node->getDegree() == degree) nodesFound.push_back(node);

@@ -61,9 +61,9 @@ class GEOS_DLL PlanarGraph {
 
 protected:
 
-	std::vector<Edge*> edges;
-	std::vector<DirectedEdge*> dirEdges;
-	NodeMap nodeMap;
+	std::vector<Edge*> m_edges;
+	std::vector<DirectedEdge*> m_dirEdges;
+	NodeMap m_nodeMap;
 
 	/**
 	 * \brief
@@ -75,7 +75,7 @@ protected:
 	 * @return the added node
 	 */
 	void add(Node *node) {
-		nodeMap.add(node);
+		m_nodeMap.add(node);
 	}
 
 	/**
@@ -97,7 +97,7 @@ protected:
 	 * to ensure the edges added are of the right class.
 	 */
 	void add(DirectedEdge *dirEdge) {
-		dirEdges.push_back(dirEdge);
+		m_dirEdges.push_back(dirEdge);
 	}
 
 public:
@@ -120,7 +120,7 @@ public:
 	 * or null if no Node was there.
 	 */
 	Node* findNode(const geom::Coordinate& pt) {
-		return nodeMap.find(pt);
+		return m_nodeMap.find(pt);
 	}
 
 	/**
@@ -128,23 +128,23 @@ public:
 	 * Returns an Iterator over the Nodes in this PlanarGraph.
 	 */
 	NodeMap::container::iterator nodeIterator() {
-		return nodeMap.begin();
+		return m_nodeMap.begin();
 	}
 
 	NodeMap::container::iterator nodeBegin() {
-		return nodeMap.begin();
+		return m_nodeMap.begin();
 	}
 
 	NodeMap::container::const_iterator nodeBegin() const {
-		return nodeMap.begin();
+		return m_nodeMap.begin();
 	}
 
 	NodeMap::container::iterator nodeEnd() {
-		return nodeMap.end();
+		return m_nodeMap.end();
 	}
 
 	NodeMap::container::const_iterator nodeEnd() const {
-		return nodeMap.end();
+		return m_nodeMap.end();
 	}
 
 	/**
@@ -153,7 +153,7 @@ public:
 	 *
 	 * @param nodes : the nodes are push_back'ed here
 	 */
-	void getNodes(std::vector<Node*>& nodes) const { nodes = nodeMap.getNodes(); }
+	void getNodes(std::vector<Node*>& nodes) const { nodes = m_nodeMap.getNodes(); }
 
 	/**
 	 * \brief
@@ -164,12 +164,12 @@ public:
 	 * @see add(DirectedEdge)
 	 */
 	std::vector<DirectedEdge*>::iterator dirEdgeIterator() {
-		return dirEdges.begin();
+		return m_dirEdges.begin();
 	}
 
 	/// Alias for edgeBegin()
 	std::vector<Edge*>::iterator edgeIterator() {
-		return edges.begin();
+		return m_edges.begin();
 	}
 
 	/// Returns an iterator to first Edge in this graph.
@@ -178,7 +178,7 @@ public:
 	/// @see add(Edge)
 	///
 	std::vector<Edge*>::iterator edgeBegin() {
-		return edges.begin();
+		return m_edges.begin();
 	}
 
 	/// Returns an iterator to one-past last Edge in this graph.
@@ -187,7 +187,7 @@ public:
 	/// @see add(Edge)
 	///
 	std::vector<Edge*>::iterator edgeEnd() {
-		return edges.end();
+		return m_edges.end();
 	}
 
 	/**
@@ -196,7 +196,7 @@ public:
 	 * @see #add(Edge)
 	 */
 	std::vector<Edge*>* getEdges() {
-		return &edges;
+		return &m_edges;
 	}
 
 	/**

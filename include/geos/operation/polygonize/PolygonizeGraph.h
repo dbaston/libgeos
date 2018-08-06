@@ -71,7 +71,7 @@ class PolygonizeDirectedEdge;
  */
 class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
  public:
-	bool empty() const {return newNodes.empty();}
+	bool empty() const {return m_newNodes.empty();}
 	/**
 	 * \brief
 	 * Deletes all edges at a node
@@ -82,7 +82,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * \brief
 	 * Create a new polygonization graph.
 	 */
-	PolygonizeGraph() {factory = new geom::GeometryFactory();};
+	PolygonizeGraph() {m_factory = new geom::GeometryFactory();};
 	explicit PolygonizeGraph(const geom::GeometryFactory *newFactory);
 
 	/**
@@ -229,18 +229,18 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	/*
 	 * Data members
 	 */
-	const geom::GeometryFactory *factory;
+	const geom::GeometryFactory *m_factory;
 
 	/*
 	 *  These are for memory management
 	 */
 	/* created as PolygonizeEdge but saved as Edge*/
-	std::vector<planargraph::Edge *> newEdges;
+	std::vector<planargraph::Edge *> m_newEdges;
 	/* created as PolygonizeDirectedEdge but saved as DirectedEdge */
-	std::vector<planargraph::DirectedEdge *> newDirEdges;
-	std::vector<planargraph::Node *> newNodes;
-	mutable std::vector<EdgeRing *> newEdgeRings;
-	std::vector<geom::CoordinateSequence *> newCoords;
+	std::vector<planargraph::DirectedEdge *> m_newDirEdges;
+	std::vector<planargraph::Node *> m_newNodes;
+	mutable std::vector<EdgeRing *> m_newEdgeRings;
+	std::vector<geom::CoordinateSequence *> m_newCoords;
 };
 
 }  // namespace polygonize
