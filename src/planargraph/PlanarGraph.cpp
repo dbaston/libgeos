@@ -22,6 +22,7 @@
 #include <geos/planargraph/NodeMap.h>
 #include <geos/planargraph/Node.h>
 #include <geos/planargraph/DirectedEdge.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -31,13 +32,6 @@ using namespace std;
 
 namespace geos {
 namespace planargraph {
-
-template <typename T>
-void
-find_and_erase(T what, vector<T> &where) {
-	if (!what) return;
-	where.erase(std::remove(where.begin(), where.end(), what), where.end());
-}
 
 
 /*
@@ -79,8 +73,8 @@ PlanarGraph::remove(Edge *edge)
 void
 PlanarGraph::remove(DirectedEdge *de)
 {
-	DirectedEdge *sym = de->getSym();
-	if (sym!=nullptr) sym->setSym(nullptr);
+	if (!de) return;
+	de->resetSym();
 	de->getFromNode()->getOutEdges().remove(de);
 	find_and_erase(de, m_dirEdges);
 }
@@ -95,9 +89,8 @@ PlanarGraph::remove(Node *node)
 	// unhook all directed edges
 	auto & outEdges=node->getOutEdges().getEdges();
 	for(auto de : outEdges) {
-		DirectedEdge *sym = de->getSym();
 		// remove the diredge that points to this node
-		if (sym) remove(sym);
+		remove(de->getSym());
 		find_and_erase(de, m_dirEdges);
 		find_and_erase(de->parentEdge(), m_edges);
 	}
@@ -121,7 +114,7 @@ PlanarGraph::findNodesOfDegree(size_t degree) const
 	for (const auto &n : m_nodeMap)
 	{
 		auto node = n.second;
-		if (node->getDegree() == degree) nodesFound.push_back(node);
+		if (node->hasDegree(degree)) nodesFound.push_back(node);
 	}
 	return nodesFound;
 }

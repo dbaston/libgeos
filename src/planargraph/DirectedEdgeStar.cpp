@@ -15,6 +15,7 @@
 
 #include <geos/planargraph/DirectedEdgeStar.h>
 #include <geos/planargraph/DirectedEdge.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <vector>
 #include <algorithm>
@@ -42,14 +43,7 @@ DirectedEdgeStar::add(DirectedEdge *de)
 void
 DirectedEdgeStar::remove(DirectedEdge *de)
 {
-	for(unsigned int i=0; i<outEdges.size(); ++i)
-	{
-		if(outEdges[i]==de)
-		{
-			outEdges.erase(outEdges.begin()+i);
-			--i;
-		}
-	}
+	find_and_erase(de, outEdges);
 }
 
 vector<DirectedEdge*>::iterator
