@@ -20,7 +20,6 @@
 #include <vector>
 #include <algorithm>
 
-using namespace std;
 using namespace geos::geom;
 
 namespace geos {
@@ -34,7 +33,7 @@ void
 DirectedEdgeStar::add(DirectedEdge *de)
 {
 	outEdges.push_back(de);
-	sorted=false;
+	sorted = false;
 }
 
 /*
@@ -46,25 +45,25 @@ DirectedEdgeStar::remove(DirectedEdge *de)
 	find_and_erase(de, outEdges);
 }
 
-vector<DirectedEdge*>::iterator
+std::vector<DirectedEdge*>::iterator
 DirectedEdgeStar::begin() {
 	sortEdges();
 	return outEdges.begin();
 }
 
-vector<DirectedEdge*>::iterator
+std::vector<DirectedEdge*>::iterator
 DirectedEdgeStar::end() {
 	sortEdges();
 	return outEdges.end();
 }
 
-vector<DirectedEdge*>::const_iterator
+std::vector<DirectedEdge*>::const_iterator
 DirectedEdgeStar::begin() const {
 	sortEdges();
 	return outEdges.begin();
 }
 
-vector<DirectedEdge*>::const_iterator
+std::vector<DirectedEdge*>::const_iterator
 DirectedEdgeStar::end() const {
 	sortEdges();
 	return outEdges.end();
@@ -76,17 +75,17 @@ DirectedEdgeStar::end() const {
 Coordinate&
 DirectedEdgeStar::getCoordinate() const
 {
+	sortEdges();
 	if (outEdges.empty())
 		return Coordinate::getNull();
-	DirectedEdge *e=outEdges[0];
-	return e->getCoordinate();
+	return outEdges[0]->getCoordinate();
 }
 
 /*
  * Returns the DirectedEdges, in ascending order by angle with
  * the positive x-axis.
  */
-vector<DirectedEdge*>&
+std::vector<DirectedEdge*>&
 DirectedEdgeStar::getEdges()
 {
 	sortEdges();
@@ -104,8 +103,8 @@ void
 DirectedEdgeStar::sortEdges() const
 {
 	if (!sorted) {
-		sort(outEdges.begin(), outEdges.end(), pdeLessThan);
-		sorted=true;
+		std::sort(outEdges.begin(), outEdges.end(), pdeLessThan);
+		sorted = true;
 	}
 }
 
@@ -161,7 +160,8 @@ DirectedEdgeStar::getIndex(int i) const
 std::vector<geos::planargraph::DirectedEdge*>::iterator
 DirectedEdgeStar::findEdge(const DirectedEdge *dirEdge) const
 {
-	  return std::find(outEdges.begin(), outEdges.end(), dirEdge);
+	sortEdges();
+	return std::find(outEdges.begin(), outEdges.end(), dirEdge);
 }
 
 /*
