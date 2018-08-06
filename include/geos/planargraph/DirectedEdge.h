@@ -77,7 +77,7 @@ public:
 	 * the caller, see the equivalent function taking a vector
 	 * reference to avoid this.
 	 */
-	static std::vector<Edge*>* toEdges(
+	static std::vector<Edge*> toEdges(
 		std::vector<DirectedEdge*>& dirEdges);
 
 	/**
@@ -88,6 +88,7 @@ public:
 	 * NOTE: parents are pushed to the parentEdges vector, make sure
 	 * it is empty if index-based corrispondence is important.
 	 */
+	// [[deprecated]]
 	static void toEdges( std::vector<DirectedEdge*>& dirEdges,
 			std::vector<Edge*>& parentEdges);
 
@@ -111,13 +112,16 @@ public:
 	 * \brief Returns this DirectedEdge's parent Edge,
 	 * or null if it has none.
 	 */
-	//Edge* getEdge() const;
 	Edge* parentEdge() const;
+	// [[deprecated]]
+	Edge* getEdge() const;
 
 	/**
 	 * \brief Associates this DirectedEdge with an Edge
 	 * (possibly null, indicating no associated Edge).
 	 */
+	void set_parentEdge(Edge* newParentEdge);
+	// [[deprecated]]
 	void setEdge(Edge* newParentEdge);
 
 	/**

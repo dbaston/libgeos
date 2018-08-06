@@ -33,8 +33,8 @@ Edge::setDirectedEdges(DirectedEdge *de0, DirectedEdge *de1)
 {
 	dirEdge.push_back(de0);
 	dirEdge.push_back(de1);
-	de0->setEdge(this);
-	de1->setEdge(this);
+	de0->set_parentEdge(this);
+	de1->set_parentEdge(this);
 	de0->setSym(de1);
 	de1->setSym(de0);
 	de0->getFromNode()->addOutEdge(de0);

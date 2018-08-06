@@ -61,7 +61,10 @@ public:
 	 *
 	 * Note: returned vector is newly allocated, ownership to
 	 * the caller.
+	 *
+	 * NOT used and not tested
 	 */
+	// [[deprecated]]
 	static std::vector<Edge*>* getEdgesBetween(Node *node0,
 			Node *node1);
 

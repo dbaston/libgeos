@@ -28,7 +28,7 @@ using namespace geos::geom;
 namespace geos {
 namespace planargraph {
 
-/*public*/
+/*public deprecated*/
 void
 DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges, vector<Edge*>& edges)
 {
@@ -39,27 +39,27 @@ DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges, vector<Edge*>& edges)
 }
 
 /*public*/
-vector<Edge*>*
+vector<Edge*>
 DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges)
 {
-	vector<Edge*> *edges=new vector<Edge*>();
-	toEdges(dirEdges, *edges);
+	vector<Edge*> edges;
+	for (auto e : dirEdges) edges.push_back(e->m_parentEdge);
 	return edges;
 }
 
 /*public*/
 DirectedEdge::DirectedEdge(Node* newFrom, Node* newTo,
-	const Coordinate &directionPt, bool newEdgeDirection)
+	const Coordinate &directionPt, bool newEdgeDirection) :
+	m_from(newFrom),
+	m_to(newTo),
+	m_p0(m_from->getCoordinate()),
+	m_p1(directionPt),
+	m_edgeDirection(newEdgeDirection)
 {
-	m_from=newFrom;
-	m_to=newTo;
-	m_edgeDirection=newEdgeDirection;
-	m_p0=m_from->getCoordinate();
-	m_p1=directionPt;
 	double dx = m_p1.x - m_p0.x;
 	double dy = m_p1.y - m_p0.y;
 	m_quadrant = geomgraph::Quadrant::quadrant(dx, dy);
-	m_angle=atan2(dy, dx);
+	m_angle = atan2(dy, dx);
 	//Assert.isTrue(! (dx == 0 && dy == 0), "EdgeEnd with identical endpoints found");
 }
 
@@ -69,14 +69,22 @@ DirectedEdge::parentEdge() const
 {
 	return m_parentEdge;
 }
-#if 0
+
+// [[deprecated]]
 Edge*
 DirectedEdge::getEdge() const
 {
 	return m_parentEdge;
 }
-#endif
+
 /*public*/
+void
+DirectedEdge::set_parentEdge(Edge* newParentEdge)
+{
+	m_parentEdge = newParentEdge;
+}
+
+// [[deprecated]]
 void
 DirectedEdge::setEdge(Edge* newParentEdge)
 {
