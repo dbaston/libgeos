@@ -30,6 +30,7 @@
 #include <geos/planargraph/Subgraph.h>
 #include <geos/planargraph/algorithm/ConnectedSubgraphFinder.h>
 #include <geos/util/Assert.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <cassert>
 #include <limits>
@@ -331,8 +332,9 @@ LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 	using planargraph::Node;
 	using planargraph::GraphComponent;
 
-	GraphComponent::setVisited(p_graph.edgeBegin(),
-			p_graph.edgeEnd(), false);
+	setVisited(p_graph.getEdges(), false);
+	//GraphComponent::setVisited(p_graph.edgeBegin(),
+	//			p_graph.edgeEnd(), false);
 
 	const Node* startNode = findLowestDegreeNode(p_graph);
 

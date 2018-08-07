@@ -77,6 +77,7 @@ public:
 	 */
 	virtual void setVisited(bool isVisited) { isVisitedVar=isVisited; }
 
+#if 0
 	/** \brief
 	 * Sets the Visited state for the elements of a container,
 	 * from start to end iterator.
@@ -91,6 +92,7 @@ public:
 			(*i)->setVisited(visited);
 		}
 	}
+#endif
 
 #ifdef GEOS_USEDEPRECATED
 	/** @name deprecated */

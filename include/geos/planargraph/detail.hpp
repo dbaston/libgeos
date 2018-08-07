@@ -10,6 +10,21 @@ find_and_erase(T *what, std::vector<T*> &where) {
 	where.erase(std::remove(where.begin(), where.end(), what), where.end());
 }
 
+/** \brief
+ * Sets the Visited state for the elements of a container,
+ * from start to end iterator.
+ *
+ * @param start the start element
+ * @param end one past the last element
+ * @param visited the state to set the visited flag to
+ */
+template <typename T>
+void setVisited(T &p_container, bool visited) {
+    for(auto &e : p_container) {
+        e->setVisited(visited);
+    }
+}
+
 
 /** \brief
  * Sets the Marked state for the elements of a container,

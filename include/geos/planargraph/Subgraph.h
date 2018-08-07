@@ -128,6 +128,10 @@ public:
 	}
 
 
+	std::set<Edge*>& getEdges() {
+		return edges;
+	}
+
 	NodeMap& getNodes() {
 		return nodeMap;
 	}
