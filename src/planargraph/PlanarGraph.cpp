@@ -99,7 +99,7 @@ PlanarGraph::remove(Node *node)
 	//nodes.remove(node);
 }
 
-#if 0
+#ifdef GEOS_USEDEPRECATED
 /*public deprecated*/
 void
 PlanarGraph::findNodesOfDegree(size_t degree, vector<Node*>& nodesFound) const

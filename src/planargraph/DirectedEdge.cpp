@@ -28,15 +28,6 @@ using namespace geos::geom;
 namespace geos {
 namespace planargraph {
 
-/*public deprecated*/
-void
-DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges, vector<Edge*>& edges)
-{
-	for (auto e : dirEdges)
-	{
-		edges.push_back(e->m_parentEdge);
-	}
-}
 
 /*public*/
 vector<Edge*>
@@ -69,6 +60,23 @@ DirectedEdge::parentEdge() const
 {
 	return m_parentEdge;
 }
+/*public*/
+void
+DirectedEdge::set_parentEdge(Edge* newParentEdge)
+{
+	m_parentEdge = newParentEdge;
+}
+
+#ifdef GEOS_USEDEPRECATED
+/*public deprecated*/
+void
+DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges, vector<Edge*>& edges)
+{
+	for (auto e : dirEdges)
+	{
+		edges.push_back(e->m_parentEdge);
+	}
+}
 
 // [[deprecated]]
 Edge*
@@ -77,12 +85,6 @@ DirectedEdge::getEdge() const
 	return m_parentEdge;
 }
 
-/*public*/
-void
-DirectedEdge::set_parentEdge(Edge* newParentEdge)
-{
-	m_parentEdge = newParentEdge;
-}
 
 // [[deprecated]]
 void
@@ -90,6 +92,7 @@ DirectedEdge::setEdge(Edge* newParentEdge)
 {
 	m_parentEdge=newParentEdge;
 }
+#endif
 
 /*public*/
 int

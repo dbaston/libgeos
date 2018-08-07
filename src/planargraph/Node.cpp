@@ -24,7 +24,7 @@ using namespace std;
 namespace geos {
 namespace planargraph {
 
-#if 0
+#ifdef GEOS_USEDEPRECATED
 /* static public */
 /* UNUSED */
 vector<Edge*>*

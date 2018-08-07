@@ -110,7 +110,7 @@ public:
 	 */
 	bool hasDegree(size_t degree) const;
 
-#if 0
+#ifdef GEOS_USEDEPRECATED
 	/** @name deprecated */
 	///@{
 	/** \brief

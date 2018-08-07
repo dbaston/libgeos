@@ -108,7 +108,7 @@ DirectedEdgeStar::sortEdges() const
 	}
 }
 
-#if 1
+#ifdef GEOS_USEDEPRECATED
 /*
  * Returns the zero-based index of the given Edge, after sorting in
  * ascending order by angle with the positive x-axis.

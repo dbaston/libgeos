@@ -92,6 +92,9 @@ public:
 		}
 	}
 
+#ifdef GEOS_USEDEPRECATED
+	/** @name deprecated */
+	///@{
 	/** \brief
 	 * Sets the Visited state for the values of each map
 	 * container element, from start to end iterator.
@@ -137,6 +140,8 @@ public:
 			i->second->setMarked(marked);
 		}
 	}
+	///@}
+#endif
 
 	/** \brief
 	 * Tests if a component has been marked at some point

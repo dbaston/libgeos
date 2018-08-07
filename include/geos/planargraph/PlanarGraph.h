@@ -140,7 +140,7 @@ public:
 	 */
 	std::vector<Node*> findNodesOfDegree(std::size_t degree) const;
 
-#if 0
+#ifdef GEOS_USEDEPRECATED
 	/** @name deprecated */
 	///@{
 	/**

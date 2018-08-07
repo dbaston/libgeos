@@ -81,18 +81,6 @@ public:
 		std::vector<DirectedEdge*>& dirEdges);
 
 	/**
-	 * \brief
-	 * Add parent Edge (possibly null) of each of the given DirectedEdges
-	 * to the given parentEdges vector.
-	 *
-	 * NOTE: parents are pushed to the parentEdges vector, make sure
-	 * it is empty if index-based corrispondence is important.
-	 */
-	// [[deprecated]]
-	static void toEdges( std::vector<DirectedEdge*>& dirEdges,
-			std::vector<Edge*>& parentEdges);
-
-	/**
 	 * \brief Constructs a DirectedEdge connecting the <code>from</code>
 	 * node to the <code>to</code> node.
 	 *
@@ -113,16 +101,11 @@ public:
 	 * or null if it has none.
 	 */
 	Edge* parentEdge() const;
-	// [[deprecated]]
-	Edge* getEdge() const;
-
 	/**
 	 * \brief Associates this DirectedEdge with an Edge
 	 * (possibly null, indicating no associated Edge).
 	 */
 	void set_parentEdge(Edge* newParentEdge);
-	// [[deprecated]]
-	void setEdge(Edge* newParentEdge);
 
 	/**
 	 * \brief Returns 0, 1, 2, or 3, indicating the quadrant in which
@@ -232,6 +215,30 @@ public:
 	 * to the given PrintStream.
 	 */
 	std::string print() const;
+
+#ifdef GEOS_USEDEPRECATED
+	/** @name deprecated */
+	///@{
+	/**
+	 * \brief
+	 * Add parent Edge (possibly null) of each of the given DirectedEdges
+	 * to the given parentEdges vector.
+	 *
+	 * NOTE: parents are pushed to the parentEdges vector, make sure
+	 * it is empty if index-based corrispondence is important.
+	 */
+	// [[deprecated]]
+	static void toEdges( std::vector<DirectedEdge*>& dirEdges,
+			std::vector<Edge*>& parentEdges);
+
+	// [[deprecated]]
+	Edge* getEdge() const;
+
+	// [[deprecated]]
+	void setEdge(Edge* newParentEdge);
+	///@}
+#endif
+
 
 };
 

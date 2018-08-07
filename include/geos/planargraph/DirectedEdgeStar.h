@@ -104,7 +104,9 @@ public:
 	 */
 	std::vector<DirectedEdge*>& getEdges();
 
-#if 1
+#ifdef GEOS_USEDEPRECATED
+	/** @name deprecated */
+	///@{
 	/**
 	 * \brief Returns the zero-based index of the given Edge,
 	 * after sorting in ascending order by angle with the
@@ -127,6 +129,7 @@ public:
 	 */
 	// [[deprecated]]
 	int getIndex(int i) const;
+	///@}
 #endif
 
 	/**
