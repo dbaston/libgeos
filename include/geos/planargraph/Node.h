@@ -55,18 +55,6 @@ public:
 
 	friend std::ostream& operator << (std::ostream& os, const Node&);
 
-	/** \brief
-	 * Returns all Edges that connect the two nodes (which are
-	 * assumed to be different).
-	 *
-	 * Note: returned vector is newly allocated, ownership to
-	 * the caller.
-	 *
-	 * NOT used and not tested
-	 */
-	// [[deprecated]]
-	static std::vector<Edge*>* getEdgesBetween(Node *node0,
-			Node *node1);
 
 	/// Constructs a Node with the given location.
 	Node(const geom::Coordinate& newPt)
@@ -122,7 +110,22 @@ public:
 	 */
 	bool hasDegree(size_t degree) const;
 
-#if 1
+#if 0
+	/** @name deprecated */
+	///@{
+	/** \brief
+	 * Returns all Edges that connect the two nodes (which are
+	 * assumed to be different).
+	 *
+	 * Note: returned vector is newly allocated, ownership to
+	 * the caller.
+	 *
+	 * NOT used and not tested
+	 */
+	// [[deprecated]]
+	static std::vector<Edge*>* getEdgesBetween(Node *node0,
+			Node *node1);
+
 	/**
 	 * \brief Returns the zero-based index of the given Edge,
 	 * after sorting in ascending order by angle with
@@ -132,6 +135,7 @@ public:
 	int getIndex(Edge *edge) {
 		return deStar.getIndex(edge);
 	}
+	///@}
 #endif
 };
 

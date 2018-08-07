@@ -24,6 +24,7 @@ using namespace std;
 namespace geos {
 namespace planargraph {
 
+#if 0
 /* static public */
 /* UNUSED */
 vector<Edge*>*
@@ -48,6 +49,7 @@ Node::getEdgesBetween(Node *node0, Node *node1)
 	return commonEdges;
 
 }
+#endif
 
 std::ostream& operator<<(std::ostream& os, const Node& n) {
 	os << "Node " << n.pt << " with degree " << n.getDegree();
