@@ -86,6 +86,7 @@ public:
 	 */
 	std::pair<std::set<Edge*>::iterator, bool> add(Edge *e);
 
+#ifdef GEOS_USEDEPRECATED
 	/**
 	 * Returns an iterator over the DirectedEdge in this graph,
 	 * in the order in which they were added.
@@ -97,7 +98,6 @@ public:
 	std::vector<const DirectedEdge*>::iterator getDirEdgeBegin() {
 		return dirEdges.begin();
 	}
-
 
 	/**
 	 * Returns an {@link Iterator} over the {@link Edge}s in this
@@ -126,10 +126,14 @@ public:
 	NodeMap::container::const_iterator nodeBegin() const {
 		return nodeMap.begin();
 	}
-
+#endif
 
 	std::set<Edge*>& getEdges() {
 		return edges;
+	}
+
+	const NodeMap& getNodes() const {
+		return nodeMap;
 	}
 
 	NodeMap& getNodes() {
@@ -147,7 +151,9 @@ protected:
 
 	PlanarGraph &parentGraph;
 	std::set<Edge*> edges;
+#ifdef GEOS_USEDEPRECATED
 	std::vector<const DirectedEdge*> dirEdges;
+#endif
 	NodeMap nodeMap;
 
     // Declare type as noncopyable

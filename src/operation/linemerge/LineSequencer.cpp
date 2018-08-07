@@ -253,12 +253,9 @@ LineSequencer::findLowestDegreeNode(const planargraph::Subgraph& graph)
 {
 	size_t minDegree = numeric_limits<size_t>::max();
 	const planargraph::Node* minDegreeNode = nullptr;
-	for (planargraph::NodeMap::container::const_iterator
-		it = graph.nodeBegin(), itEnd = graph.nodeEnd();
-		it != itEnd;
-		++it )
+	for (const auto e : graph.getNodes())
 	{
-		const planargraph::Node* node = (*it).second;
+		const auto node = e.second;
 		if (minDegreeNode == nullptr || node->getDegree() < minDegree)
 		{
 			minDegree = node->getDegree();

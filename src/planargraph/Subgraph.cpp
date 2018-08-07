@@ -29,11 +29,13 @@ namespace planargraph {
 pair<Edge::NonConstSet::iterator, bool>
 Subgraph::add(Edge *e)
 {
-	pair<Edge::NonConstSet::iterator,bool> p = edges.insert(e);
+	auto p = edges.insert(e);
 	if (!p.second) return p;
 
+#ifdef GEOS_USEDEPRECATED
 	dirEdges.push_back(e->getDirEdge(0));
 	dirEdges.push_back(e->getDirEdge(1));
+#endif
 	nodeMap.add(e->getDirEdge(0)->getFromNode());
 	nodeMap.add(e->getDirEdge(1)->getFromNode());
 
