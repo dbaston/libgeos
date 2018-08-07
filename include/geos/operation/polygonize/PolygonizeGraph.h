@@ -119,7 +119,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 *
 	 * @return edgeRingList: the EdgeRings found by the polygonization process.
 	 */
-	std::vector<EdgeRing*> getEdgeRings() const;
+	std::vector<EdgeRing*> getEdgeRings();
 
 	/**
 	 * \brief
@@ -156,7 +156,6 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 
 	planargraph::Node* getNode(const geom::Coordinate& pt);
 
-	void computeNextCWEdges() const;
 
 	/**
 	 * \brief
@@ -168,7 +167,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 *
 	 */
 	void convertMaximalToMinimalEdgeRings(
-			const std::vector<PolygonizeDirectedEdge*> ringEdges) const;
+			const std::vector<PolygonizeDirectedEdge*> ringEdges);
 
 	/**
 	 * \brief
@@ -200,7 +199,6 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 
 	void label(const std::vector<planargraph::DirectedEdge*> &dirEdges, long label) const;
 
-	void computeNextCWEdges(planargraph::Node *node) const;
 
 	/**
 	 * \brief
@@ -209,7 +207,9 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * This algorithm has the effect of converting maximal edgerings
 	 * into minimal edgerings
 	 */
-	void computeNextCCWEdges(planargraph::Node *node, long label) const;
+	void computeNextCWEdges();
+	void computeNextCWEdges(planargraph::Node *node);
+	void computeNextCCWEdges(planargraph::Node *node, long label);
 
 	/**
 	 * \brief

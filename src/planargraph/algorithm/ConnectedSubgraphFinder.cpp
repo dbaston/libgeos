@@ -19,6 +19,7 @@
 #include <geos/planargraph/Node.h>
 #include <geos/planargraph/DirectedEdge.h>
 #include <geos/planargraph/DirectedEdgeStar.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <cmath>
 #include <vector>
@@ -33,8 +34,7 @@ namespace algorithm {
 void
 ConnectedSubgraphFinder::getConnectedSubgraphs(vector<Subgraph *>& subgraphs)
 {
-	GraphComponent::setVisitedMap(graph.nodeBegin(),
-			graph.nodeEnd(), false);
+	::setVisitedMap(graph.getNodes(), false);
 
 	for (PlanarGraph::EdgeIterator
 			it=graph.edgeBegin(),

@@ -26,6 +26,7 @@
 //#include <geos/planargraph/GraphComponent.h>
 #include <geos/geom/GeometryComponentFilter.h>
 #include <geos/geom/LineString.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <cassert>
 #include <functional>
@@ -103,8 +104,7 @@ LineMerger::merge()
 	if (mergedLineStrings!=nullptr) return;
 
 	// reset marks (this allows incremental processing)
-	GraphComponent::setMarkedMap(graph.nodeIterator(), graph.nodeEnd(),
-	                                                              false);
+	::setMarkedMap(graph.getNodes(), false);
 	GraphComponent::setMarked(graph.edgeIterator(), graph.edgeEnd(),
 	                                                              false);
 
@@ -142,12 +142,10 @@ LineMerger::buildEdgeStringsForUnprocessedNodes()
 #if GEOS_DEBUG
 	cerr<<__FUNCTION__<<endl;
 #endif
-	typedef std::vector<Node*> Nodes;
 
-	Nodes nodes;
-	graph.getNodes(nodes);
-	for (Nodes::size_type i=0, in=nodes.size(); i<in; ++i) {
-		Node *node=nodes[i];
+	auto nodes = graph.getNodes();
+	for (auto &n : nodes) {
+		Node *node = n.second;
 #if GEOS_DEBUG
 		cerr<<"Node "<<i<<": "<<*node<<endl;
 #endif
@@ -168,12 +166,10 @@ LineMerger::buildEdgeStringsForNonDegree2Nodes()
 #if GEOS_DEBUG
 	cerr<<__FUNCTION__<<endl;
 #endif
-	typedef std::vector<Node*> Nodes;
 
-	Nodes nodes;
-	graph.getNodes(nodes);
-	for (Nodes::size_type i=0, in=nodes.size(); i<in; ++i) {
-		Node *node=nodes[i];
+	auto nodes = graph.getNodes();
+	for (auto n : nodes) {
+		Node* node = n.second;
 #if GEOS_DEBUG
 		cerr<<"Node "<<i<<": "<<*node<<endl;
 #endif

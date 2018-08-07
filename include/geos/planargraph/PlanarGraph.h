@@ -123,30 +123,51 @@ public:
 		return m_nodeMap.find(pt);
 	}
 
+#if 0
+	/** @name deprecated */
+	///@{
 	/**
 	 * \brief
 	 * Returns an Iterator over the Nodes in this PlanarGraph.
 	 */
+	// [[deprecated]]
 	NodeMap::container::iterator nodeIterator() {
 		return m_nodeMap.begin();
 	}
 
+	// [[deprecated]]
 	NodeMap::container::iterator nodeBegin() {
 		return m_nodeMap.begin();
 	}
 
+	// [[deprecated]]
 	NodeMap::container::const_iterator nodeBegin() const {
 		return m_nodeMap.begin();
 	}
 
+	// [[deprecated]]
 	NodeMap::container::iterator nodeEnd() {
 		return m_nodeMap.end();
 	}
 
+	// [[deprecated]]
 	NodeMap::container::const_iterator nodeEnd() const {
 		return m_nodeMap.end();
 	}
+	///@}
+#endif
 
+	const NodeMap getNodes() const {
+		return m_nodeMap;
+	}
+
+
+	NodeMap& getNodes() {
+		return m_nodeMap;
+	}
+
+
+#if 0
 	/**
 	 * \brief
 	 * Returns the Nodes in this PlanarGraph.
@@ -154,6 +175,7 @@ public:
 	 * @param nodes : the nodes are push_back'ed here
 	 */
 	void getNodes(std::vector<Node*>& nodes) const { nodes = m_nodeMap.getNodes(); }
+#endif
 
 	/**
 	 * \brief
@@ -199,8 +221,8 @@ public:
 		return m_edges;
 	}
 
-	NodeMap& getNodes() {
-		return m_nodeMap;
+	std::vector<DirectedEdge*>& getDirEdges() {
+		return m_dirEdges;
 	}
 
 	/**

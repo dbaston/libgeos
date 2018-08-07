@@ -145,24 +145,21 @@ PolygonizeGraph::getNode(const Coordinate& pt) {
 }
 
 void
-PolygonizeGraph::computeNextCWEdges() const {
-	typedef std::vector<Node*> Nodes;
-	Nodes pns;
- 	getNodes(pns);
+PolygonizeGraph::computeNextCWEdges() {
 	// set the next pointers for the edges around each node
-	for(auto n : pns) {
-		computeNextCWEdges(n);
+	for(auto n : getNodes()) {
+		computeNextCWEdges(n.second);
 	}
 }
 
 /* private */
 void
 PolygonizeGraph::convertMaximalToMinimalEdgeRings(
-		const std::vector<PolygonizeDirectedEdge*> ringEdges)  const {
+		const std::vector<PolygonizeDirectedEdge*> ringEdges) {
 	for (const auto de : ringEdges) {
 		auto label = de->getLabel();
 		auto intNodes = findIntersectionNodes(de, label);
-		for (auto n : intNodes) {
+		for (auto &n : intNodes) {
 			computeNextCCWEdges(n, label);
 		}
 	}
@@ -190,7 +187,7 @@ PolygonizeGraph::findIntersectionNodes(
 
 /* public */
 std::vector<EdgeRing*>
-PolygonizeGraph::getEdgeRings() const {
+PolygonizeGraph::getEdgeRings() {
 	std::vector<EdgeRing*> edgeRingList;
 	// maybe could optimize this, since most of these pointers should
 	// be set correctly already
@@ -299,7 +296,7 @@ PolygonizeGraph::label(
 }
 
 void
-PolygonizeGraph::computeNextCWEdges(Node *node) const {
+PolygonizeGraph::computeNextCWEdges(Node *node) {
 	auto deStar = node->getOutEdges();
 	PolygonizeDirectedEdge *startDE = nullptr;
 	PolygonizeDirectedEdge *prevDE = nullptr;
@@ -327,7 +324,7 @@ PolygonizeGraph::computeNextCWEdges(Node *node) const {
  * minimal edgerings
  */
 void
-PolygonizeGraph::computeNextCCWEdges(Node *node, long label) const {
+PolygonizeGraph::computeNextCCWEdges(Node *node, long label) {
 	auto deStar = node->getOutEdges();
 
 	PolygonizeDirectedEdge *firstOutDE = nullptr;
