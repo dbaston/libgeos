@@ -105,8 +105,7 @@ LineMerger::merge()
 
 	// reset marks (this allows incremental processing)
 	::setMarkedMap(graph.getNodes(), false);
-	GraphComponent::setMarked(graph.edgeIterator(), graph.edgeEnd(),
-	                                                              false);
+	setMarked(graph.getEdges(), false);
 
 	for (size_t i=0, n=edgeStrings.size(); i<n; ++i)
 		delete edgeStrings[i];

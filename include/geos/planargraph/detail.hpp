@@ -12,6 +12,22 @@ find_and_erase(T *what, std::vector<T*> &where) {
 
 
 /** \brief
+ * Sets the Marked state for the elements of a container,
+ * from start to end iterator.
+ *
+ * @param start the start element
+ * @param end one past the last element
+ * @param marked the state to set the marked flag to
+ */
+template <typename T>
+void setMarked(T &p_container, bool marked) {
+    for(auto &e : p_container) {
+        e->setMarked(marked);
+    }
+}
+
+
+/** \brief
  * Sets the Marked state for the values of each map
  * container element, from start to end iterator.
  *

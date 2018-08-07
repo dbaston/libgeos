@@ -35,19 +35,14 @@ void
 ConnectedSubgraphFinder::getConnectedSubgraphs(vector<Subgraph *>& subgraphs)
 {
 	::setVisitedMap(graph.getNodes(), false);
-
-	for (PlanarGraph::EdgeIterator
-			it=graph.edgeBegin(),
-			itEnd=graph.edgeEnd();
-			it!=itEnd; ++it)
+	for (auto &e : graph.getEdges())
 	{
-		Edge *e = *it;
-		Node *node = e->getDirEdge(0)->getFromNode();
-		if (! node->isVisited()) {
+		auto node = e->getDirEdge(0)->getFromNode();
+		if (!node->isVisited())
+	 	{
 			subgraphs.push_back(findSubgraph(node));
 		}
 	}
-
 }
 
 /*private*/

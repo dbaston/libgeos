@@ -123,40 +123,6 @@ public:
 		return m_nodeMap.find(pt);
 	}
 
-#if 0
-	/** @name deprecated */
-	///@{
-	/**
-	 * \brief
-	 * Returns an Iterator over the Nodes in this PlanarGraph.
-	 */
-	// [[deprecated]]
-	NodeMap::container::iterator nodeIterator() {
-		return m_nodeMap.begin();
-	}
-
-	// [[deprecated]]
-	NodeMap::container::iterator nodeBegin() {
-		return m_nodeMap.begin();
-	}
-
-	// [[deprecated]]
-	NodeMap::container::const_iterator nodeBegin() const {
-		return m_nodeMap.begin();
-	}
-
-	// [[deprecated]]
-	NodeMap::container::iterator nodeEnd() {
-		return m_nodeMap.end();
-	}
-
-	// [[deprecated]]
-	NodeMap::container::const_iterator nodeEnd() const {
-		return m_nodeMap.end();
-	}
-	///@}
-#endif
-
 	const NodeMap getNodes() const {
 		return m_nodeMap;
 	}
@@ -166,51 +132,6 @@ public:
 		return m_nodeMap;
 	}
 
-
-#if 0
-	/**
-	 * \brief
-	 * Returns the Nodes in this PlanarGraph.
-	 *
-	 * @param nodes : the nodes are push_back'ed here
-	 */
-	void getNodes(std::vector<Node*>& nodes) const { nodes = m_nodeMap.getNodes(); }
-#endif
-
-	/**
-	 * \brief
-	 * Returns an Iterator over the DirectedEdges in this PlanarGraph,
-	 * in the order in which they were added.
-	 *
-	 * @see add(Edge)
-	 * @see add(DirectedEdge)
-	 */
-	std::vector<DirectedEdge*>::iterator dirEdgeIterator() {
-		return m_dirEdges.begin();
-	}
-
-	/// Alias for edgeBegin()
-	std::vector<Edge*>::iterator edgeIterator() {
-		return m_edges.begin();
-	}
-
-	/// Returns an iterator to first Edge in this graph.
-	//
-	/// Edges are stored in the order they were added.
-	/// @see add(Edge)
-	///
-	std::vector<Edge*>::iterator edgeBegin() {
-		return m_edges.begin();
-	}
-
-	/// Returns an iterator to one-past last Edge in this graph.
-	//
-	/// Edges are stored in the order they were added.
-	/// @see add(Edge)
-	///
-	std::vector<Edge*>::iterator edgeEnd() {
-		return m_edges.end();
-	}
 
 	/**
 	 * \brief
@@ -261,6 +182,85 @@ public:
 	 */
 	std::vector<Node*> findNodesOfDegree(std::size_t degree) const;
 
+#if 0
+	/** @name deprecated */
+	///@{
+	/**
+	 * \brief
+	 * Returns an Iterator over the Nodes in this PlanarGraph.
+	 */
+	// [[deprecated]]
+	NodeMap::container::iterator nodeIterator() {
+		return m_nodeMap.begin();
+	}
+
+	// [[deprecated]]
+	NodeMap::container::iterator nodeBegin() {
+		return m_nodeMap.begin();
+	}
+
+	// [[deprecated]]
+	NodeMap::container::const_iterator nodeBegin() const {
+		return m_nodeMap.begin();
+	}
+
+	// [[deprecated]]
+	NodeMap::container::iterator nodeEnd() {
+		return m_nodeMap.end();
+	}
+
+	// [[deprecated]]
+	NodeMap::container::const_iterator nodeEnd() const {
+		return m_nodeMap.end();
+	}
+
+	// [[deprecated]]
+	/**
+	 * \brief
+	 * Returns the Nodes in this PlanarGraph.
+	 *
+	 * @param nodes : the nodes are push_back'ed here
+	 */
+	void getNodes(std::vector<Node*>& nodes) const { nodes = m_nodeMap.getNodes(); }
+
+	/**
+	 * \brief
+	 * Returns an Iterator over the DirectedEdges in this PlanarGraph,
+	 * in the order in which they were added.
+	 *
+	 * @see add(Edge)
+	 * @see add(DirectedEdge)
+	 */
+	// [[deprecated]]
+	std::vector<DirectedEdge*>::iterator dirEdgeIterator() {
+		return m_dirEdges.begin();
+	}
+
+	/// Alias for edgeBegin()
+	std::vector<Edge*>::iterator edgeIterator() {
+		return m_edges.begin();
+	}
+
+	/// Returns an iterator to first Edge in this graph.
+	//
+	/// Edges are stored in the order they were added.
+	/// @see add(Edge)
+	///
+	// [[deprecated]]
+	std::vector<Edge*>::iterator edgeBegin() {
+		return m_edges.begin();
+	}
+
+	/// Returns an iterator to one-past last Edge in this graph.
+	//
+	/// Edges are stored in the order they were added.
+	/// @see add(Edge)
+	///
+	// [[deprecated]]
+	std::vector<Edge*>::iterator edgeEnd() {
+		return m_edges.end();
+	}
+
 	/**
 	 * \brief
 	 * Get all Nodes with the given number of Edges around it.
@@ -269,6 +269,8 @@ public:
 	 */
 	// [[deprecated]]
 	void findNodesOfDegree(std::size_t degree, std::vector<Node*>& to) const;
+	///@}
+#endif
 };
 
 } // namespace geos::planargraph
