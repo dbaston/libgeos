@@ -58,48 +58,6 @@ namespace planargraph { // geos.planargraph
  * components, which hold application-specific data and graph algorithms.
  */
 class GEOS_DLL PlanarGraph {
-
-protected:
-
-	std::vector<Edge*> m_edges;
-	std::vector<DirectedEdge*> m_dirEdges;
-	NodeMap m_nodeMap;
-
-	/**
-	 * \brief
-	 * Adds a node to the std::map, replacing any that is already at that
-	 * location.
-	 *
-	 * Only subclasses can add Nodes, to ensure Nodes are
-	 * of the right type.
-	 * @return the added node
-	 */
-	void add(Node *node) {
-		m_nodeMap.add(node);
-	}
-
-	/**
-	 * \brief
-	 * Adds the Edge and its DirectedEdges with this PlanarGraph.
-	 *
-	 * Assumes that the Edge has already been created with its associated
-	 * DirectEdges.
-	 * Only subclasses can add Edges, to ensure the edges added are of
-	 * the right class.
-	 */
-	void add(Edge *edge);
-
-	/**
-	 * \brief
-	 * Adds the Edge to this PlanarGraph.
-	 *
-	 * Only subclasses can add DirectedEdges,
-	 * to ensure the edges added are of the right class.
-	 */
-	void add(DirectedEdge *dirEdge) {
-		m_dirEdges.push_back(dirEdge);
-	}
-
 public:
 
 	typedef std::vector<Edge *> EdgeContainer;
@@ -271,6 +229,47 @@ public:
 	void findNodesOfDegree(std::size_t degree, std::vector<Node*>& to) const;
 	///@}
 #endif
+
+protected:
+	/**
+	 * \brief
+	 * Adds a node to the std::map, replacing any that is already at that
+	 * location.
+	 *
+	 * Only subclasses can add Nodes, to ensure Nodes are
+	 * of the right type.
+	 * @return the added node
+	 */
+	void add(Node *node) {
+		m_nodeMap.add(node);
+	}
+
+	/**
+	 * \brief
+	 * Adds the Edge and its DirectedEdges with this PlanarGraph.
+	 *
+	 * Assumes that the Edge has already been created with its associated
+	 * DirectEdges.
+	 * Only subclasses can add Edges, to ensure the edges added are of
+	 * the right class.
+	 */
+	void add(Edge *edge);
+
+	/**
+	 * \brief
+	 * Adds the Edge to this PlanarGraph.
+	 *
+	 * Only subclasses can add DirectedEdges,
+	 * to ensure the edges added are of the right class.
+	 */
+	void add(DirectedEdge *dirEdge) {
+		m_dirEdges.push_back(dirEdge);
+	}
+
+	std::vector<Edge*> m_edges;
+	std::vector<DirectedEdge*> m_dirEdges;
+	NodeMap m_nodeMap;
+
 };
 
 } // namespace geos::planargraph

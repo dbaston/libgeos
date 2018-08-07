@@ -99,12 +99,14 @@ PlanarGraph::remove(Node *node)
 	//nodes.remove(node);
 }
 
+#if 0
 /*public deprecated*/
 void
 PlanarGraph::findNodesOfDegree(size_t degree, vector<Node*>& nodesFound) const
 {
 	nodesFound = findNodesOfDegree(degree);
 }
+#endif
 
 /*public*/
 vector<Node*>
