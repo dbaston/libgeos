@@ -90,9 +90,11 @@ public:
 	 * sorted in ascending order
 	 * by angle with the positive x-axis.
 	 */
+#ifdef GEOS_USEDEPRECATED
 	container::iterator iterator() {
 		return nodeMap.begin();
 	}
+#endif
 
 	container::iterator begin() {
 		return nodeMap.begin();
