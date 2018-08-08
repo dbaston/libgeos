@@ -47,10 +47,7 @@ namespace linemerge { // geos.operation.linemerge
 void
 LineMerger::add(vector<Geometry*> *geometries)
 {
-	for(size_t i=0, n=geometries->size(); i<n; i++) {
-		Geometry *geometry=(*geometries)[i];
-		add(geometry);
-	}
+	for(auto geometry : *geometries) add(geometry);
 }
 
 LineMerger::LineMerger():
@@ -61,9 +58,7 @@ LineMerger::LineMerger():
 
 LineMerger::~LineMerger()
 {
-	for (size_t i=0, n=edgeStrings.size(); i<n; ++i) {
-		delete edgeStrings[i];
-	}
+	for (auto e : edgeStrings) delete e;
 }
 
 
@@ -73,7 +68,7 @@ struct LMGeometryComponentFilter: public GeometryComponentFilter {
 	LMGeometryComponentFilter(LineMerger *newLm): lm(newLm) {}
 
 	void filter(const Geometry *geom) {
-		const LineString *ls = dynamic_cast<const LineString *>(geom);
+		const auto ls = dynamic_cast<const LineString *>(geom);
 		if ( ls ) lm->add(ls);
 	}
 };
@@ -107,20 +102,26 @@ LineMerger::merge()
 	::setMarkedMap(graph.getNodes(), false);
 	setMarked(graph.getEdges(), false);
 
-	for (size_t i=0, n=edgeStrings.size(); i<n; ++i)
-		delete edgeStrings[i];
+	for (auto e : edgeStrings) delete e;
 	edgeStrings.clear();
 
 	buildEdgeStringsForObviousStartNodes();
 	buildEdgeStringsForIsolatedLoops();
 
-	auto numEdgeStrings = edgeStrings.size();
-	mergedLineStrings=new vector<LineString*>(numEdgeStrings);
-	for (size_t i=0; i<numEdgeStrings; ++i)
+	mergedLineStrings=new vector<LineString*>(edgeStrings.size());
+#if 1
+	for (size_t i=0; i<edgeStrings.size(); ++i)
 	{
 		EdgeString *edgeString=edgeStrings[i];
 		(*mergedLineStrings)[i]=edgeString->toLineString();
 	}
+#else
+	for (const auto e : edgeStrings)
+	{
+		mergedLineStrings->push_back(e->toLineString());
+	}
+
+#endif
 }
 
 void
@@ -142,8 +143,7 @@ LineMerger::buildEdgeStringsForUnprocessedNodes()
 	cerr<<__FUNCTION__<<endl;
 #endif
 
-	auto nodes = graph.getNodes();
-	for (auto &n : nodes) {
+	for (auto &n : graph.getNodes()) {
 		Node *node = n.second;
 #if GEOS_DEBUG
 		cerr<<"Node "<<i<<": "<<*node<<endl;
@@ -166,8 +166,7 @@ LineMerger::buildEdgeStringsForNonDegree2Nodes()
 	cerr<<__FUNCTION__<<endl;
 #endif
 
-	auto nodes = graph.getNodes();
-	for (auto n : nodes) {
+	for (auto &n : graph.getNodes()) {
 		Node* node = n.second;
 #if GEOS_DEBUG
 		cerr<<"Node "<<i<<": "<<*node<<endl;
@@ -185,13 +184,9 @@ LineMerger::buildEdgeStringsForNonDegree2Nodes()
 void
 LineMerger::buildEdgeStringsStartingAt(Node *node)
 {
-	auto edges = node->getOutEdges().getEdges();
-	size_t size = edges.size();
-	for (size_t i=0; i<size; i++)
+	for (auto e : node->getOutEdges())
 	{
-		assert(dynamic_cast<LineMergeDirectedEdge*>(edges[i]));
-		LineMergeDirectedEdge *directedEdge=\
-			static_cast<LineMergeDirectedEdge*> (edges[i]);
+		auto directedEdge = safe_cast<LineMergeDirectedEdge*> (e);
 		if (directedEdge->parentEdge()->isMarked()) {
 			continue;
 		}

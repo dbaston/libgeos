@@ -85,11 +85,11 @@ public:
 		return m_nodeMap;
 	}
 
-
+#if 0
 	NodeMap& getNodes() {
 		return m_nodeMap;
 	}
-
+#endif
 
 	/**
 	 * \brief

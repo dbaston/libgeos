@@ -1,5 +1,6 @@
 #include <vector>
 #include <algorithm>
+#include <memory>
 
 namespace {
 
@@ -72,4 +73,12 @@ void setVisitedMap(T &p_map, bool visited) {
     }
 }
 
+template <typename B, typename D>
+B
+safe_cast(D* ptr)
+{
+    assert(dynamic_cast<B>(ptr));
+    return static_cast<B>(ptr);
 }
+
+}  // namespace

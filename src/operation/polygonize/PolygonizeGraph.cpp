@@ -147,7 +147,7 @@ PolygonizeGraph::getNode(const Coordinate& pt) {
 void
 PolygonizeGraph::computeNextCWEdges() {
 	// set the next pointers for the edges around each node
-	for(auto n : getNodes()) {
+	for(auto n : m_nodeMap) {
 		computeNextCWEdges(n.second);
 	}
 }
