@@ -92,15 +92,16 @@ LineMerger::add(const LineString *lineString)
 {
 	if (factory==nullptr) factory=lineString->getFactory();
 	graph.addEdge(lineString);
+	if (!mergedLineStrings) mergedLineStrings.reset(nullptr);
 }
 
 void
 LineMerger::merge()
 {
-	if (mergedLineStrings!=nullptr) return;
+	if (mergedLineStrings) return;
 
 	// reset marks (this allows incremental processing)
-	::setMarkedMap(graph.getNodes(), false);
+	setMarkedMap(graph.getNodes(), false);
 	setMarked(graph.getEdges(), false);
 
 	for (auto e : edgeStrings) delete e;
@@ -117,8 +118,9 @@ LineMerger::merge()
 		(*mergedLineStrings)[i]=edgeString->toLineString();
 	}
 #else
-	for (const auto e : edgeStrings)
+	for (auto e : edgeStrings)
 	{
+		assert(e->toLineString());
 		mergedLineStrings->push_back(e->toLineString());
 	}
 
@@ -145,7 +147,7 @@ LineMerger::buildEdgeStringsForUnprocessedNodes()
 #endif
 
 	for (auto &n : graph.getNodes()) {
-		Node *node = n.second;
+		auto node = n.second;
 #if GEOS_DEBUG
 		cerr<<"Node "<<i<<": "<<*node<<endl;
 #endif
@@ -168,7 +170,7 @@ LineMerger::buildEdgeStringsForNonDegree2Nodes()
 #endif
 
 	for (auto &n : graph.getNodes()) {
-		Node* node = n.second;
+		auto node = n.second;
 #if GEOS_DEBUG
 		cerr<<"Node "<<i<<": "<<*node<<endl;
 #endif
@@ -185,7 +187,7 @@ LineMerger::buildEdgeStringsForNonDegree2Nodes()
 void
 LineMerger::buildEdgeStringsStartingAt(Node *node)
 {
-	for (auto e : node->getOutEdges())
+	for (auto &e : node->getOutEdges())
 	{
 		auto directedEdge = safe_cast<LineMergeDirectedEdge*> (e);
 		if (directedEdge->parentEdge()->isMarked()) {
@@ -217,12 +219,6 @@ LineMerger::getMergedLineStrings()
 	merge();
 
 	return std::move(mergedLineStrings);
-#if 0
-	// Explicitly give ownership to the caller.
-	vector<LineString*>* ret = mergedLineStrings;
-	mergedLineStrings = nullptr;
-	return ret;
-#endif
 }
 
 } // namespace geos.operation.linemerge
