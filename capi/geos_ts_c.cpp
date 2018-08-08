@@ -3730,8 +3730,8 @@ GEOSLineMerge_r(GEOSContextHandle_t extHandle, const Geometry *g)
         LineMerger lmrgr;
         lmrgr.add(g);
 
-        std::vector<LineString *>* lines = lmrgr.getMergedLineStrings();
-        assert(0 != lines);
+        auto lines = lmrgr.getMergedLineStrings();
+        assert(lines);
 
 #if GEOS_DEBUG
         handle->NOTICE_MESSAGE("output lines got");
@@ -3742,9 +3742,11 @@ GEOSLineMerge_r(GEOSContextHandle_t extHandle, const Geometry *g)
         {
             (*geoms)[i] = (*lines)[i];
         }
+#if 0
+				// is unique_ptr
         delete lines;
         lines = 0;
-
+#endif
         const GeometryFactory *gf = handle->geomFactory;
         out = gf->buildGeometry(geoms);
 

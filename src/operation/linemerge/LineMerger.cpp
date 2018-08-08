@@ -31,6 +31,7 @@
 #include <cassert>
 #include <functional>
 #include <vector>
+#include <memory>
 
 using namespace std;
 using namespace geos::planargraph;
@@ -108,7 +109,7 @@ LineMerger::merge()
 	buildEdgeStringsForObviousStartNodes();
 	buildEdgeStringsForIsolatedLoops();
 
-	mergedLineStrings=new vector<LineString*>(edgeStrings.size());
+	mergedLineStrings.reset(new vector<LineString*>(edgeStrings.size()));
 #if 1
 	for (size_t i=0; i<edgeStrings.size(); ++i)
 	{
@@ -210,15 +211,18 @@ LineMerger::buildEdgeStringStartingWith(LineMergeDirectedEdge *start)
 /**
  * Returns the LineStrings built by the merging process.
  */
-vector<LineString*>*
+	std::unique_ptr<std::vector<LineString*>>
 LineMerger::getMergedLineStrings()
 {
 	merge();
 
+	return std::move(mergedLineStrings);
+#if 0
 	// Explicitly give ownership to the caller.
 	vector<LineString*>* ret = mergedLineStrings;
 	mergedLineStrings = nullptr;
 	return ret;
+#endif
 }
 
 } // namespace geos.operation.linemerge

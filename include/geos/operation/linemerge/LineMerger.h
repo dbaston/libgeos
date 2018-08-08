@@ -23,6 +23,7 @@
 #include <geos/operation/linemerge/LineMergeGraph.h> // for composition
 
 #include <vector>
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -78,7 +79,7 @@ private:
 
 	LineMergeGraph graph;
 
-	std::vector<geom::LineString*> *mergedLineStrings;
+	std::unique_ptr<std::vector<geom::LineString*>> mergedLineStrings;
 
 	std::vector<EdgeString*> edgeStrings;
 
@@ -128,7 +129,7 @@ public:
 	 *
 	 * Ownership of vector _and_ its elements to caller.
 	 */
-	std::vector<geom::LineString*>* getMergedLineStrings();
+	std::unique_ptr<std::vector<geom::LineString*>> getMergedLineStrings();
 
 	void add(const geom::LineString *lineString);
 

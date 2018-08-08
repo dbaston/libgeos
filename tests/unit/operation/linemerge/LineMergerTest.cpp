@@ -38,7 +38,7 @@ namespace tut
 
     GeomVect inpGeoms;
     GeomVect expGeoms;
-    LineVect* mrgGeoms;
+		std::unique_ptr<LineVect> mrgGeoms;
 
     test_linemerger_data()
       : wktreader(), wktwriter(), mrgGeoms(nullptr)
@@ -52,7 +52,10 @@ namespace tut
       delAll(expGeoms);
       if ( mrgGeoms ) {
         delAll(*mrgGeoms);
+#if 0
+				// is unique ptr
         delete mrgGeoms;
+#endif
       }
     }
 
