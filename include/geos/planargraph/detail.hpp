@@ -74,6 +74,13 @@ void setVisitedMap(T &p_map, bool visited) {
 }
 
 template <typename B, typename D>
+B safe_cast(std::shared_ptr<D> ptr)
+{
+    assert(dynamic_cast<B>(ptr.get()));
+    return static_cast<B>(ptr.get());
+}
+
+template <typename B, typename D>
 B
 safe_cast(D* ptr)
 {

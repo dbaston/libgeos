@@ -31,7 +31,7 @@ namespace planargraph {
 
 /*public*/
 vector<Edge*>
-DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges)
+DirectedEdge::toEdges(NonConstVect& dirEdges)
 {
 	vector<Edge*> edges;
 	for (auto e : dirEdges) edges.push_back(e->m_parentEdge);
@@ -70,7 +70,7 @@ DirectedEdge::set_parentEdge(Edge* newParentEdge)
 #ifdef GEOS_USEDEPRECATED
 /*public deprecated*/
 void
-DirectedEdge::toEdges(vector<DirectedEdge*>& dirEdges, vector<Edge*>& edges)
+DirectedEdge::toEdges(NonConstVector& dirEdges, vector<Edge*>& edges)
 {
 	for (auto e : dirEdges)
 	{

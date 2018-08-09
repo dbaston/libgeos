@@ -22,6 +22,7 @@
 
 #include <vector> // for typedefs
 #include <list> // for typedefs
+#include <memory> // for typedefs
 
 // Forward declarations
 namespace geos {
@@ -49,24 +50,27 @@ public:
 
   friend std::ostream& operator << (std::ostream&, const DirectedEdge&);
 
-	typedef std::list<DirectedEdge *> NonConstList;
-	typedef std::list<const DirectedEdge *> ConstList;
-	typedef std::vector<DirectedEdge *> NonConstVect;
+#if 1
+	typedef DirectedEdge* DirectedEdgePtr;
+#else
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+	typedef std::list<DirectedEdgePtr> NonConstList;
+	typedef std::list<const DirectedEdgePtr> ConstList;
+	typedef std::vector<DirectedEdgePtr> NonConstVect;
+	typedef std::vector<const DirectedEdgePtr> ConstVect;
 
 protected:
 	Edge* m_parentEdge;
 	Node* m_from;
 	Node* m_to;
 	geom::Coordinate m_p0, m_p1;
-	DirectedEdge* m_sym;  // optional
+	DirectedEdgePtr m_sym;  // optional
 	bool m_edgeDirection;
 	int m_quadrant;
 	double m_angle;
 
 public:
-
-	typedef std::vector<const DirectedEdge *> ConstVect;
-	typedef std::vector<DirectedEdge *> Vect;
 
 	/**
 	 * \brief
@@ -78,7 +82,7 @@ public:
 	 * reference to avoid this.
 	 */
 	static std::vector<Edge*> toEdges(
-		std::vector<DirectedEdge*>& dirEdges);
+		NonConstVect& dirEdges);
 
 	/**
 	 * \brief Constructs a DirectedEdge connecting the <code>from</code>
@@ -228,7 +232,7 @@ public:
 	 * it is empty if index-based corrispondence is important.
 	 */
 	// [[deprecated]]
-	static void toEdges( std::vector<DirectedEdge*>& dirEdges,
+	static void toEdges( NonConstVect& dirEdges,
 			std::vector<Edge*>& parentEdges);
 
 	// [[deprecated]]

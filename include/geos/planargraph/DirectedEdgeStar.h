@@ -19,6 +19,8 @@
 #include <geos/export.h>
 
 #include <vector>
+#include <set>
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -39,15 +41,21 @@ namespace geos {
 namespace geos {
 namespace planargraph { // geos.planargraph
 
-/// A sorted collection of DirectedEdge which leave a Node in a PlanarGraph.
+/// A sorted collection of DirectedEdge pointers which leave a Node in a PlanarGraph.
 class GEOS_DLL DirectedEdgeStar {
-protected:
+public:
+#if 1
+	typedef DirectedEdge* DirectedEdgePtr;
+#else
+	typedef td::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+	typedef std::vector<DirectedEdgePtr> OutEdges;
 
 private:
 	/**
 	 * \brief The underlying list of outgoing DirectedEdges
 	 */
-	mutable std::vector<DirectedEdge*> outEdges;
+	mutable OutEdges outEdges;
 	mutable bool sorted;
 	void sortEdges() const;
 
@@ -73,18 +81,18 @@ public:
 	 * \brief Returns an Iterator over the DirectedEdges,
 	 * in ascending order by angle with the positive x-axis.
 	 */
-	std::vector<DirectedEdge*>::iterator iterator() { return begin(); }
+	OutEdges::iterator iterator() { return begin(); }
 	/// Returns an iterator to first DirectedEdge
-	std::vector<DirectedEdge*>::iterator begin();
+	OutEdges::iterator begin();
 
 	/// Returns an iterator to one-past last DirectedEdge
-	std::vector<DirectedEdge*>::iterator end();
+	OutEdges::iterator end();
 
 	/// Returns an const_iterator to first DirectedEdge
-	std::vector<DirectedEdge*>::const_iterator begin() const;
+	OutEdges::const_iterator begin() const;
 
 	/// Returns an const_iterator to one-past last DirectedEdge
-	std::vector<DirectedEdge*>::const_iterator end() const;
+	OutEdges::const_iterator end() const;
 
 	/**
 	 * \brief Returns the number of edges around the Node associated
@@ -138,7 +146,7 @@ public:
 	 * outEdges are sorting in ascending order by angle with the
 	 * positive x-axis.
 	 */
-	std::vector<geos::planargraph::DirectedEdge*>::iterator
+	OutEdges::iterator
 	findEdge(const DirectedEdge *dirEdge) const;
 
 	/**
