@@ -70,7 +70,7 @@ void PolygonizeDirectedEdge::setLabel(long newLabel) {
  * Returns the next directed edge in the EdgeRing that this directed
  * edge is a member of.
  */
-PolygonizeDirectedEdge *
+std::shared_ptr<DirectedEdge>
 PolygonizeDirectedEdge::getNext() const
 {
 	return next;
@@ -81,7 +81,7 @@ PolygonizeDirectedEdge::getNext() const
  * edge is a member of.
  */
 void
-PolygonizeDirectedEdge::setNext(PolygonizeDirectedEdge *newNext)
+PolygonizeDirectedEdge::setNext(DirectedEdgePtr &newNext)
 {
 	next=newNext;
 }

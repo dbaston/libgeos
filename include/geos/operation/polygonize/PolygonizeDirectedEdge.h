@@ -52,12 +52,21 @@ namespace polygonize { // geos::operation::polygonize
  * <code>marked</code> flag.
  */
 class GEOS_DLL PolygonizeDirectedEdge: public planargraph::DirectedEdge {
+public:
+#if 0
+	  typedef DirectedEdge* DirectedEdgePtr;
+#else
+		typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+
 
 private:
 
 	EdgeRing *edgeRing;
 
-	PolygonizeDirectedEdge *next;
+
+	DirectedEdgePtr next;
+	//PolygonizeDirectedEdge *next;
 
 	long label;
 
@@ -95,13 +104,13 @@ public:
 	 * Returns the next directed edge in the EdgeRing that this
 	 * directed edge is a member of.
 	 */
-	PolygonizeDirectedEdge* getNext() const;
+	DirectedEdgePtr getNext() const;
 
 	/*
 	 * Sets the next directed edge in the EdgeRing that this
 	 * directed edge is a member of.
 	 */
-	void setNext(PolygonizeDirectedEdge *newNext);
+	void setNext(DirectedEdgePtr &newNext);
 
 	/*
 	 * Returns the ring of directed edges that this directed edge is

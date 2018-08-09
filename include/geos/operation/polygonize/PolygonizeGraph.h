@@ -28,6 +28,7 @@
 #include <geos/geom/GeometryFactory.h>
 
 #include <vector>
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -51,6 +52,8 @@ namespace planargraph {
 }  // namespace planargraph
 }  // namespace geos
 
+using geos::planargraph::DirectedEdge;
+
 namespace geos {
 namespace operation {
 namespace polygonize {
@@ -71,6 +74,14 @@ class PolygonizeDirectedEdge;
  */
 class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
  public:
+#if 0
+	typedef DirectedEdge* DirectedEdgePtr;
+#else
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
+
+
 	bool empty() const {return m_newNodes.empty();}
 	/**
 	 * \brief
@@ -167,7 +178,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 *
 	 */
 	void convertMaximalToMinimalEdgeRings(
-			const std::vector<PolygonizeDirectedEdge*> ringEdges);
+			const DirectedEdges ringEdges);
 
 	/**
 	 * \brief
@@ -181,7 +192,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 */
 	std::vector<planargraph::Node*>
 	findIntersectionNodes(
-		 	PolygonizeDirectedEdge *startDE,
+		 	DirectedEdgePtr startDE,
 			long label) const;
 
 	/**
@@ -193,11 +204,11 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * @param dirEdgesIn  a list of the DirectedEdges in the graph
 	 * @result vector that contains each ring found
 	 */
-	std::vector<PolygonizeDirectedEdge*>
+	DirectedEdges
 	findLabeledEdgeRings(
-			const std::vector<planargraph::DirectedEdge*> dirEdgesIn) const;
+			const DirectedEdges dirEdgesIn) const;
 
-	void label(const std::vector<planargraph::DirectedEdge*> &dirEdges, long label) const;
+	void label(const DirectedEdges &dirEdges, long label) const;
 
 
 	/**
@@ -220,16 +231,17 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * @param startDE the DirectedEdge to start traversing at
 	 * @result a vector of the DirectedEdge that form a ring
 	 */
-	std::vector<planargraph::DirectedEdge*>
-	findDirEdgesInRing(PolygonizeDirectedEdge *startDE) const;
+	DirectedEdges
+	findDirEdgesInRing(DirectedEdgePtr startDE) const;
 
 	/* has side effect of saving the Edge Ring found */
-	EdgeRing* findEdgeRing(PolygonizeDirectedEdge *startDE) const;
+	EdgeRing* findEdgeRing(DirectedEdgePtr startDE) const;
 
 	/*
 	 * Data members
 	 */
 	const geom::GeometryFactory *m_factory;
+
 
 	/*
 	 *  These are for memory management
@@ -237,7 +249,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	/* created as PolygonizeEdge but saved as Edge*/
 	std::vector<planargraph::Edge *> m_newEdges;
 	/* created as PolygonizeDirectedEdge but saved as DirectedEdge */
-	std::vector<planargraph::DirectedEdge *> m_newDirEdges;
+	DirectedEdges m_newDirEdges;
 	std::vector<planargraph::Node *> m_newNodes;
 	mutable std::vector<EdgeRing *> m_newEdgeRings;
 	std::vector<geom::CoordinateSequence *> m_newCoords;

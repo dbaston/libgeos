@@ -89,10 +89,10 @@ PolygonizeGraph::PolygonizeGraph(const GeometryFactory *newFactory)
  */
 PolygonizeGraph::~PolygonizeGraph() {
 	for (auto e : m_newEdges) delete e;
-	for (auto e : m_newDirEdges) delete e;
 	for (auto n : m_newNodes) delete n;
 	for (auto e : m_newEdgeRings) delete e;
 	for (auto c : m_newCoords) delete c;
+	m_newDirEdges.clear();
 }
 
 /*
@@ -119,11 +119,11 @@ PolygonizeGraph::addEdge(const LineString *line) {
 	const Coordinate& endPt = linePts->getAt(linePts->getSize() - 1);
 	auto nStart = getNode(startPt);
 	auto nEnd = getNode(endPt);
-	DirectedEdge *de0 = new PolygonizeDirectedEdge(
-			nStart, nEnd, linePts->getAt(1), true);
+	auto de0 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
+			nStart, nEnd, linePts->getAt(1), true));
 	m_newDirEdges.push_back(de0);
-	DirectedEdge *de1 = new PolygonizeDirectedEdge(
-			nEnd, nStart, linePts->getAt(linePts->getSize() - 2), false);
+	auto de1 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
+			nEnd, nStart, linePts->getAt(linePts->getSize() - 2), false));
 	m_newDirEdges.push_back(de1);
 	Edge *edge = new PolygonizeEdge(line);
 	m_newEdges.push_back(edge);
@@ -156,9 +156,10 @@ PolygonizeGraph::computeNextCWEdges() {
 /* private */
 void
 PolygonizeGraph::convertMaximalToMinimalEdgeRings(
-		const std::vector<PolygonizeDirectedEdge*> ringEdges) {
+		const DirectedEdges ringEdges) {
 	for (const auto de : ringEdges) {
-		auto label = de->getLabel();
+		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
+		auto label = e->getLabel();
 		auto intNodes = findIntersectionNodes(de, label);
 		for (auto &n : intNodes) {
 			computeNextCCWEdges(n, label);
@@ -168,19 +169,20 @@ PolygonizeGraph::convertMaximalToMinimalEdgeRings(
 
 std::vector<Node*>
 PolygonizeGraph::findIntersectionNodes(
-		PolygonizeDirectedEdge *startDE,
+		DirectedEdgePtr startDE,
 		long label) const {
 	std::vector<Node*> intNodes;
 	auto de = startDE;
 
 	do {
-		auto node = de->getFromNode();
+		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
+		auto node = e->getFromNode();
 		if (getDegree(node, label) > 1) {
 			intNodes.push_back(node);
 		}
-		de = de->getNext();
+		de = e->getNext();
 		assert(de);  // found NULL DE in ring
-		assert(de == startDE || !de->isInRing());  // found DE already in ring
+		assert(de == startDE || !e->isInRing());  // found DE already in ring
 	} while (de != startDE);
 
 	return intNodes;
@@ -204,12 +206,12 @@ PolygonizeGraph::getEdgeRings() {
 
 	// find all edgerings
 	for (auto e : m_dirEdges) {
-		auto de = dynamic_cast<PolygonizeDirectedEdge*>(e);
+		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
 
 		if (de->isMarked()) continue;
 		if (de->isInRing()) continue;
 
-		auto er = findEdgeRing(de);
+		auto er = findEdgeRing(e);
 		edgeRingList.push_back(er);
 	}
 	return edgeRingList;
@@ -222,22 +224,22 @@ PolygonizeGraph::getEdgeRings(std::vector<EdgeRing*>& edgeRingList) {
 }
 
 
-std::vector<PolygonizeDirectedEdge*>
+PolygonizeGraph::DirectedEdges
 PolygonizeGraph::findLabeledEdgeRings(
-		const std::vector<DirectedEdge*> dirEdges) const {
-	std::vector<PolygonizeDirectedEdge*> edgeRingStarts;
+		const DirectedEdges dirEdges) const {
+	DirectedEdges edgeRingStarts;
 
 	// label the edge rings formed
 	long currLabel(1);
 	for (const auto e : dirEdges) {
-		auto de = dynamic_cast<PolygonizeDirectedEdge*>(e);
+		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
 
 		if (de->isMarked()) continue;
 		if (de->getLabel() >= 0) continue;
 
-		edgeRingStarts.push_back(de);
+		edgeRingStarts.push_back(e);
 
-		auto edges = findDirEdgesInRing(de);
+		auto edges = findDirEdgesInRing(e);
 
 		label(edges, currLabel);
 
@@ -289,23 +291,23 @@ PolygonizeGraph::deleteCutEdges(std::vector<const LineString*> &cutLines) {
 
 void
 PolygonizeGraph::label(
-		const std::vector<DirectedEdge*> &dirEdges,
+		const DirectedEdges &dirEdges,
 	 	long label) const {
 	for(auto e : dirEdges) {
-		dynamic_cast<PolygonizeDirectedEdge*>(e)->setLabel(label);
+		safe_cast<PolygonizeDirectedEdge*>(e)->setLabel(label);
 	}
 }
 
 void
 PolygonizeGraph::computeNextCWEdges(Node *node) {
 	auto deStar = node->getOutEdges();
-	PolygonizeDirectedEdge *startDE = nullptr;
-	PolygonizeDirectedEdge *prevDE = nullptr;
+	DirectedEdgePtr startDE = nullptr;
+	DirectedEdgePtr prevDE = nullptr;
 
 	// the edges are stored in CCW order around the star
 	auto pde = deStar.getEdges();
 	for (auto e : pde) {
-		auto outDE = safe_cast<PolygonizeDirectedEdge*>(e);
+		auto outDE = e;
 		if (outDE->isMarked()) continue;
 		if (!startDE) startDE = outDE;
 		if (prevDE) {
@@ -328,8 +330,8 @@ void
 PolygonizeGraph::computeNextCCWEdges(Node *node, long label) {
 	auto deStar = node->getOutEdges();
 
-	PolygonizeDirectedEdge *firstOutDE = nullptr;
-	PolygonizeDirectedEdge *prevInDE = nullptr;
+	DirectedEdgePtr firstOutDE = nullptr;
+	DirectedEdgePtr prevInDE = nullptr;
 
 	// the edges are stored in CCW order around the star
 	auto edges = deStar.getEdges();
@@ -341,15 +343,15 @@ PolygonizeGraph::computeNextCCWEdges(Node *node, long label) {
 		auto de = safe_cast<PolygonizeDirectedEdge*>(edges[i - 1]);
 		auto sym = safe_cast<PolygonizeDirectedEdge*>(de->getSym());
 
-		auto outDE = (de->getLabel() == label)? de : nullptr;
-		auto inDE = (sym->getLabel() == label)? sym : nullptr;
+		auto outDE = (de->getLabel() == label)? edges[i - 1] : nullptr;
+		auto inDE = (sym->getLabel() == label)? de->getSym() : nullptr;
 
 		if (!outDE && !inDE) continue;  // this edge is not in edgering
 
 		if (inDE) prevInDE = inDE;
 		if (outDE) {
 			if (prevInDE) {
-				prevInDE->setNext(outDE);
+				safe_cast<PolygonizeDirectedEdge*>(prevInDE)->setNext(outDE);
 				prevInDE = nullptr;
 			}
 			if (!firstOutDE) firstOutDE = outDE;
@@ -357,37 +359,38 @@ PolygonizeGraph::computeNextCCWEdges(Node *node, long label) {
 	}
 	if (prevInDE) {
 		assert(firstOutDE);
-		prevInDE->setNext(firstOutDE);
+		safe_cast<PolygonizeDirectedEdge*>(prevInDE)->setNext(firstOutDE);
 	}
 }
 
-std::vector<DirectedEdge*>
-PolygonizeGraph::findDirEdgesInRing(PolygonizeDirectedEdge *startDE) const {
+PolygonizeGraph::DirectedEdges
+PolygonizeGraph::findDirEdgesInRing(DirectedEdgePtr startDE) const {
 	auto de = startDE;
-	std::vector<DirectedEdge*> edges;
+	DirectedEdges edges;
 	do {
 		edges.push_back(de);
-		de = de->getNext();
+		de = safe_cast<PolygonizeDirectedEdge *>(de)->getNext();
 		assert(de);  // found NULL DE in ring
-		assert(de == startDE || !de->isInRing());  // found DE already in ring
+		assert(de == startDE || !safe_cast<PolygonizeDirectedEdge *>(de)->isInRing());  // found DE already in ring
 	} while (de != startDE);
 
 	return edges;
 }
 
 EdgeRing *
-PolygonizeGraph::findEdgeRing(PolygonizeDirectedEdge *startDE) const {
+PolygonizeGraph::findEdgeRing(DirectedEdgePtr startDE) const {
 	auto de = startDE;
 	EdgeRing *er = new EdgeRing(*m_factory);
 	// Now, when will we delete those EdgeRings ?
 	m_newEdgeRings.push_back(er);
 	do {
-		er->add(de);
-		de->setRing(er);
-		de = de->getNext();
+		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
+		er->add(e);
+		e->setRing(er);
+		de = e->getNext();
 		assert(de);  // found NULL DE in ring
-		assert(de == startDE || !de->isInRing());  // found DE already in ring
-	} while (de != startDE);
+		assert(de == startDE || !safe_cast<PolygonizeDirectedEdge *>(de)->isInRing());  // found DE already in ring
+	} while (de.get() != startDE.get());
 	return er;
 }
 

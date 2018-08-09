@@ -23,6 +23,7 @@
 #include <vector> // for typedefs
 #include <set> // for typedefs
 #include <iosfwd> // ostream
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -38,6 +39,8 @@ namespace geos {
 		class Node;
 	}
 }
+
+using geos::planargraph::DirectedEdge;
 
 namespace geos {
 namespace planargraph { // geos.planargraph
@@ -55,7 +58,7 @@ class GEOS_DLL Edge: public GraphComponent {
 
 public:
 
-#if 1
+#if 0
 	typedef DirectedEdge* DirectedEdgePtr;
 #else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;

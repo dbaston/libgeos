@@ -71,7 +71,7 @@ PlanarGraph::remove(Edge *edge)
  * zero.
  */
 void
-PlanarGraph::remove(DirectedEdge *de)
+PlanarGraph::remove(DirectedEdgePtr de)
 {
 	if (!de) return;
 	de->resetSym();

@@ -23,8 +23,10 @@
 
 #include <geos/export.h>
 #include <geos/planargraph/PlanarGraph.h> // for inheritance
+#include <geos/planargraph/DirectedEdge.h>
 
 #include <vector>
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -44,6 +46,8 @@ namespace geos {
 	}
 }
 
+using geos::planargraph::DirectedEdge;
+using geos::planargraph::PlanarGraph;
 
 namespace geos {
 namespace operation { // geos::operation
@@ -56,9 +60,16 @@ namespace linemerge { // geos::operation::linemerge
  * and planargraph::Node indicates whether they have been
  * logically deleted from the graph.
  */
-class GEOS_DLL LineMergeGraph: public planargraph::PlanarGraph {
+class GEOS_DLL LineMergeGraph: public PlanarGraph {
 
 private:
+
+#if 0
+	typedef DirectedEdge* DirectedEdgePtr;
+#else
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 
 	planargraph::Node* getNode(const geom::Coordinate &coordinate);
 
@@ -66,7 +77,7 @@ private:
 
 	std::vector<planargraph::Edge*> newEdges;
 
-	std::vector<planargraph::DirectedEdge*> newDirEdges;
+	DirectedEdges newDirEdges;
 
 public:
 
@@ -80,6 +91,7 @@ public:
 	 */
 	void addEdge(const geom::LineString *lineString);
 
+	LineMergeGraph() { };
 	~LineMergeGraph() override;
 };
 } // namespace geos::operation::linemerge

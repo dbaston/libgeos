@@ -50,7 +50,7 @@ public:
 
   friend std::ostream& operator << (std::ostream&, const DirectedEdge&);
 
-#if 1
+#if 0
 	typedef DirectedEdge* DirectedEdgePtr;
 #else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
@@ -164,7 +164,7 @@ public:
 	 * Sets this DirectedEdge's symmetric DirectedEdge, which runs
 	 * in the opposite direction.
 	 */
-	void setSym(DirectedEdge *newSym);
+	void setSym(DirectedEdgePtr newSym);
 	/**
 	 * \brief
 	 * Unsets this DirectedEdge's symmetric DirectedEdge

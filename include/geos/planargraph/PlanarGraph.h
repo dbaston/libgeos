@@ -23,6 +23,7 @@
 #include <geos/planargraph/NodeMap.h> // for composition
 
 #include <vector> // for typedefs
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -59,6 +60,13 @@ namespace planargraph { // geos.planargraph
  */
 class GEOS_DLL PlanarGraph {
 public:
+#if 0
+	typedef DirectedEdge* DirectedEdgePtr;
+#else
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
+
 
 	typedef std::vector<Edge *> EdgeContainer;
 	typedef EdgeContainer::iterator EdgeIterator;
@@ -100,7 +108,7 @@ public:
 		return m_edges;
 	}
 
-	std::vector<DirectedEdge*>& getDirEdges() {
+	DirectedEdges& getDirEdges() {
 		return m_dirEdges;
 	}
 
@@ -124,7 +132,7 @@ public:
 	 * DirectedEdge, even if the removal of the DirectedEdge reduces
 	 * the degree of a Node to zero.
 	 */
-	void remove(DirectedEdge *de);
+	void remove(DirectedEdgePtr de);
 
 	/**
 	 * \brief
@@ -262,12 +270,12 @@ protected:
 	 * Only subclasses can add DirectedEdges,
 	 * to ensure the edges added are of the right class.
 	 */
-	void add(DirectedEdge *dirEdge) {
+	void add(DirectedEdgePtr dirEdge) {
 		m_dirEdges.push_back(dirEdge);
 	}
 
 	std::vector<Edge*> m_edges;
-	std::vector<DirectedEdge*> m_dirEdges;
+	DirectedEdges m_dirEdges;
 	NodeMap m_nodeMap;
 
 };

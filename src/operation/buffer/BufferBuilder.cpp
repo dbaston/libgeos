@@ -415,7 +415,7 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 	std::vector<BufferSubgraph*> subgraphList;
 
 	try {
-		PlanarGraph graph(OverlayNodeFactory::instance());
+		geos::geomgraph::PlanarGraph graph(OverlayNodeFactory::instance());
 		graph.addEdges(edgeList.getEdges());
 
     GEOS_CHECK_FOR_INTERRUPTS();
@@ -622,7 +622,7 @@ bool BufferSubgraphGT(BufferSubgraph *first, BufferSubgraph *second) {
 
 /*private*/
 void
-BufferBuilder::createSubgraphs(PlanarGraph *graph, std::vector<BufferSubgraph*>& subgraphList)
+BufferBuilder::createSubgraphs(geos::geomgraph::PlanarGraph *graph, std::vector<BufferSubgraph*>& subgraphList)
 {
 	std::vector<Node*> nodes;
 	graph->getNodes(nodes);
