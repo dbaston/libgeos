@@ -49,6 +49,7 @@ namespace geos {
 	}
 }
 
+using geos::planargraph::DirectedEdge;
 
 namespace geos {
 namespace operation { // geos::operation
@@ -99,7 +100,14 @@ namespace linemerge { // geos::operation::linemerge
 class GEOS_DLL LineSequencer {
 
 private:
-	typedef std::list<planargraph::DirectedEdge*> DirEdgeList;
+#if 1
+	  typedef DirectedEdge* DirectedEdgePtr;
+#else
+		typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+
+	typedef std::list<DirectedEdgePtr> DirEdgeList;
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 	typedef std::vector< DirEdgeList* > Sequences;
 
 	LineMergeGraph graph;
@@ -136,7 +144,7 @@ private:
 	static const planargraph::Node* findLowestDegreeNode(
 			const planargraph::Subgraph& graph);
 
-	void addReverseSubpath(const planargraph::DirectedEdge *de,
+	void addReverseSubpath(DirectedEdgePtr de,
 		DirEdgeList& deList,
 		DirEdgeList::iterator lit,
 		bool expectedClosed);
@@ -149,7 +157,7 @@ private:
 	 * @return the dirEdge found, or <code>null</code>
 	 *         if none were unvisited
 	 */
-	static const planargraph::DirectedEdge* findUnvisitedBestOrientedDE(
+	static DirectedEdgePtr findUnvisitedBestOrientedDE(
 			const planargraph::Node* node);
 
 	/**

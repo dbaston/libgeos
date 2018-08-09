@@ -266,14 +266,14 @@ LineSequencer::findLowestDegreeNode(const planargraph::Subgraph& graph)
 }
 
 /*private static*/
-const planargraph::DirectedEdge*
+LineSequencer::DirectedEdgePtr
 LineSequencer::findUnvisitedBestOrientedDE(const planargraph::Node* node)
 {
 	using planargraph::DirectedEdge;
 	using planargraph::DirectedEdgeStar;
 
-	const DirectedEdge* wellOrientedDE = nullptr;
-	const DirectedEdge* unvisitedDE = nullptr;
+	LineSequencer::DirectedEdgePtr wellOrientedDE = nullptr;
+	LineSequencer::DirectedEdgePtr unvisitedDE = nullptr;
 	const auto des = node->getOutEdges();
 	for (const auto de : des)
 	{
@@ -290,7 +290,7 @@ LineSequencer::findUnvisitedBestOrientedDE(const planargraph::Node* node)
 
 /*private*/
 void
-LineSequencer::addReverseSubpath(const planargraph::DirectedEdge *de,
+LineSequencer::addReverseSubpath(DirectedEdgePtr de,
 		planargraph::DirectedEdge::NonConstList& deList,
 		planargraph::DirectedEdge::NonConstList::iterator lit,
 		bool expectedClosed)
@@ -306,7 +306,7 @@ LineSequencer::addReverseSubpath(const planargraph::DirectedEdge *de,
 		deList.insert(lit, de->getSym());
 		de->parentEdge()->setVisited(true);
 		fromNode = de->getFromNode();
-		const DirectedEdge* unvisitedOutDE = findUnvisitedBestOrientedDE(fromNode);
+		auto unvisitedOutDE = findUnvisitedBestOrientedDE(fromNode);
 
 		// this must terminate, since we are continually marking edges as visited
 		if (unvisitedOutDE == nullptr) break;
@@ -336,7 +336,7 @@ LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 	const Node* startNode = findLowestDegreeNode(p_graph);
 
 	const auto startDE = *(startNode->getOutEdges().begin());
-	const DirectedEdge *startDESym = startDE->getSym();
+	auto startDESym = startDE->getSym();
 
 	DirectedEdge::NonConstList *seq = new DirectedEdge::NonConstList();
 
