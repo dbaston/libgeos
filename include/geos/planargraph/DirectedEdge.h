@@ -57,7 +57,7 @@ public:
 #endif
 	typedef std::list<DirectedEdgePtr> NonConstList;
 	typedef std::list<const DirectedEdgePtr> ConstList;
-	typedef std::vector<DirectedEdgePtr> NonConstVect;
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 	typedef std::vector<const DirectedEdgePtr> ConstVect;
 
 protected:
@@ -82,7 +82,7 @@ public:
 	 * reference to avoid this.
 	 */
 	static std::vector<Edge*> toEdges(
-		NonConstVect& dirEdges);
+		DirectedEdges& dirEdges);
 
 	/**
 	 * \brief Constructs a DirectedEdge connecting the <code>from</code>
@@ -232,7 +232,7 @@ public:
 	 * it is empty if index-based corrispondence is important.
 	 */
 	// [[deprecated]]
-	static void toEdges( NonConstVect& dirEdges,
+	static void toEdges( DirectedEdges& dirEdges,
 			std::vector<Edge*>& parentEdges);
 
 	// [[deprecated]]

@@ -30,7 +30,7 @@ namespace planargraph {
  * Adds a new member to this DirectedEdgeStar.
  */
 void
-DirectedEdgeStar::add(DirectedEdge *de)
+DirectedEdgeStar::add(DirectedEdgePtr de)
 {
 	outEdges.push_back(de);
 	sorted = false;
@@ -40,24 +40,24 @@ DirectedEdgeStar::add(DirectedEdge *de)
  * Drops a member of this DirectedEdgeStar.
  */
 void
-DirectedEdgeStar::remove(DirectedEdge *de)
+DirectedEdgeStar::remove(DirectedEdgePtr de)
 {
 	find_and_erase(de, outEdges);
 }
 
-std::vector<DirectedEdge*>::iterator
+DirectedEdgeStar::DirectedEdges::iterator
 DirectedEdgeStar::begin() {
 	sortEdges();
 	return outEdges.begin();
 }
 
-std::vector<DirectedEdge*>::iterator
+DirectedEdgeStar::DirectedEdges::iterator
 DirectedEdgeStar::end() {
 	sortEdges();
 	return outEdges.end();
 }
 
-std::vector<DirectedEdge*>::const_iterator
+DirectedEdgeStar::DirectedEdges::const_iterator
 DirectedEdgeStar::begin() const {
 	sortEdges();
 	return outEdges.begin();

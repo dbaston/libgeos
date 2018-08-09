@@ -28,6 +28,7 @@
 #include <geos/planargraph/DirectedEdge.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/LineString.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <cassert>
 #include <vector>
@@ -50,7 +51,7 @@ int
 PolygonizeGraph::getDegreeNonDeleted(Node *node) const {
 	int degree = 0;
 	for (auto e : node->getOutEdges()) {
-		if (!dynamic_cast<PolygonizeDirectedEdge*>(e)->isMarked()) ++degree;
+		if (!safe_cast<PolygonizeDirectedEdge*>(e)->isMarked()) ++degree;
 	}
 	return degree;
 }
@@ -59,7 +60,7 @@ int
 PolygonizeGraph::getDegree(Node *node, long label) const {
 	int degree = 0;
 	for (auto e : node->getOutEdges()) {
-		if (dynamic_cast<PolygonizeDirectedEdge*>(e)->getLabel() == label) ++degree;
+		if (safe_cast<PolygonizeDirectedEdge*>(e)->getLabel() == label) ++degree;
 	}
 	return degree;
 }
@@ -70,7 +71,7 @@ PolygonizeGraph::getDegree(Node *node, long label) const {
 void
 PolygonizeGraph::deleteAllEdges(Node *node) {
   for (auto e : node->getOutEdges()) {
-		auto de = dynamic_cast<PolygonizeDirectedEdge*>(e);
+		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
 		de->setMarked(true);
 		if (de->getSym()) de->getSym()->setMarked(true);
 	}

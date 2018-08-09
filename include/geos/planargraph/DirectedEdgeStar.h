@@ -47,15 +47,15 @@ public:
 #if 1
 	typedef DirectedEdge* DirectedEdgePtr;
 #else
-	typedef td::shared_ptr<DirectedEdge> DirectedEdgePtr;
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
 #endif
-	typedef std::vector<DirectedEdgePtr> OutEdges;
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 
 private:
 	/**
 	 * \brief The underlying list of outgoing DirectedEdges
 	 */
-	mutable OutEdges outEdges;
+	mutable DirectedEdges outEdges;
 	mutable bool sorted;
 	void sortEdges() const;
 
@@ -81,18 +81,18 @@ public:
 	 * \brief Returns an Iterator over the DirectedEdges,
 	 * in ascending order by angle with the positive x-axis.
 	 */
-	OutEdges::iterator iterator() { return begin(); }
+	DirectedEdges::iterator iterator() { return begin(); }
 	/// Returns an iterator to first DirectedEdge
-	OutEdges::iterator begin();
+	DirectedEdges::iterator begin();
 
 	/// Returns an iterator to one-past last DirectedEdge
-	OutEdges::iterator end();
+	DirectedEdges::iterator end();
 
 	/// Returns an const_iterator to first DirectedEdge
-	OutEdges::const_iterator begin() const;
+	DirectedEdges::const_iterator begin() const;
 
 	/// Returns an const_iterator to one-past last DirectedEdge
-	OutEdges::const_iterator end() const;
+	DirectedEdges::const_iterator end() const;
 
 	/**
 	 * \brief Returns the number of edges around the Node associated
@@ -146,7 +146,7 @@ public:
 	 * outEdges are sorting in ascending order by angle with the
 	 * positive x-axis.
 	 */
-	OutEdges::iterator
+	DirectedEdges::iterator
 	findEdge(const DirectedEdge *dirEdge) const;
 
 	/**
