@@ -50,7 +50,7 @@ public:
 
   friend std::ostream& operator << (std::ostream&, const DirectedEdge&);
 
-#if 1
+#if 0
 	typedef DirectedEdge* DirectedEdgePtr;
 #else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
