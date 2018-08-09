@@ -123,7 +123,7 @@ public:
 	 */
 	void add(const std::vector<const geom::Geometry*> *geomList);
 
-#if 0
+#ifdef GEOS_USEDEPRECATED
 	/**
 	 * Add a geometry to the linework to be polygonized.
 	 * May be called multiple times.

@@ -53,11 +53,7 @@ namespace polygonize { // geos::operation::polygonize
  */
 class GEOS_DLL PolygonizeDirectedEdge: public planargraph::DirectedEdge {
 public:
-#if 0
-	  typedef DirectedEdge* DirectedEdgePtr;
-#else
 		typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
-#endif
 
 
 private:

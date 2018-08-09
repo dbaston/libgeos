@@ -44,11 +44,7 @@ namespace planargraph { // geos.planargraph
 /// A sorted collection of DirectedEdge pointers which leave a Node in a PlanarGraph.
 class GEOS_DLL DirectedEdgeStar {
 public:
-#if 0
-	typedef DirectedEdge* DirectedEdgePtr;
-#else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
-#endif
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 
 private:

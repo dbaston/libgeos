@@ -57,12 +57,7 @@ namespace planargraph { // geos.planargraph
 class GEOS_DLL Edge: public GraphComponent {
 
 public:
-
-#if 0
-	typedef DirectedEdge* DirectedEdgePtr;
-#else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
-#endif
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 
 	friend std::ostream& operator<< (std::ostream& os, const Node&);
