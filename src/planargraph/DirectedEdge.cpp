@@ -144,7 +144,7 @@ DirectedEdge::getAngle() const
 }
 
 /*public*/
-DirectedEdge*
+DirectedEdge::DirectedEdgePtr
 DirectedEdge::getSym() const
 {
 	return m_sym;
@@ -155,7 +155,7 @@ DirectedEdge::getSym() const
  * which runs in the opposite direction.
  */
 void
-DirectedEdge::setSym(DirectedEdge *newSym)
+DirectedEdge::setSym(DirectedEdgePtr newSym)
 {
 	m_sym = newSym;
 }

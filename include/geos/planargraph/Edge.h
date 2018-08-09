@@ -55,7 +55,15 @@ class GEOS_DLL Edge: public GraphComponent {
 
 public:
 
+#if 1
+	typedef DirectedEdge* DirectedEdgePtr;
+#else
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
+
 	friend std::ostream& operator<< (std::ostream& os, const Node&);
+
 
 	/// Set of const Edges pointers
 	typedef std::set<const Edge *> ConstSet;
@@ -72,7 +80,7 @@ public:
 protected:
 
 	/** \brief The two DirectedEdges associated with this Edge */
-	std::vector<DirectedEdge*> dirEdge;
+	DirectedEdges dirEdge;
 
 	/**
 	 * \brief Constructs an Edge whose DirectedEdges are not yet set.
@@ -97,7 +105,7 @@ public:
 	 * For  each DirectedEdge: sets the Edge, sets the symmetric
 	 * DirectedEdge, and adds this Edge to its from-Node.
 	 */
-	Edge(DirectedEdge *de0, DirectedEdge *de1)
+	Edge(DirectedEdgePtr de0, DirectedEdgePtr de1)
 		:
 		dirEdge()
 	{
@@ -111,20 +119,20 @@ public:
 	 *  sets the Edge, sets the symmetric DirectedEdge, and
 	 *  adds this Edge to its from-Node.
 	 */
-	void setDirectedEdges(DirectedEdge *de0, DirectedEdge *de1);
+	void setDirectedEdges(DirectedEdgePtr de0, DirectedEdgePtr de1);
 
 	/**
 	 * \brief Returns one of the DirectedEdges associated with this Edge.
 	 * @param i 0 or 1
 	 */
-	DirectedEdge* getDirEdge(int i);
+	DirectedEdgePtr getDirEdge(int i);
 
 	/**
 	 * \brief Returns the DirectedEdge that starts from the given node,
 	 * or null if the node is not one of the two nodes associated
 	 * with this Edge.
 	 */
-	DirectedEdge* getDirEdge(Node *fromNode);
+	DirectedEdgePtr getDirEdge(Node *fromNode);
 
 	/**
 	 * \brief If <code>node</code> is one of the two nodes associated

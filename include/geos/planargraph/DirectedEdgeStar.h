@@ -44,7 +44,7 @@ namespace planargraph { // geos.planargraph
 /// A sorted collection of DirectedEdge pointers which leave a Node in a PlanarGraph.
 class GEOS_DLL DirectedEdgeStar {
 public:
-#if 0
+#if 1
 	typedef DirectedEdge* DirectedEdgePtr;
 #else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
@@ -70,12 +70,12 @@ public:
 	/**
 	 * \brief Adds a new member to this DirectedEdgeStar.
 	 */
-	void add(DirectedEdge *de);
+	void add(DirectedEdgePtr de);
 
 	/**
 	 * \brief Drops a member of this DirectedEdgeStar.
 	 */
-	void remove(DirectedEdge *de);
+	void remove(DirectedEdgePtr de);
 
 	/**
 	 * \brief Returns an Iterator over the DirectedEdges,
@@ -110,7 +110,7 @@ public:
 	 * \brief Returns the DirectedEdges, in ascending order
 	 * by angle with the positive x-axis.
 	 */
-	std::vector<DirectedEdge*>& getEdges();
+	DirectedEdges& getEdges();
 
 #ifdef GEOS_USEDEPRECATED
 	/** @name deprecated */
@@ -147,14 +147,15 @@ public:
 	 * positive x-axis.
 	 */
 	DirectedEdges::iterator
-	findEdge(const DirectedEdge *dirEdge) const;
+	findEdge(const DirectedEdgePtr dirEdge) const;
 
 	/**
 	 * \brief Returns the DirectedEdge on the left-hand side
 	 * of the given DirectedEdge (which must be a member of this
 	 * DirectedEdgeStar).
 	 */
-	DirectedEdge* getNextEdge(DirectedEdge *dirEdge);
+	DirectedEdgePtr
+	getNextEdge(DirectedEdgePtr dirEdge);
 };
 
 } // namespace geos::planargraph

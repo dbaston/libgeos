@@ -200,18 +200,11 @@ LineSequencer::buildSequencedGeometry(const Sequences& sequences)
 {
 	unique_ptr<Geometry::NonConstVect> lines(new Geometry::NonConstVect);
 
-	for (Sequences::const_iterator
-		i1=sequences.begin(), i1End=sequences.end();
-		i1 != i1End;
-		++i1)
+	for (auto seq : sequences)
 	{
-		planargraph::DirectedEdge::NonConstList& seq = *(*i1);
-		for(planargraph::DirectedEdge::NonConstList::iterator i2=seq.begin(),
-			i2End=seq.end(); i2 != i2End; ++i2)
+		for(auto de : *seq)
 		{
-			const planargraph::DirectedEdge* de = *i2;
-			assert(dynamic_cast<LineMergeEdge* >(de->parentEdge()));
-			LineMergeEdge* e = static_cast<LineMergeEdge* >(de->parentEdge());
+			auto e = safe_cast<LineMergeEdge* >(de->parentEdge());
 			const LineString* line = e->getLine();
 
 			// lineToAdd will be a *copy* of input things
@@ -291,8 +284,8 @@ LineSequencer::findUnvisitedBestOrientedDE(const planargraph::Node* node)
 /*private*/
 void
 LineSequencer::addReverseSubpath(DirectedEdgePtr de,
-		planargraph::DirectedEdge::NonConstList& deList,
-		planargraph::DirectedEdge::NonConstList::iterator lit,
+		DirEdgeList& deList,
+		DirEdgeList::iterator lit,
 		bool expectedClosed)
 {
 	using planargraph::Node;
@@ -322,7 +315,7 @@ LineSequencer::addReverseSubpath(DirectedEdgePtr de,
 }
 
 /*private*/
-planargraph::DirectedEdge::NonConstList*
+LineSequencer::DirEdgeList*
 LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 {
 	using planargraph::DirectedEdge;
@@ -345,8 +338,8 @@ LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 
 	lit=seq->end();
 	while (lit != seq->begin()) {
-		const DirectedEdge* prev = *(--lit);
-		const DirectedEdge* unvisitedOutDE = findUnvisitedBestOrientedDE(prev->getFromNode());
+		const auto prev = *(--lit);
+		const auto unvisitedOutDE = findUnvisitedBestOrientedDE(prev->getFromNode());
 		if (unvisitedOutDE != nullptr)
 			addReverseSubpath(unvisitedOutDE->getSym(), *seq, lit, true);
 	}
@@ -362,13 +355,13 @@ LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 }
 
 /* private */
-planargraph::DirectedEdge::NonConstList*
-LineSequencer::orient(planargraph::DirectedEdge::NonConstList* seq)
+LineSequencer::DirEdgeList*
+LineSequencer::orient(DirEdgeList* seq)
 {
 	using namespace geos::planargraph;
 
-	const DirectedEdge* startEdge = seq->front();
-	const DirectedEdge* endEdge = seq->back();
+	const auto startEdge = seq->front();
+	const auto endEdge = seq->back();
 	Node* startNode = startEdge->getFromNode();
 	Node* endNode = endEdge->getToNode();
 
@@ -422,15 +415,13 @@ LineSequencer::orient(planargraph::DirectedEdge::NonConstList* seq)
 }
 
 /* private */
-planargraph::DirectedEdge::NonConstList*
-LineSequencer::reverse(planargraph::DirectedEdge::NonConstList& seq)
+LineSequencer::DirEdgeList*
+LineSequencer::reverse(DirEdgeList& seq)
 {
 	using namespace geos::planargraph;
 
 	DirectedEdge::NonConstList* newSeq = new DirectedEdge::NonConstList();
-	DirectedEdge::NonConstList::iterator it=seq.begin(), itEnd=seq.end();
-	for (; it!=itEnd; ++it) {
-		const DirectedEdge *de = *it;
+	for (auto de : seq) {
 		newSeq->push_front(de->getSym());
 	}
 	return newSeq;

@@ -20,6 +20,7 @@
 #include <geos/operation/linemerge/LineMergeDirectedEdge.h>
 #include <geos/planargraph/DirectedEdge.h>
 #include <geos/planargraph/Node.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <cassert>
 
@@ -52,11 +53,11 @@ LineMergeDirectedEdge::getNext()
 		return nullptr;
 	}
 	if (getToNode()->getOutEdges().getEdges()[0]==getSym()) {
-		return (LineMergeDirectedEdge*) getToNode()->getOutEdges().getEdges()[1];
+	  return safe_cast<LineMergeDirectedEdge*>(getToNode()->getOutEdges().getEdges()[1]);
 	}
 	assert(getToNode()->getOutEdges().getEdges()[1]==getSym());
 
-	LineMergeDirectedEdge* nextedge = dynamic_cast<LineMergeDirectedEdge*>(getToNode()->getOutEdges().getEdges()[0]);
+	auto nextedge = safe_cast<LineMergeDirectedEdge*>(getToNode()->getOutEdges().getEdges()[0]);
 	assert(nextedge);
 
 	return nextedge;

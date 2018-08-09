@@ -63,7 +63,7 @@ DirectedEdgeStar::begin() const {
 	return outEdges.begin();
 }
 
-std::vector<DirectedEdge*>::const_iterator
+DirectedEdgeStar::DirectedEdges::const_iterator
 DirectedEdgeStar::end() const {
 	sortEdges();
 	return outEdges.end();
@@ -85,15 +85,15 @@ DirectedEdgeStar::getCoordinate() const
  * Returns the DirectedEdges, in ascending order by angle with
  * the positive x-axis.
  */
-std::vector<DirectedEdge*>&
+DirectedEdgeStar::DirectedEdges&
 DirectedEdgeStar::getEdges()
 {
 	sortEdges();
 	return outEdges;
 }
 
-bool
-pdeLessThan(DirectedEdge *first, DirectedEdge * second)
+static bool
+pdeLessThan1(DirectedEdgeStar::DirectedEdgePtr first, DirectedEdgeStar::DirectedEdgePtr second)
 {
 	return first->compareTo(*second) < 0;
 }
@@ -103,7 +103,7 @@ void
 DirectedEdgeStar::sortEdges() const
 {
 	if (!sorted) {
-		std::sort(outEdges.begin(), outEdges.end(), pdeLessThan);
+		std::sort(outEdges.begin(), outEdges.end(), pdeLessThan1);
 		sorted = true;
 	}
 }
@@ -157,8 +157,8 @@ DirectedEdgeStar::getIndex(int i) const
 }
 #endif
 
-std::vector<geos::planargraph::DirectedEdge*>::iterator
-DirectedEdgeStar::findEdge(const DirectedEdge *dirEdge) const
+DirectedEdgeStar::DirectedEdges::iterator
+DirectedEdgeStar::findEdge(const DirectedEdgePtr dirEdge) const
 {
 	sortEdges();
 	return std::find(outEdges.begin(), outEdges.end(), dirEdge);
@@ -168,8 +168,8 @@ DirectedEdgeStar::findEdge(const DirectedEdge *dirEdge) const
  * Returns the DirectedEdge on the left-hand side of the given
  * DirectedEdge (which must be a member of this DirectedEdgeStar).
  */
-DirectedEdge*
-DirectedEdgeStar::getNextEdge(DirectedEdge *dirEdge)
+DirectedEdgeStar::DirectedEdgePtr
+DirectedEdgeStar::getNextEdge(DirectedEdgePtr dirEdge)
 {
 	auto it = findEdge(dirEdge);
 	return *(it + 1);

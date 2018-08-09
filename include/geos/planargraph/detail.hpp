@@ -11,6 +11,13 @@ find_and_erase(T *what, std::vector<T*> &where) {
 	where.erase(std::remove(where.begin(), where.end(), what), where.end());
 }
 
+template <typename T, typename C>
+void
+find_and_erase(T what, C &where) {
+	if (!what) return;
+	where.erase(std::remove(where.begin(), where.end(), what), where.end());
+}
+
 /** \brief
  * Sets the Visited state for the elements of a container,
  * from start to end iterator.

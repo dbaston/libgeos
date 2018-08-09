@@ -100,7 +100,7 @@ namespace linemerge { // geos::operation::linemerge
 class GEOS_DLL LineSequencer {
 
 private:
-#if 0
+#if 1
 	  typedef DirectedEdge* DirectedEdgePtr;
 #else
 		typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
@@ -117,6 +117,7 @@ private:
 	std::unique_ptr<geom::Geometry> sequencedGeometry;
 	bool isSequenceableVar;
 
+	// functions
 	void addLine(const geom::LineString *lineString);
 	void computeSequence();
 	Sequences* findSequences();

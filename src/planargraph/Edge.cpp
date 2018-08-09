@@ -29,7 +29,7 @@ namespace planargraph {
  *  adds this Edge to its from-Node.
  */
 void
-Edge::setDirectedEdges(DirectedEdge *de0, DirectedEdge *de1)
+Edge::setDirectedEdges(DirectedEdgePtr de0, DirectedEdgePtr de1)
 {
 	dirEdge.push_back(de0);
 	dirEdge.push_back(de1);
@@ -45,7 +45,7 @@ Edge::setDirectedEdges(DirectedEdge *de0, DirectedEdge *de1)
 * Returns one of the DirectedEdges associated with this Edge.
 * @param i 0 or 1
 */
-DirectedEdge *
+Edge::DirectedEdgePtr
 Edge::getDirEdge(int i)
 {
 	return dirEdge[i];
@@ -55,7 +55,7 @@ Edge::getDirEdge(int i)
  * Returns the DirectedEdge that starts from the given node, or null if the
  * node is not one of the two nodes associated with this Edge.
  */
-DirectedEdge *
+Edge::DirectedEdgePtr
 Edge::getDirEdge(Node *fromNode)
 {
 	if (dirEdge[0]->getFromNode()==fromNode) return dirEdge[0];

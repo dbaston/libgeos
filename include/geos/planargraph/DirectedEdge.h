@@ -50,7 +50,7 @@ public:
 
   friend std::ostream& operator << (std::ostream&, const DirectedEdge&);
 
-#if 0
+#if 1
 	typedef DirectedEdge* DirectedEdgePtr;
 #else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
@@ -157,7 +157,7 @@ public:
 	 * Returns the symmetric DirectedEdge -- the other DirectedEdge
 	 * associated with this DirectedEdge's parent Edge.
 	 */
-	DirectedEdge* getSym() const;
+	DirectedEdgePtr getSym() const;
 
 	/**
 	 * \brief

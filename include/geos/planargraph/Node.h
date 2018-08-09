@@ -87,7 +87,7 @@ public:
 	/**
 	 * \brief Adds an outgoing DirectedEdge to this Node.
 	 */
-	void addOutEdge(DirectedEdge *de) {
+	void addOutEdge(DirectedEdgeStar::DirectedEdgePtr de) {
 		deStar.add(de);
 	}
 

@@ -262,11 +262,11 @@ PolygonizeGraph::deleteCutEdges() {
 	 * Delete them, and record them
 	 */
 	for (auto e : m_dirEdges) {
-		auto de = dynamic_cast<PolygonizeDirectedEdge*>(e);
+		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
 
 		if (de->isMarked()) continue;
 
-		auto sym = dynamic_cast<PolygonizeDirectedEdge*>(de->getSym());
+		auto sym = safe_cast<PolygonizeDirectedEdge*>(de->getSym());
 
 		if (de->getLabel() == sym->getLabel()) {
 			de->setMarked(true);
@@ -305,16 +305,16 @@ PolygonizeGraph::computeNextCWEdges(Node *node) {
 	// the edges are stored in CCW order around the star
 	auto pde = deStar.getEdges();
 	for (auto e : pde) {
-		auto outDE = dynamic_cast<PolygonizeDirectedEdge*>(e);
+		auto outDE = safe_cast<PolygonizeDirectedEdge*>(e);
 		if (outDE->isMarked()) continue;
 		if (!startDE) startDE = outDE;
 		if (prevDE) {
-			dynamic_cast<PolygonizeDirectedEdge*>(prevDE->getSym())->setNext(outDE);
+			safe_cast<PolygonizeDirectedEdge*>(prevDE->getSym())->setNext(outDE);
 		}
 		prevDE = outDE;
 	}
 	if (prevDE) {
-		dynamic_cast<PolygonizeDirectedEdge*>(prevDE->getSym())->setNext(startDE);
+		safe_cast<PolygonizeDirectedEdge*>(prevDE->getSym())->setNext(startDE);
 	}
 }
 
@@ -338,8 +338,8 @@ PolygonizeGraph::computeNextCCWEdges(Node *node, long label) {
 	 * Cycling in reverse order.
 	 */
 	for(auto i = edges.size(); i > 0; --i) {
-		auto de = dynamic_cast<PolygonizeDirectedEdge*>(edges[i - 1]);
-		auto sym = dynamic_cast<PolygonizeDirectedEdge*>(de->getSym());
+		auto de = safe_cast<PolygonizeDirectedEdge*>(edges[i - 1]);
+		auto sym = safe_cast<PolygonizeDirectedEdge*>(de->getSym());
 
 		auto outDE = (de->getLabel() == label)? de : nullptr;
 		auto inDE = (sym->getLabel() == label)? sym : nullptr;
@@ -409,10 +409,10 @@ PolygonizeGraph::deleteDangles() {
 		auto nodeOutEdges(node->getOutEdges().getEdges());
 
 		for(auto oe : nodeOutEdges) {
-			auto de(dynamic_cast<PolygonizeDirectedEdge*>(oe));
+			auto de(safe_cast<PolygonizeDirectedEdge*>(oe));
 			// delete this edge and its sym
 			de->setMarked(true);
-			auto sym(dynamic_cast<PolygonizeDirectedEdge*>(de->getSym()));
+			auto sym(safe_cast<PolygonizeDirectedEdge*>(de->getSym()));
 			if (sym) sym->setMarked(true);
 			// save the line as a dangle
 			auto e(dynamic_cast<PolygonizeEdge*>(de->parentEdge()));
