@@ -243,7 +243,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 *  These are for memory management
 	 */
 	/* created as PolygonizeEdge but saved as Edge*/
-	std::vector<planargraph::Edge *> m_newEdges;
+	//std::vector<planargraph::Edge *> m_newEdges;
 	/* created as PolygonizeDirectedEdge but saved as DirectedEdge */
 	DirectedEdges m_newDirEdges;
 	std::vector<planargraph::Node *> m_newNodes;

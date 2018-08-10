@@ -88,7 +88,6 @@ PolygonizeGraph::PolygonizeGraph(const GeometryFactory *newFactory)
  * Destroy a PolygonizeGraph
  */
 PolygonizeGraph::~PolygonizeGraph() {
-	for (auto e : m_newEdges) delete e;
 	for (auto n : m_newNodes) delete n;
 	for (auto e : m_newEdgeRings) delete e;
 	for (auto c : m_newCoords) delete c;
@@ -126,7 +125,6 @@ PolygonizeGraph::addEdge(const LineString *line) {
 			nEnd, nStart, linePts->getAt(linePts->getSize() - 2), false));
 	m_newDirEdges.push_back(de1);
 	Edge *edge = new PolygonizeEdge(line);
-	m_newEdges.push_back(edge);
 	edge->setDirectedEdges(de0, de1);
 	add(edge);
 

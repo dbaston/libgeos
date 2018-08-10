@@ -155,7 +155,7 @@ Polygonizer::add(const vector<const Geometry*> *geomList)
 	for (auto &g : (*geomList)) add(g);
 }
 
-#if 0
+#ifdef GEOS_USEDEPRECATED
 /*
  * Add a geometry to the linework to be polygonized.
  * May be called multiple times.
