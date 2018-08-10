@@ -43,6 +43,9 @@ namespace algorithm { // geos::planargraph::algorithm
 class GEOS_DLL ConnectedSubgraphFinder
 {
 public:
+	typedef NodeMap::NodePtr NodePtr;
+	typedef std::stack<NodePtr> NodeStack;
+
 
 	ConnectedSubgraphFinder(PlanarGraph& newGraph)
 		:
@@ -64,7 +67,7 @@ private:
 	PlanarGraph& graph;
 
 	/// Returns a newly allocated Subgraph
-	Subgraph* findSubgraph(Node* node);
+	Subgraph* findSubgraph(NodePtr node);
 
 
 	/**
@@ -73,14 +76,14 @@ private:
 	 *
 	 * @param node a node known to be in the subgraph
 	 */
-	void addReachable(Node* node, Subgraph* subgraph);
+	void addReachable(NodePtr node, Subgraph* subgraph);
 
 	/**
 	 * Adds the argument node and all its out edges to the subgraph.
 	 * @param node the node to add
 	 * @param nodeStack the current set of nodes being traversed
 	 */
-	void addEdges(Node* node, std::stack<Node *>& nodeStack,
+	void addEdges(NodePtr node, NodeStack& nodeStack,
 			Subgraph* subgraph);
 
     // Declare type as noncopyable

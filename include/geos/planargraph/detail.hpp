@@ -1,6 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <cassert>
 
 namespace {
 

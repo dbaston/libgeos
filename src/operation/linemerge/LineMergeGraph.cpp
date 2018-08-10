@@ -40,6 +40,7 @@
 using namespace std;
 //using namespace geos::planargraph;
 using namespace geos::geom;
+using geos::planargraph::Node;
 
 namespace geos {
 namespace operation { // geos.operation
@@ -66,21 +67,28 @@ LineMergeGraph::addEdge(const LineString *lineString)
 	const Coordinate& startCoordinate = coordinates->getAt(0);
 	const Coordinate& endCoordinate = coordinates->getAt(nCoords-1);
 
-	planargraph::Node* startNode=getNode(startCoordinate);
-	planargraph::Node* endNode=getNode(endCoordinate);
+	auto startNode = getNode(startCoordinate);
+	auto  endNode=getNode(endCoordinate);
+
 #if GEOS_DEBUG
 	cerr<<" startNode: "<<*startNode<<endl;
 	cerr<<" endNode: "<<*endNode<<endl;
 #endif
 
-	auto directedEdge0 = std::make_shared<LineMergeDirectedEdge>(LineMergeDirectedEdge(startNode,
-			endNode,coordinates->getAt(1),
-			true));
+	auto directedEdge0 = std::make_shared<LineMergeDirectedEdge>(
+			LineMergeDirectedEdge(
+				startNode.get(),
+				endNode.get(),
+				coordinates->getAt(1),
+				true));
 	newDirEdges.push_back(directedEdge0);
 
-	auto directedEdge1 = std::make_shared<LineMergeDirectedEdge>(LineMergeDirectedEdge(endNode,
-			startNode,coordinates->getAt(nCoords - 2),
-			false));
+	auto directedEdge1 = std::make_shared<LineMergeDirectedEdge>(
+			LineMergeDirectedEdge(
+				endNode.get(),
+				startNode.get(),
+				coordinates->getAt(nCoords - 2),
+				false));
 	newDirEdges.push_back(directedEdge1);
 
 	planargraph::Edge *edge=new LineMergeEdge(lineString);
@@ -101,13 +109,12 @@ LineMergeGraph::addEdge(const LineString *lineString)
 
 }
 
-planargraph::Node *
+LineMergeGraph::NodePtr
 LineMergeGraph::getNode(const Coordinate &coordinate)
 {
-	planargraph::Node *node=findNode(coordinate);
-	if (node==nullptr) {
-		node=new planargraph::Node(coordinate);
-		newNodes.push_back(node);
+	auto node=findNode(coordinate);
+	if (!node) {
+		node = std::make_shared<Node>(Node(coordinate));
 		add(node);
 	}
 	return node;
@@ -115,11 +122,7 @@ LineMergeGraph::getNode(const Coordinate &coordinate)
 
 LineMergeGraph::~LineMergeGraph()
 {
-	unsigned int i;
-	for (i=0; i<newNodes.size(); i++)
-		delete newNodes[i];
-	for (i=0; i<newEdges.size(); i++)
-		delete newEdges[i];
+	for (auto e : newEdges) delete e;
 	newDirEdges.clear();
 }
 

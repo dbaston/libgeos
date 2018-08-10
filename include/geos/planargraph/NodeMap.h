@@ -21,6 +21,7 @@
 
 #include <map>
 #include <vector>
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -47,10 +48,16 @@ class Node;
  */
 class GEOS_DLL NodeMap {
 public:
-	typedef std::map<geom::Coordinate, Node*, geom::CoordinateLessThen> container;
+#if 0
+	typedef Node* NodePtr;
+#else
+	typedef std::shared_ptr<Node> NodePtr;
+#endif
+	typedef std::map<geom::Coordinate, NodePtr, geom::CoordinateLessThen> NodeContainer;
+	typedef std::vector<NodePtr> NodeVector;
 
 private:
-	container nodeMap;
+	NodeContainer nodeMap;
 
 public:
 	/**
@@ -59,7 +66,7 @@ public:
 	NodeMap() = default;
 	~NodeMap() = default;
 
-	container& getNodeMap();
+	NodeContainer& getNodeMap();
 
 
 	/**
@@ -68,21 +75,21 @@ public:
 	 * at that location.
 	 * @return the added node
 	 */
-	Node* add(Node *n);
+	NodePtr add(NodePtr n);
 
 	/**
 	 * \brief
 	 * Removes the Node at the given location, and returns it
 	 * (or null if no Node was there).
 	 */
-	Node* remove(geom::Coordinate& pt);
+	NodePtr remove(geom::Coordinate& pt);
 
 	/**
 	 * \brief
 	 * Returns the Node at the given location,
 	 * or null if no Node was there.
 	 */
-	Node* find(const geom::Coordinate& coord) const;
+	NodePtr find(const geom::Coordinate& coord) const;
 
 	/**
 	 * \brief
@@ -96,19 +103,21 @@ public:
 	}
 #endif
 
-	container::iterator begin() {
+	NodeContainer::iterator begin() {
 		return nodeMap.begin();
 	}
-	container::const_iterator begin() const {
+	NodeContainer::const_iterator begin() const {
 		return nodeMap.begin();
 	}
 
-	container::iterator end() {
+	NodeContainer::iterator end() {
 		return nodeMap.end();
 	}
-	container::const_iterator end() const {
+	NodeContainer::const_iterator end() const {
 		return nodeMap.end();
 	}
+
+	bool empty() const {return nodeMap.empty();}
 
 	/**
 	 * \brief
@@ -117,7 +126,7 @@ public:
 	 *
 	 * @return a vector of Node pointers
 	 */
-	std::vector<Node*> getNodes() const;
+	NodeVector getNodes() const;
 
 	/**
 	 * \brief
@@ -127,7 +136,7 @@ public:
 	 * @param nodes : the nodes are push_back'ed here
 	 */
 	// [[deprecated]]
-	void getNodes(std::vector<Node*>& nodes) const;
+	void getNodes(NodeVector& nodes) const;
 };
 
 

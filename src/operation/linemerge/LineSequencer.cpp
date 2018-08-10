@@ -241,11 +241,11 @@ LineSequencer::reverse(const LineString *line)
 }
 
 /*private static*/
-const planargraph::Node*
+const LineSequencer::NodePtr
 LineSequencer::findLowestDegreeNode(const planargraph::Subgraph& graph)
 {
 	size_t minDegree = numeric_limits<size_t>::max();
-	const planargraph::Node* minDegreeNode = nullptr;
+	NodePtr minDegreeNode = nullptr;
 	for (const auto e : graph.getNodes())
 	{
 		const auto node = e.second;
@@ -260,7 +260,7 @@ LineSequencer::findLowestDegreeNode(const planargraph::Subgraph& graph)
 
 /*private static*/
 LineSequencer::DirectedEdgePtr
-LineSequencer::findUnvisitedBestOrientedDE(const planargraph::Node* node)
+LineSequencer::findUnvisitedBestOrientedDE(const NodePtr node)
 {
 	using planargraph::DirectedEdge;
 	using planargraph::DirectedEdgeStar;
@@ -292,9 +292,10 @@ LineSequencer::addReverseSubpath(DirectedEdgePtr de,
 	using planargraph::DirectedEdge;
 
 	// trace an unvisited path *backwards* from this de
-	Node* endNode = de->getToNode();
+	auto endNode = de->getToNode();
 
-	Node* fromNode = nullptr;
+	NodePtr fromNode = nullptr;
+
 	while (true) {
 		deList.insert(lit, de->getSym());
 		de->parentEdge()->setVisited(true);
@@ -326,7 +327,7 @@ LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 	//GraphComponent::setVisited(p_graph.edgeBegin(),
 	//			p_graph.edgeEnd(), false);
 
-	const Node* startNode = findLowestDegreeNode(p_graph);
+	const auto startNode = findLowestDegreeNode(p_graph);
 
 	const auto startDE = *(startNode->getOutEdges().begin());
 	auto startDESym = startDE->getSym();
@@ -362,8 +363,8 @@ LineSequencer::orient(DirEdgeList* seq)
 
 	const auto startEdge = seq->front();
 	const auto endEdge = seq->back();
-	Node* startNode = startEdge->getFromNode();
-	Node* endNode = endEdge->getToNode();
+	auto startNode = startEdge->getFromNode();
+	auto endNode = endEdge->getToNode();
 
 	bool flipSeq = false;
 	bool hasDegree1Node = \

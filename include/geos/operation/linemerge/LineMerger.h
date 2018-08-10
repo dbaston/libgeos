@@ -48,6 +48,9 @@ namespace geos {
 	}
 }
 
+using geos::planargraph::DirectedEdge;
+using geos::planargraph::NodeMap;
+
 
 namespace geos {
 namespace operation { // geos::operation
@@ -74,6 +77,9 @@ namespace linemerge { // geos::operation::linemerge
  *
  */
 class GEOS_DLL LineMerger {
+public:
+	typedef NodeMap::NodePtr NodePtr;
+
 
 private:
 
@@ -95,7 +101,7 @@ private:
 
 	void buildEdgeStringsForNonDegree2Nodes();
 
-	void buildEdgeStringsStartingAt(planargraph::Node *node);
+	void buildEdgeStringsStartingAt(NodePtr node);
 
 	EdgeString* buildEdgeStringStartingWith(LineMergeDirectedEdge *start);
 

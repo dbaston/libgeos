@@ -61,19 +61,14 @@ namespace linemerge { // geos::operation::linemerge
  * logically deleted from the graph.
  */
 class GEOS_DLL LineMergeGraph: public PlanarGraph {
-
 private:
-
-#if 0
-	typedef DirectedEdge* DirectedEdgePtr;
-#else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
-#endif
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
+	typedef NodeMap::NodePtr NodePtr;
+	typedef NodeMap::NodeVector NodeVector;
 
-	planargraph::Node* getNode(const geom::Coordinate &coordinate);
 
-	std::vector<planargraph::Node*> newNodes;
+	NodePtr getNode(const geom::Coordinate &coordinate);
 
 	std::vector<planargraph::Edge*> newEdges;
 

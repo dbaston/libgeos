@@ -53,6 +53,7 @@ namespace planargraph {
 }  // namespace geos
 
 using geos::planargraph::DirectedEdge;
+using geos::planargraph::NodeMap;
 
 namespace geos {
 namespace operation {
@@ -77,13 +78,18 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 
+	typedef NodeMap::NodePtr NodePtr;
+	typedef NodeMap::NodeVector NodeVector;
 
-	bool empty() const {return m_newNodes.empty();}
+
+
+
+	bool empty() const {return m_nodeMap.empty();}
 	/**
 	 * \brief
 	 * Deletes all edges at a node
 	 */
-	void deleteAllEdges(planargraph::Node *node);
+	void deleteAllEdges(NodePtr node);
 
 	/**
 	 * \brief
@@ -156,12 +162,12 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	void deleteDangles(std::vector<const geom::LineString*> &dangleLines);
 
  private:
-	int getDegreeNonDeleted(planargraph::Node *node) const;
+	int getDegreeNonDeleted(NodePtr node) const;
 
-	int getDegree(planargraph::Node *node, long label) const;
+	int getDegree(NodePtr node, long label) const;
 
 
-	planargraph::Node* getNode(const geom::Coordinate& pt);
+	NodePtr getNode(const geom::Coordinate& pt);
 
 
 	/**
@@ -186,7 +192,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * @param intNodes : intersection nodes found will be pushed here
 	 *                   the vector won't be cleared before pushing.
 	 */
-	std::vector<planargraph::Node*>
+	NodeVector
 	findIntersectionNodes(
 		 	DirectedEdgePtr startDE,
 			long label) const;
@@ -215,8 +221,8 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * into minimal edgerings
 	 */
 	void computeNextCWEdges();
-	void computeNextCWEdges(planargraph::Node *node);
-	void computeNextCCWEdges(planargraph::Node *node, long label);
+	void computeNextCWEdges(NodePtr node);
+	void computeNextCCWEdges(NodePtr node, long label);
 
 	/**
 	 * \brief
@@ -242,11 +248,8 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	/*
 	 *  These are for memory management
 	 */
-	/* created as PolygonizeEdge but saved as Edge*/
-	//std::vector<planargraph::Edge *> m_newEdges;
 	/* created as PolygonizeDirectedEdge but saved as DirectedEdge */
 	DirectedEdges m_newDirEdges;
-	std::vector<planargraph::Node *> m_newNodes;
 	mutable std::vector<EdgeRing *> m_newEdgeRings;
 	std::vector<geom::CoordinateSequence *> m_newCoords;
 };

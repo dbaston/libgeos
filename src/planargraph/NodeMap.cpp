@@ -23,7 +23,7 @@
 namespace geos {
 namespace planargraph {
 
-NodeMap::container&
+NodeMap::NodeContainer&
 NodeMap::getNodeMap()
 {
 	return nodeMap;
@@ -33,10 +33,10 @@ NodeMap::getNodeMap()
  * Adds a node to the map, replacing any that is already at that location.
  * @return the added node
  */
-Node*
-NodeMap::add(Node *n)
+NodeMap::NodePtr
+NodeMap::add(NodePtr n)
 {
-	nodeMap.insert(std::pair<geom::Coordinate, Node*> (n->getCoordinate(), n));
+	nodeMap.insert(std::pair<geom::Coordinate, NodePtr> (n->getCoordinate(), n));
 	return n;
 }
 
@@ -44,19 +44,19 @@ NodeMap::add(Node *n)
  * Removes the Node at the given location, and returns it
  * (or null if no Node was there).
  */
-Node*
+NodeMap::NodePtr
 NodeMap::remove(geom::Coordinate& pt)
 {
-	Node *n = find(pt);
+	auto n = find(pt);
 	nodeMap.erase(pt);
 	return n;
 }
 
 /* public */
-std::vector<Node*>
+NodeMap::NodeVector
 NodeMap::getNodes() const
 {
-	std::vector<Node*> values;
+	NodeVector values;
 
 	for (const auto e : nodeMap) {
 		values.push_back(e.second);
@@ -67,7 +67,7 @@ NodeMap::getNodes() const
 
 // [[deprecated]]
 void
-NodeMap::getNodes(std::vector<Node*>& values) const
+NodeMap::getNodes(NodeVector& values) const
 {
 	values = getNodes();
 }
@@ -75,7 +75,7 @@ NodeMap::getNodes(std::vector<Node*>& values) const
 /**
  * Returns the Node ptr at the given location, or null if no Node was there.
  */
-Node*
+NodeMap::NodePtr
 NodeMap::find(const geom::Coordinate& coord) const
 {
 	auto found = nodeMap.find(coord);

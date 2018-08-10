@@ -34,7 +34,7 @@ namespace algorithm {
 void
 ConnectedSubgraphFinder::getConnectedSubgraphs(vector<Subgraph *>& subgraphs)
 {
-	::setVisitedMap(graph.getNodes(), false);
+	setVisitedMap(graph.getNodes(), false);
 	for (auto &e : graph.getEdges())
 	{
 		auto node = e->getDirEdge(0)->getFromNode();
@@ -47,7 +47,7 @@ ConnectedSubgraphFinder::getConnectedSubgraphs(vector<Subgraph *>& subgraphs)
 
 /*private*/
 Subgraph*
-ConnectedSubgraphFinder::findSubgraph(Node* node)
+ConnectedSubgraphFinder::findSubgraph(NodePtr node)
 {
 	Subgraph* subgraph = new Subgraph(graph);
 	addReachable(node, subgraph);
@@ -56,14 +56,14 @@ ConnectedSubgraphFinder::findSubgraph(Node* node)
 
 /*private*/
 void
-ConnectedSubgraphFinder::addReachable(Node* startNode,
+ConnectedSubgraphFinder::addReachable(NodePtr startNode,
 		Subgraph* subgraph)
 {
-	stack<Node *> nodeStack;
+	NodeStack nodeStack;
 	nodeStack.push(startNode);
 	while ( !nodeStack.empty() )
 	{
-		Node* node = nodeStack.top();
+		auto node = nodeStack.top();
 		nodeStack.pop();
 		addEdges(node, nodeStack, subgraph);
 	}
@@ -71,15 +71,15 @@ ConnectedSubgraphFinder::addReachable(Node* startNode,
 
 /*private*/
 void
-ConnectedSubgraphFinder::addEdges(Node* node,
-		stack<Node *>& nodeStack, Subgraph* subgraph)
+ConnectedSubgraphFinder::addEdges(NodePtr node,
+		NodeStack &nodeStack, Subgraph* subgraph)
 {
 	node->setVisited(true);
 	auto des = node->getOutEdges();
 	for (auto de : des)
 	{
 		subgraph->add(de->parentEdge());
-		Node *toNode = de->getToNode();
+		auto toNode = de->getToNode();
 		if ( ! toNode->isVisited() ) nodeStack.push(toNode);
 	}
 }

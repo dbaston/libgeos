@@ -56,7 +56,7 @@ Edge::getDirEdge(int i)
  * node is not one of the two nodes associated with this Edge.
  */
 Edge::DirectedEdgePtr
-Edge::getDirEdge(Node *fromNode)
+Edge::getDirEdge(NodePtr fromNode)
 {
 	if (dirEdge[0]->getFromNode()==fromNode) return dirEdge[0];
 	if (dirEdge[1]->getFromNode()==fromNode) return dirEdge[1];
@@ -69,8 +69,8 @@ Edge::getDirEdge(Node *fromNode)
 * If <code>node</code> is one of the two nodes associated with this Edge,
 * returns the other node; otherwise returns null.
 */
-Node*
-Edge::getOppositeNode(Node *node)
+Edge::NodePtr
+Edge::getOppositeNode(NodePtr node)
 {
 	if (dirEdge[0]->getFromNode()==node) return dirEdge[0]->getToNode();
 	if (dirEdge[1]->getFromNode()==node) return dirEdge[1]->getToNode();

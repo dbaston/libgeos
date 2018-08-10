@@ -48,7 +48,7 @@ namespace operation {  // geos.operation
 namespace polygonize {  // geos.operation.polygonize
 
 int
-PolygonizeGraph::getDegreeNonDeleted(Node *node) const {
+PolygonizeGraph::getDegreeNonDeleted(NodePtr node) const {
 	int degree = 0;
 	for (auto e : node->getOutEdges()) {
 		if (!safe_cast<PolygonizeDirectedEdge*>(e)->isMarked()) ++degree;
@@ -57,7 +57,7 @@ PolygonizeGraph::getDegreeNonDeleted(Node *node) const {
 }
 
 int
-PolygonizeGraph::getDegree(Node *node, long label) const {
+PolygonizeGraph::getDegree(NodePtr node, long label) const {
 	int degree = 0;
 	for (auto e : node->getOutEdges()) {
 		if (safe_cast<PolygonizeDirectedEdge*>(e)->getLabel() == label) ++degree;
@@ -69,7 +69,7 @@ PolygonizeGraph::getDegree(Node *node, long label) const {
  * marks them as Deleted
  */
 void
-PolygonizeGraph::deleteAllEdges(Node *node) {
+PolygonizeGraph::deleteAllEdges(NodePtr node) {
   for (auto e : node->getOutEdges()) {
 		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
 		de->setMarked(true);
@@ -88,7 +88,6 @@ PolygonizeGraph::PolygonizeGraph(const GeometryFactory *newFactory)
  * Destroy a PolygonizeGraph
  */
 PolygonizeGraph::~PolygonizeGraph() {
-	for (auto n : m_newNodes) delete n;
 	for (auto e : m_newEdgeRings) delete e;
 	for (auto c : m_newCoords) delete c;
 	m_newDirEdges.clear();
@@ -118,12 +117,15 @@ PolygonizeGraph::addEdge(const LineString *line) {
 	const Coordinate& endPt = linePts->getAt(linePts->getSize() - 1);
 	auto nStart = getNode(startPt);
 	auto nEnd = getNode(endPt);
+
 	auto de0 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
-			nStart, nEnd, linePts->getAt(1), true));
+			nStart.get(), nEnd.get(), linePts->getAt(1), true));
 	m_newDirEdges.push_back(de0);
+
 	auto de1 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
-			nEnd, nStart, linePts->getAt(linePts->getSize() - 2), false));
+			nEnd.get(), nStart.get(), linePts->getAt(linePts->getSize() - 2), false));
 	m_newDirEdges.push_back(de1);
+
 	Edge *edge = new PolygonizeEdge(line);
 	edge->setDirectedEdges(de0, de1);
 	add(edge);
@@ -131,12 +133,11 @@ PolygonizeGraph::addEdge(const LineString *line) {
 	m_newCoords.push_back(linePts);
 }
 
-Node *
+PolygonizeGraph::NodePtr
 PolygonizeGraph::getNode(const Coordinate& pt) {
 	auto node = findNode(pt);
 	if (!node) {
-		node = new Node(pt);
-		m_newNodes.push_back(node);
+		node = std::make_shared<Node>(Node(pt));
 		// ensure node is only added once to graph
 		add(node);
 	}
@@ -165,11 +166,11 @@ PolygonizeGraph::convertMaximalToMinimalEdgeRings(
 	}
 }
 
-std::vector<Node*>
+PolygonizeGraph::NodeVector
 PolygonizeGraph::findIntersectionNodes(
 		DirectedEdgePtr startDE,
 		long label) const {
-	std::vector<Node*> intNodes;
+	NodeVector intNodes;
 	auto de = startDE;
 
 	do {
@@ -297,7 +298,7 @@ PolygonizeGraph::label(
 }
 
 void
-PolygonizeGraph::computeNextCWEdges(Node *node) {
+PolygonizeGraph::computeNextCWEdges(NodePtr node) {
 	auto deStar = node->getOutEdges();
 	DirectedEdgePtr startDE = nullptr;
 	DirectedEdgePtr prevDE = nullptr;
@@ -325,7 +326,7 @@ PolygonizeGraph::computeNextCWEdges(Node *node) {
  * minimal edgerings
  */
 void
-PolygonizeGraph::computeNextCCWEdges(Node *node, long label) {
+PolygonizeGraph::computeNextCCWEdges(NodePtr node, long label) {
 	auto deStar = node->getOutEdges();
 
 	DirectedEdgePtr firstOutDE = nullptr;

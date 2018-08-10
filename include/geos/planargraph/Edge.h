@@ -19,6 +19,7 @@
 #include <geos/export.h>
 
 #include <geos/planargraph/GraphComponent.h> // for inheritance
+#include <geos/planargraph/NodeMap.h>
 
 #include <vector> // for typedefs
 #include <set> // for typedefs
@@ -37,10 +38,12 @@ namespace geos {
 		class DirectedEdge;
 		class Edge;
 		class Node;
+		class NodeMap;
 	}
 }
 
 using geos::planargraph::DirectedEdge;
+using geos::planargraph::NodeMap;
 
 namespace geos {
 namespace planargraph { // geos.planargraph
@@ -59,6 +62,9 @@ class GEOS_DLL Edge: public GraphComponent {
 public:
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
+
+	typedef NodeMap::NodePtr NodePtr;
+
 
 	friend std::ostream& operator<< (std::ostream& os, const Node&);
 
@@ -130,13 +136,13 @@ public:
 	 * or null if the node is not one of the two nodes associated
 	 * with this Edge.
 	 */
-	DirectedEdgePtr getDirEdge(Node *fromNode);
+	DirectedEdgePtr getDirEdge(NodePtr fromNode);
 
 	/**
 	 * \brief If <code>node</code> is one of the two nodes associated
 	 * with this Edge, returns the other node; otherwise returns null.
 	 */
-	Node* getOppositeNode(Node *node);
+	NodePtr getOppositeNode(NodePtr node);
 };
 
 /// Print a Edge

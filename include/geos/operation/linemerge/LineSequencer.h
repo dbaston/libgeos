@@ -100,15 +100,12 @@ namespace linemerge { // geos::operation::linemerge
 class GEOS_DLL LineSequencer {
 
 private:
-#if 0
-	  typedef DirectedEdge* DirectedEdgePtr;
-#else
-		typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
-#endif
-
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
 	typedef std::list<DirectedEdgePtr> DirEdgeList;
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 	typedef std::vector< DirEdgeList* > Sequences;
+
+	typedef NodeMap::NodePtr NodePtr;
 
 	LineMergeGraph graph;
 	const geom::GeometryFactory *factory;
@@ -142,7 +139,7 @@ private:
 	 */
 	geom::Geometry* buildSequencedGeometry(const Sequences& sequences);
 
-	static const planargraph::Node* findLowestDegreeNode(
+	static const NodePtr findLowestDegreeNode(
 			const planargraph::Subgraph& graph);
 
 	void addReverseSubpath(DirectedEdgePtr de,
@@ -159,7 +156,7 @@ private:
 	 *         if none were unvisited
 	 */
 	static DirectedEdgePtr findUnvisitedBestOrientedDE(
-			const planargraph::Node* node);
+			const NodePtr node);
 
 	/**
 	 * Computes a version of the sequence which is optimally

@@ -185,7 +185,7 @@ LineMerger::buildEdgeStringsForNonDegree2Nodes()
 }
 
 void
-LineMerger::buildEdgeStringsStartingAt(Node *node)
+LineMerger::buildEdgeStringsStartingAt(NodePtr node)
 {
 	for (auto &e : node->getOutEdges())
 	{

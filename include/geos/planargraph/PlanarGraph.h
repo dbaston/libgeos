@@ -63,6 +63,9 @@ public:
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 
+	typedef NodeMap::NodePtr NodePtr;
+	typedef NodeMap::NodeVector NodeVector;
+
 
 	typedef std::vector<Edge *> EdgeContainer;
 	typedef EdgeContainer::iterator EdgeIterator;
@@ -81,7 +84,7 @@ public:
 	 * Returns the Node at the given location,
 	 * or null if no Node was there.
 	 */
-	Node* findNode(const geom::Coordinate& pt) {
+	NodePtr findNode(const geom::Coordinate& pt) {
 		return m_nodeMap.find(pt);
 	}
 
@@ -117,7 +120,7 @@ public:
 	 * with the Edge, even if the removal of the Edge reduces the
 	 * degree of a Node to zero.
 	 */
-	void remove(Edge *edge);
+	void remove(Edge* edge);
 
 	/**
 	 * \brief
@@ -135,14 +138,14 @@ public:
 	 * Removes a node from the graph, along with any associated
 	 * DirectedEdges and Edges.
 	 */
-	void remove(Node *node);
+	void remove(NodePtr node);
 
 	/**
 	 * \brief
 	 * Returns all Nodes with the given number of Edges around it.
  	 * The return value is a newly allocated vector of existing nodes
 	 */
-	std::vector<Node*> findNodesOfDegree(std::size_t degree) const;
+	NodeVector findNodesOfDegree(std::size_t degree) const;
 
 #ifdef GEOS_USEDEPRECATED
 	/** @name deprecated */
@@ -244,7 +247,7 @@ protected:
 	 * of the right type.
 	 * @return the added node
 	 */
-	void add(Node *node) {
+	void add(NodePtr node) {
 		m_nodeMap.add(node);
 	}
 

@@ -84,7 +84,7 @@ PlanarGraph::remove(DirectedEdgePtr de)
  * DirectedEdges and Edges.
  */
 void
-PlanarGraph::remove(Node *node)
+PlanarGraph::remove(NodePtr node)
 {
 	// unhook all directed edges
 	auto & outEdges=node->getOutEdges().getEdges();
@@ -109,10 +109,10 @@ PlanarGraph::findNodesOfDegree(size_t degree, vector<Node*>& nodesFound) const
 #endif
 
 /*public*/
-vector<Node*>
+PlanarGraph::NodeVector
 PlanarGraph::findNodesOfDegree(size_t degree) const
 {
-	vector<Node*> nodesFound;
+	NodeVector nodesFound;
 	for (const auto &n : m_nodeMap)
 	{
 		auto node = n.second;

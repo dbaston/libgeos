@@ -116,14 +116,14 @@ DirectedEdge::getEdgeDirection() const
 }
 
 /*public*/
-Node*
+DirectedEdge::NodePtr
 DirectedEdge::getFromNode() const
 {
 	return m_from;
 }
 
 /*public*/
-Node*
+DirectedEdge::NodePtr
 DirectedEdge::getToNode() const
 {
 	return m_to;

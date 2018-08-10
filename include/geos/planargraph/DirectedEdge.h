@@ -19,6 +19,8 @@
 #include <geos/export.h>
 #include <geos/planargraph/GraphComponent.h> // for inheritance
 #include <geos/geom/Coordinate.h> // for composition
+#include <geos/planargraph/NodeMap.h>
+
 
 #include <vector> // for typedefs
 #include <list> // for typedefs
@@ -31,6 +33,8 @@ namespace geos {
 		class Node;
 	}
 }
+
+using geos::planargraph::NodeMap;
 
 namespace geos {
 namespace planargraph { // geos.planargraph
@@ -56,10 +60,13 @@ public:
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 	typedef std::vector<const DirectedEdgePtr> ConstVect;
 
+	typedef NodeMap::NodePtr NodePtr;
+
+
 protected:
 	Edge* m_parentEdge;
-	Node* m_from;
-	Node* m_to;
+	NodePtr m_from;
+	NodePtr m_to;
 	geom::Coordinate m_p0, m_p1;
 	DirectedEdgePtr m_sym;  // optional
 	bool m_edgeDirection;
@@ -128,12 +135,12 @@ public:
 	/**
 	 * \brief Returns the node from which this DirectedEdge leaves.
 	 */
-	Node* getFromNode() const;
+	NodePtr getFromNode() const;
 
 	/**
 	 * \brief Returns the node to which this DirectedEdge goes.
 	 */
-	Node* getToNode() const;
+	NodePtr getToNode() const;
 
 	/**
 	 * \brief
