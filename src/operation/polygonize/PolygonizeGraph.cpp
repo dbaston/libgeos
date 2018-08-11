@@ -90,7 +90,6 @@ PolygonizeGraph::PolygonizeGraph(const GeometryFactory *newFactory)
 PolygonizeGraph::~PolygonizeGraph() {
 	for (auto e : m_newEdgeRings) delete e;
 	for (auto c : m_newCoords) delete c;
-	m_newDirEdges.clear();
 }
 
 /*
@@ -120,11 +119,9 @@ PolygonizeGraph::addEdge(const LineString *line) {
 
 	auto de0 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
 			nStart.get(), nEnd.get(), linePts->getAt(1), true));
-	m_newDirEdges.push_back(de0);
 
 	auto de1 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
 			nEnd.get(), nStart.get(), linePts->getAt(linePts->getSize() - 2), false));
-	m_newDirEdges.push_back(de1);
 
 	Edge *edge = new PolygonizeEdge(line);
 	edge->setDirectedEdges(de0, de1);

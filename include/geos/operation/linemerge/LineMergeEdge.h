@@ -43,6 +43,7 @@ namespace linemerge { // geos::operation::linemerge
 class GEOS_DLL LineMergeEdge: public planargraph::Edge {
 private:
 	const geom::LineString *line;
+
 public:
 	/**
 	 * Constructs a LineMergeEdge with vertices given by the specified

@@ -230,8 +230,6 @@ public:
 	/*
 	 *  These are for memory management
 	 */
-	/* created as PolygonizeDirectedEdge but saved as DirectedEdge */
-	DirectedEdges m_newDirEdges;
 	mutable std::vector<EdgeRing *> m_newEdgeRings;
 	std::vector<geom::CoordinateSequence *> m_newCoords;
 };
