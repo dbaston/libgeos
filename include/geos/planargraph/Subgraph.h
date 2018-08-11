@@ -86,7 +86,40 @@ public:
 	 */
 	std::pair<std::set<Edge*>::iterator, bool> add(Edge *e);
 
+	std::set<Edge*>& getEdges() {
+		return edges;
+	}
+
+	const NodeMap& getNodes() const {
+		return nodeMap;
+	}
+
+	NodeMap& getNodes() {
+		return nodeMap;
+	}
+
+	/**
+	 * Tests whether an {@link Edge} is contained in this subgraph
+	 * @param e the edge to test
+	 * @return <code>true</code> if the edge is contained in this subgraph
+	 */
+	bool contains(Edge *e) { return (edges.find(e) != edges.end()); }
+
+protected:
+
+	PlanarGraph &parentGraph;
+	std::set<Edge*> edges;
+	NodeMap nodeMap;
+
+    // Declare type as noncopyable
+    Subgraph(const Subgraph& other) = delete;
+    Subgraph& operator=(const Subgraph& rhs) = delete;
+
 #ifdef GEOS_USEDEPRECATED
+protected:
+	std::vector<const DirectedEdge*> dirEdges;
+
+public:
 	/**
 	 * Returns an iterator over the DirectedEdge in this graph,
 	 * in the order in which they were added.
@@ -128,37 +161,6 @@ public:
 	}
 #endif
 
-	std::set<Edge*>& getEdges() {
-		return edges;
-	}
-
-	const NodeMap& getNodes() const {
-		return nodeMap;
-	}
-
-	NodeMap& getNodes() {
-		return nodeMap;
-	}
-
-	/**
-	 * Tests whether an {@link Edge} is contained in this subgraph
-	 * @param e the edge to test
-	 * @return <code>true</code> if the edge is contained in this subgraph
-	 */
-	bool contains(Edge *e) { return (edges.find(e) != edges.end()); }
-
-protected:
-
-	PlanarGraph &parentGraph;
-	std::set<Edge*> edges;
-#ifdef GEOS_USEDEPRECATED
-	std::vector<const DirectedEdge*> dirEdges;
-#endif
-	NodeMap nodeMap;
-
-    // Declare type as noncopyable
-    Subgraph(const Subgraph& other) = delete;
-    Subgraph& operator=(const Subgraph& rhs) = delete;
 };
 
 } // namespace geos::planargraph
