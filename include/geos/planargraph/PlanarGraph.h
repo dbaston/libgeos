@@ -147,7 +147,51 @@ public:
 	 */
 	NodeVector findNodesOfDegree(std::size_t degree) const;
 
+
+protected:
+	/**
+	 * \brief
+	 * Adds a node to the std::map, replacing any that is already at that
+	 * location.
+	 *
+	 * Only subclasses can add Nodes, to ensure Nodes are
+	 * of the right type.
+	 * @return the added node
+	 */
+	void add(NodePtr node) {
+		m_nodeMap.add(node);
+	}
+
+	/**
+	 * \brief
+	 * Adds the Edge and its DirectedEdges with this PlanarGraph.
+	 *
+	 * Assumes that the Edge has already been created with its associated
+	 * DirectEdges.
+	 * Only subclasses can add Edges, to ensure the edges added are of
+	 * the right class.
+	 */
+	void add(Edge *edge);
+
+	/**
+	 * \brief
+	 * Adds the Edge to this PlanarGraph.
+	 *
+	 * Only subclasses can add DirectedEdges,
+	 * to ensure the edges added are of the right class.
+	 */
+	void add(DirectedEdgePtr dirEdge) {
+		m_dirEdges.push_back(dirEdge);
+	}
+
+	NodePtr getNode(const geom::Coordinate& pt);
+
+	std::vector<Edge*> m_edges;
+	DirectedEdges m_dirEdges;
+	NodeMap m_nodeMap;
+
 #ifdef GEOS_USEDEPRECATED
+piblic:
 	/** @name deprecated */
 	///@{
 	/**
@@ -236,49 +280,6 @@ public:
 	void findNodesOfDegree(std::size_t degree, std::vector<Node*>& to) const;
 	///@}
 #endif
-
-protected:
-	/**
-	 * \brief
-	 * Adds a node to the std::map, replacing any that is already at that
-	 * location.
-	 *
-	 * Only subclasses can add Nodes, to ensure Nodes are
-	 * of the right type.
-	 * @return the added node
-	 */
-	void add(NodePtr node) {
-		m_nodeMap.add(node);
-	}
-
-	/**
-	 * \brief
-	 * Adds the Edge and its DirectedEdges with this PlanarGraph.
-	 *
-	 * Assumes that the Edge has already been created with its associated
-	 * DirectEdges.
-	 * Only subclasses can add Edges, to ensure the edges added are of
-	 * the right class.
-	 */
-	void add(Edge *edge);
-
-	/**
-	 * \brief
-	 * Adds the Edge to this PlanarGraph.
-	 *
-	 * Only subclasses can add DirectedEdges,
-	 * to ensure the edges added are of the right class.
-	 */
-	void add(DirectedEdgePtr dirEdge) {
-		m_dirEdges.push_back(dirEdge);
-	}
-
-	NodePtr getNode(const geom::Coordinate& pt);
-
-	std::vector<Edge*> m_edges;
-	DirectedEdges m_dirEdges;
-	NodeMap m_nodeMap;
-
 };
 
 } // namespace geos::planargraph
