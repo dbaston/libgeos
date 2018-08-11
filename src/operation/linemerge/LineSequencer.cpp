@@ -121,12 +121,9 @@ LineSequencer::hasSequence(planargraph::Subgraph& p_graph)
 }
 
 void
-LineSequencer::delAll( LineSequencer::Sequences& s)
+LineSequencer::delAll( LineSequencer::Sequences& sequence)
 {
-  for ( Sequences::iterator i=s.begin(), e=s.end(); i!=e; ++i )
-  {
-    delete *i;
-  }
+  for (auto s : sequence) delete s;
 }
 
 /*private*/
@@ -137,14 +134,10 @@ LineSequencer::findSequences()
 	planargraph::algorithm::ConnectedSubgraphFinder csFinder(graph);
 	vector<planargraph::Subgraph*> subgraphs;
 	csFinder.getConnectedSubgraphs(subgraphs);
-	for (vector<planargraph::Subgraph*>::const_iterator
-		it=subgraphs.begin(), endIt=subgraphs.end();
-		it!=endIt;
-		++it )
+	for (auto subgraph : subgraphs)
 	{
-		planargraph::Subgraph* subgraph = *it;
 		if (hasSequence(*subgraph)) {
-			planargraph::DirectedEdge::NonConstList* seq=findSequence(*subgraph);
+			auto seq = findSequence(*subgraph);
 			sequences->push_back(seq);
 		}
 		else {
@@ -262,11 +255,8 @@ LineSequencer::findLowestDegreeNode(const planargraph::Subgraph& graph)
 LineSequencer::DirectedEdgePtr
 LineSequencer::findUnvisitedBestOrientedDE(const NodePtr node)
 {
-	using planargraph::DirectedEdge;
-	using planargraph::DirectedEdgeStar;
-
-	LineSequencer::DirectedEdgePtr wellOrientedDE = nullptr;
-	LineSequencer::DirectedEdgePtr unvisitedDE = nullptr;
+	DirectedEdgePtr wellOrientedDE = nullptr;
+	DirectedEdgePtr unvisitedDE = nullptr;
 	const auto des = node->getOutEdges();
 	for (const auto de : des)
 	{
@@ -319,10 +309,6 @@ LineSequencer::addReverseSubpath(DirectedEdgePtr de,
 LineSequencer::DirEdgeList*
 LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 {
-	using planargraph::DirectedEdge;
-	using planargraph::Node;
-	using planargraph::GraphComponent;
-
 	setVisited(p_graph.getEdges(), false);
 	//GraphComponent::setVisited(p_graph.edgeBegin(),
 	//			p_graph.edgeEnd(), false);
@@ -332,12 +318,12 @@ LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 	const auto startDE = *(startNode->getOutEdges().begin());
 	auto startDESym = startDE->getSym();
 
-	DirectedEdge::NonConstList *seq = new DirectedEdge::NonConstList();
+	auto seq = new DirectedEdge::NonConstList();
 
-	DirectedEdge::NonConstList::iterator lit=seq->begin();
+	auto lit = seq->begin();
 	addReverseSubpath(startDESym, *seq, lit, false);
 
-	lit=seq->end();
+	lit = seq->end();
 	while (lit != seq->begin()) {
 		const auto prev = *(--lit);
 		const auto unvisitedOutDE = findUnvisitedBestOrientedDE(prev->getFromNode());
@@ -348,7 +334,7 @@ LineSequencer::findSequence(planargraph::Subgraph& p_graph)
 	// At this point, we have a valid sequence of graph DirectedEdges,
 	// but it is not necessarily appropriately oriented relative to
 	// the underlying geometry.
-	DirectedEdge::NonConstList* orientedSeq = orient(seq);
+	auto orientedSeq = orient(seq);
 
 	if (orientedSeq != seq) delete seq;
 
