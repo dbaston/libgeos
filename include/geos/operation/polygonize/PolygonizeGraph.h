@@ -42,19 +42,13 @@ namespace geos {
 namespace geom {
 	class LineString;
 	class GeometryFactory;
-	class Coordinate;
 	class CoordinateSequence;
 }  // namespace geom
-namespace planargraph {
-	class Node;
-	class Edge;
-	class DirectedEdge;
-}  // namespace planargraph
 }  // namespace geos
 
-using geos::planargraph::DirectedEdge;
-using geos::planargraph::NodeMap;
-using geos::geom::Coordinate;
+using geos::geom::GeometryFactory;
+using geos::geom::CoordinateSequence;
+using geos::geom::LineString;
 
 namespace geos {
 namespace operation {
@@ -63,7 +57,6 @@ namespace polygonize {
 
 // Forward declarations
 class EdgeRing;
-class PolygonizeDirectedEdge;
 
 /** \brief
  * Represents a planar graph of edges that can be used to compute a
@@ -76,11 +69,11 @@ class PolygonizeDirectedEdge;
  */
 class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
  public:
-	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
-	typedef std::vector<DirectedEdgePtr> DirectedEdges;
+	typedef PlanarGraph::DirectedEdgePtr DirectedEdgePtr;
+	typedef PlanarGraph::DirectedEdges   DirectedEdges;
 
-	typedef NodeMap::NodePtr NodePtr;
-	typedef NodeMap::NodeVector NodeVector;
+	typedef PlanarGraph::NodePtr NodePtr;
+	typedef PlanarGraph::NodeVector NodeVector;
 
 
 
@@ -110,7 +103,7 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * Add a LineString forming an edge of the polygon graph.
 	 * @param line the line to add
 	 */
-	void addEdge(const geom::LineString *line);
+	void addEdge(const LineString *line);
 
 	/**
 	 * \brief
@@ -142,9 +135,9 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * @return  vector with the list of the LineString forming the removed
 	 *                   cut edges will be pushed here.
 	 */
-	std::vector<const geom::LineString*> deleteCutEdges();
+	std::vector<const LineString*> deleteCutEdges();
 	// [[deprecated]]
-	void deleteCutEdges(std::vector<const geom::LineString*> &cutLines);
+	void deleteCutEdges(std::vector<const LineString*> &cutLines);
 
 	/** \brief
 	 * Marks all edges from the graph which are "dangles".
@@ -158,9 +151,9 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	 * @param dangleLines : the LineStrings that formed dangles will
 	 *                      be push_back'ed here
 	 */
-	std::vector<const geom::LineString*> deleteDangles();
+	std::vector<const LineString*> deleteDangles();
 	// [[deprecated]]
-	void deleteDangles(std::vector<const geom::LineString*> &dangleLines);
+	void deleteDangles(std::vector<const LineString*> &dangleLines);
 
  private:
 	int getDegreeNonDeleted(NodePtr node) const;
