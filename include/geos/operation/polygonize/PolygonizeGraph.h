@@ -68,16 +68,7 @@ class EdgeRing;
  *
  */
 class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
- public:
-	typedef PlanarGraph::DirectedEdgePtr DirectedEdgePtr;
-	typedef PlanarGraph::DirectedEdges   DirectedEdges;
-
-	typedef PlanarGraph::NodePtr NodePtr;
-	typedef PlanarGraph::NodeVector NodeVector;
-
-
-
-
+public:
 	bool empty() const {return m_nodeMap.empty();}
 	/**
 	 * \brief

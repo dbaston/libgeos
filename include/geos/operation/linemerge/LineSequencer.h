@@ -23,8 +23,6 @@
 #include <geos/export.h>
 
 #include <geos/operation/linemerge/LineMergeGraph.h> // for composition
-#include <geos/geom/Geometry.h> // for inlines
-#include <geos/geom/LineString.h> // for inlines
 
 #include <vector>
 #include <list>
@@ -46,10 +44,12 @@ namespace geos {
 		class DirectedEdge;
 		class Subgraph;
 		class Node;
+		class NodeMap;
 	}
 }
 
 using geos::planargraph::DirectedEdge;
+using geos::planargraph::NodeMap;
 
 namespace geos {
 namespace operation { // geos::operation
@@ -246,9 +246,7 @@ public:
 	 *
 	 * @param geometry the geometry to add
 	 */
-	void add(const geom::Geometry& geometry) {
-		geometry.applyComponentFilter(*this);
-	}
+	void add(const geom::Geometry& geometry);
 
   template <class TargetContainer>
   void add(TargetContainer& geoms)
@@ -265,13 +263,7 @@ public:
 	 * Act as a GeometryComponentFilter so to extract
 	 * the linearworks
 	 */
-	void filter(const geom::Geometry* g)
-	{
-		if (const geom::LineString *ls=dynamic_cast<const geom::LineString *>(g))
-		{
-			addLine(ls);
-		}
-	}
+	void filter(const geom::Geometry* g);
 
 	/**
 	 * Returns the LineString or MultiLineString
@@ -283,11 +275,8 @@ public:
 	 *         does not exist.
 	 */
 	geom::Geometry*
-	getSequencedLineStrings(bool release=1) {
-		computeSequence();
-		if (release) return sequencedGeometry.release();
-		else return sequencedGeometry.get();
-	}
+	getSequencedLineStrings(bool release=1);
+
 };
 
 } // namespace geos::operation::linemerge

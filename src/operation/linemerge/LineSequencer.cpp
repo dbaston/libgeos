@@ -427,6 +427,31 @@ LineSequencer::reverse(DirEdgeList& seq)
 	}
 	return newSeq;
 }
+/* public */
+void
+LineSequencer::add(const geom::Geometry& geometry) {
+	geometry.applyComponentFilter(*this);
+}
+
+/* public */
+void
+LineSequencer::filter(const geom::Geometry* g)
+{
+	if (const geom::LineString *ls=dynamic_cast<const geom::LineString *>(g))
+	{
+		addLine(ls);
+	}
+}
+
+/* public */
+geom::Geometry*
+LineSequencer::getSequencedLineStrings(bool release) {
+	computeSequence();
+
+	return release?
+		sequencedGeometry.release() :
+		sequencedGeometry.get();
+}
 
 
 

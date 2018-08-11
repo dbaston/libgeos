@@ -25,6 +25,7 @@
 #include <geos/planargraph/Node.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/LineString.h>
+
 #include <memory>
 
 #include <vector>
