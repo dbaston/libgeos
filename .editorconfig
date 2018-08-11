@@ -11,8 +11,8 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 
 # C++ files want tab indentation
-[*.{h,cpp}]
-indent_style = tab
+[*.{h,cpp,hpp}]
+indent_style = space
 indent_size = 2
 
 # Makefiles want tab indentation
