@@ -68,8 +68,6 @@ private:
 	typedef NodeMap::NodeVector NodeVector;
 
 
-	NodePtr getNode(const geom::Coordinate &coordinate);
-
 	std::vector<planargraph::Edge*> newEdges;
 
 	DirectedEdges newDirEdges;

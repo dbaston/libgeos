@@ -54,6 +54,7 @@ namespace planargraph {
 
 using geos::planargraph::DirectedEdge;
 using geos::planargraph::NodeMap;
+using geos::geom::Coordinate;
 
 namespace geos {
 namespace operation {
@@ -165,9 +166,6 @@ class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 	int getDegreeNonDeleted(NodePtr node) const;
 
 	int getDegree(NodePtr node, long label) const;
-
-
-	NodePtr getNode(const geom::Coordinate& pt);
 
 
 	/**

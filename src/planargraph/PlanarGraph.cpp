@@ -22,6 +22,7 @@
 #include <geos/planargraph/NodeMap.h>
 #include <geos/planargraph/Node.h>
 #include <geos/planargraph/DirectedEdge.h>
+#include <geos/geom/Coordinate.h>
 #include <geos/planargraph/detail.hpp>
 
 #include <algorithm>
@@ -29,6 +30,8 @@
 #include <map>
 
 using namespace std;
+
+using geos::geom::Coordinate;
 
 namespace geos {
 namespace planargraph {
@@ -119,6 +122,16 @@ PlanarGraph::findNodesOfDegree(size_t degree) const
 		if (node->hasDegree(degree)) nodesFound.push_back(node);
 	}
 	return nodesFound;
+}
+
+PlanarGraph::NodePtr
+PlanarGraph::getNode(const Coordinate& pt) {
+	auto node = findNode(pt);
+	if (!node) {
+		node = std::make_shared<Node>(Node(pt));
+		add(node);
+	}
+	return node;
 }
 
 } // namespace planargraph

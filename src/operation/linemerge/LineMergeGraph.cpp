@@ -109,16 +109,6 @@ LineMergeGraph::addEdge(const LineString *lineString)
 
 }
 
-LineMergeGraph::NodePtr
-LineMergeGraph::getNode(const Coordinate &coordinate)
-{
-	auto node=findNode(coordinate);
-	if (!node) {
-		node = std::make_shared<Node>(Node(coordinate));
-		add(node);
-	}
-	return node;
-}
 
 LineMergeGraph::~LineMergeGraph()
 {

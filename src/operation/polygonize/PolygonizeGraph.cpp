@@ -133,16 +133,6 @@ PolygonizeGraph::addEdge(const LineString *line) {
 	m_newCoords.push_back(linePts);
 }
 
-PolygonizeGraph::NodePtr
-PolygonizeGraph::getNode(const Coordinate& pt) {
-	auto node = findNode(pt);
-	if (!node) {
-		node = std::make_shared<Node>(Node(pt));
-		// ensure node is only added once to graph
-		add(node);
-	}
-	return node;
-}
 
 void
 PolygonizeGraph::computeNextCWEdges() {

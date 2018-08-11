@@ -273,6 +273,8 @@ protected:
 		m_dirEdges.push_back(dirEdge);
 	}
 
+	NodePtr getNode(const geom::Coordinate& pt);
+
 	std::vector<Edge*> m_edges;
 	DirectedEdges m_dirEdges;
 	NodeMap m_nodeMap;
