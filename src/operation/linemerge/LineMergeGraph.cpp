@@ -82,7 +82,6 @@ LineMergeGraph::addEdge(const LineString *lineString)
 				endNode.get(),
 				coordinates->getAt(1),
 				true));
-	newDirEdges.push_back(directedEdge0);
 
 	auto directedEdge1 = std::make_shared<LineMergeDirectedEdge>(
 			LineMergeDirectedEdge(
@@ -90,7 +89,6 @@ LineMergeGraph::addEdge(const LineString *lineString)
 				startNode.get(),
 				coordinates->getAt(nCoords - 2),
 				false));
-	newDirEdges.push_back(directedEdge1);
 
 	planargraph::Edge *edge=new LineMergeEdge(lineString);
 	newEdges.push_back(edge);
@@ -114,7 +112,6 @@ LineMergeGraph::addEdge(const LineString *lineString)
 LineMergeGraph::~LineMergeGraph()
 {
 	for (auto e : newEdges) delete e;
-	newDirEdges.clear();
 }
 
 } // namespace geos.operation.linemerge

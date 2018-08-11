@@ -77,8 +77,8 @@ public:
 private:
 
 	std::vector<planargraph::Edge*> newEdges;
-	DirectedEdges newDirEdges;
 };
+
 } // namespace geos::operation::linemerge
 } // namespace geos::operation
 } // namespace geos
