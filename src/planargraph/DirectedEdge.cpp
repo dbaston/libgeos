@@ -39,8 +39,11 @@ DirectedEdge::toEdges(DirectedEdges& dirEdges)
 }
 
 /*public*/
-DirectedEdge::DirectedEdge(Node* newFrom, Node* newTo,
-	const Coordinate &directionPt, bool newEdgeDirection) :
+DirectedEdge::DirectedEdge(
+		NodePtr newFrom,
+		NodePtr newTo,
+		const Coordinate &directionPt,
+		bool newEdgeDirection) :
 	m_from(newFrom),
 	m_to(newTo),
 	m_p0(m_from->getCoordinate()),

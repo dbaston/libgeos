@@ -26,14 +26,15 @@
 
 //using namespace geos::planargraph;
 using namespace geos::geom;
+using geos::planargraph::Node;
 
 namespace geos {
 namespace operation { // geos.operation
 namespace linemerge { // geos.operation.linemerge
 
 LineMergeDirectedEdge::LineMergeDirectedEdge(
-		planargraph::Node *newFrom,
-		planargraph::Node *newTo,
+		NodePtr newFrom,
+		NodePtr newTo,
 		const Coordinate& newDirectionPt,
 		bool nEdgeDirection)
 	:

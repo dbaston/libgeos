@@ -22,6 +22,7 @@
 namespace geos {
 namespace planargraph {
 
+
 /*
  * Initializes this Edge's two DirectedEdges, and for each DirectedEdge:
  *  sets the Edge,

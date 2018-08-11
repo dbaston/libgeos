@@ -118,10 +118,10 @@ PolygonizeGraph::addEdge(const LineString *line) {
 	auto nEnd = getNode(endPt);
 
 	auto de0 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
-			nStart.get(), nEnd.get(), linePts->getAt(1), true));
+			nStart, nEnd, linePts->getAt(1), true));
 
 	auto de1 = std::make_shared<PolygonizeDirectedEdge>(PolygonizeDirectedEdge(
-			nEnd.get(), nStart.get(), linePts->getAt(linePts->getSize() - 2), false));
+			nEnd, nStart, linePts->getAt(linePts->getSize() - 2), false));
 
 	Edge *edge = new PolygonizeEdge(line);
 	edge->setDirectedEdges(de0, de1);

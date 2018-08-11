@@ -81,8 +81,9 @@ public:
 	 *    whether this DirectedEdge's direction is the same as or
 	 *    opposite to that of the parent Edge (if any)
 	 */
-	PolygonizeDirectedEdge(planargraph::Node *newFrom,
-			planargraph::Node *newTo,
+	PolygonizeDirectedEdge(
+			NodePtr newFrom,
+			NodePtr newTo,
 			const geom::Coordinate& newDirectionPt,
 			bool nEdgeDirection);
 

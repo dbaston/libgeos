@@ -78,15 +78,15 @@ LineMergeGraph::addEdge(const LineString *lineString)
 
 	auto directedEdge0 = std::make_shared<LineMergeDirectedEdge>(
 			LineMergeDirectedEdge(
-				startNode.get(),
-				endNode.get(),
+				startNode,
+				endNode,
 				coordinates->getAt(1),
 				true));
 
 	auto directedEdge1 = std::make_shared<LineMergeDirectedEdge>(
 			LineMergeDirectedEdge(
-				endNode.get(),
-				startNode.get(),
+				endNode,
+				startNode,
 				coordinates->getAt(nCoords - 2),
 				false));
 

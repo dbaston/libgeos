@@ -59,8 +59,9 @@ public:
 	 *        whether this DirectedEdge's direction is the same as or
 	 *        opposite to that of the parent Edge (if any)
 	 */
-	LineMergeDirectedEdge(planargraph::Node *from,
-			planargraph::Node *to,
+	LineMergeDirectedEdge(
+			NodePtr from,
+			NodePtr to,
 			const geom::Coordinate& directionPt,
 			bool edgeDirection);
 

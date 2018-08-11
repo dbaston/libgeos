@@ -38,12 +38,13 @@ namespace polygonize { // geos.operation.polygonize
  *        whether this DirectedEdge's direction is the same as or
  *        opposite to that of the parent Edge (if any)
  */
-PolygonizeDirectedEdge::PolygonizeDirectedEdge(Node *newFrom,
-		Node *newTo, const Coordinate& newDirectionPt,
+PolygonizeDirectedEdge::PolygonizeDirectedEdge(
+		NodePtr newFrom,
+		NodePtr newTo,
+	 	const Coordinate& newDirectionPt,
 		bool nEdgeDirection)
 	:
-	DirectedEdge(newFrom, newTo,
-		newDirectionPt, nEdgeDirection)
+	DirectedEdge(newFrom, newTo, newDirectionPt, nEdgeDirection)
 {
 	edgeRing=nullptr;
 	next=nullptr;

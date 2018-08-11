@@ -99,7 +99,9 @@ public:
 	 *		       is the same as or opposite to that of the
 	 *		       parent Edge (if any)
 	 */
-	DirectedEdge(Node *newFrom, Node *newTo,
+	DirectedEdge(
+			NodePtr newFrom,
+		 	NodePtr newTo,
 			const geom::Coordinate &directionPt,
 			bool newEdgeDirection);
 
@@ -249,11 +251,7 @@ public:
 
 };
 
-/// Strict Weak comparator function for containers
-bool pdeLessThan(DirectedEdge *first, DirectedEdge * second);
 
-/// Output operator
-std::ostream& operator << (std::ostream&, const DirectedEdge&);
 
 
 } // namespace geos::planargraph
