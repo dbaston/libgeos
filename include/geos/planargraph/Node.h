@@ -19,15 +19,15 @@
 #include <geos/export.h>
 
 #include <geos/planargraph/GraphComponent.h> // for inheritance
-#include <geos/planargraph/DirectedEdgeStar.h> // for inlines
-#include <geos/geom/Coordinate.h> // for composition
+#include <geos/planargraph/DirectedEdgeStar.h>
+#include <geos/planargraph/DirectedEdge.h>
+#include <algorithm>
 
 // Forward declarations
 namespace geos {
-	namespace planargraph {
-		//class DirectedEdgeStar;
-		class DirectedEdge;
-	}
+  namespace geom {
+    class Coordinate;
+  }
 }
 
 namespace geos {
@@ -52,6 +52,14 @@ private:
 	DirectedEdgeStar deStar;
 
 public:
+  typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+  struct DirectedEdgeCmp {
+    bool operator() (const DirectedEdgePtr lhs, const DirectedEdgePtr rhs) const
+    {
+      return lhs->compareTo(*rhs) < 0;
+    }
+  } DirectedEdgePtr_less;
+
 
 	friend std::ostream& operator << (std::ostream& os, const Node&);
 
@@ -95,6 +103,11 @@ public:
 	 * \brief Returns the collection of DirectedEdges that
 	 * leave this Node.
 	 */
+	DirectedEdgeStar getSortedOutEdges() {
+    std::sort(deStar.begin(), deStar.end(), DirectedEdgePtr_less);
+    return deStar;
+  }
+
 	DirectedEdgeStar getOutEdges() { return deStar; }
 	const DirectedEdgeStar& getOutEdges() const { return deStar; }
 

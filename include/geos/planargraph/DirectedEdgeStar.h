@@ -90,6 +90,9 @@ public:
 	/// Returns an const_iterator to one-past last DirectedEdge
 	DirectedEdges::const_iterator end() const;
 
+	DirectedEdges::reverse_iterator rbegin() { return outEdges.rbegin(); }
+	DirectedEdges::reverse_iterator rend() { return outEdges.rend(); }
+
 	/**
 	 * \brief Returns the number of edges around the Node associated
 	 * with this DirectedEdgeStar.

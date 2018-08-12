@@ -286,13 +286,11 @@ PolygonizeGraph::label(
 
 void
 PolygonizeGraph::computeNextCWEdges(NodePtr node) {
-	auto deStar = node->getOutEdges();
 	DirectedEdgePtr startDE = nullptr;
 	DirectedEdgePtr prevDE = nullptr;
 
 	// the edges are stored in CCW order around the star
-	auto pde = deStar.getEdges();
-	for (auto e : pde) {
+	for(auto e : node->getSortedOutEdges()) {
 		auto outDE = e;
 		if (outDE->isMarked()) continue;
 		if (!startDE) startDE = outDE;
@@ -314,22 +312,24 @@ PolygonizeGraph::computeNextCWEdges(NodePtr node) {
  */
 void
 PolygonizeGraph::computeNextCCWEdges(NodePtr node, long label) {
-	auto deStar = node->getOutEdges();
 
 	DirectedEdgePtr firstOutDE = nullptr;
 	DirectedEdgePtr prevInDE = nullptr;
 
 	// the edges are stored in CCW order around the star
-	auto edges = deStar.getEdges();
+	auto edges = node->getSortedOutEdges();
 
 	/*
 	 * Cycling in reverse order.
 	 */
-	for(auto i = edges.size(); i > 0; --i) {
-		auto de = safe_cast<PolygonizeDirectedEdge*>(edges[i - 1]);
+  for(auto it = edges.rbegin(); it != edges.rend(); ++it)
+  {
+    auto e = *it;
+    auto de = safe_cast<PolygonizeDirectedEdge*>(e);
+
 		auto sym = safe_cast<PolygonizeDirectedEdge*>(de->getSym());
 
-		auto outDE = (de->getLabel() == label)? edges[i - 1] : nullptr;
+		auto outDE = (de->getLabel() == label)? e : nullptr;
 		auto inDE = (sym->getLabel() == label)? de->getSym() : nullptr;
 
 		if (!outDE && !inDE) continue;  // this edge is not in edgering
@@ -395,9 +395,7 @@ PolygonizeGraph::deleteDangles() {
 		deleteAllEdges(node);
 
 		/* get sorted edges in ascending order by angle with the positive x-axis */
-		auto nodeOutEdges(node->getOutEdges().getEdges());
-
-		for(auto oe : nodeOutEdges) {
+		for(auto oe : node->getSortedOutEdges()) {
 			auto de(safe_cast<PolygonizeDirectedEdge*>(oe));
 			// delete this edge and its sym
 			de->setMarked(true);
