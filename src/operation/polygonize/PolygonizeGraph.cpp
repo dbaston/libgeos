@@ -160,13 +160,12 @@ PolygonizeGraph::getEdgeRings() {
 	convertMaximalToMinimalEdgeRings(findLabeledEdgeRings(m_dirEdges));
 
 	// find all edgerings
-	for (auto e : m_dirEdges) {
-		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
+	for (auto de : m_dirEdges) {
 
 		if (de->isMarked()) continue;
-		if (de->isInRing()) continue;
+		if (safe_cast<PolygonizeDirectedEdge*>(de)->isInRing()) continue;
 
-		auto er = findEdgeRing(e);
+		auto er = findEdgeRing(de);
 		edgeRingList.push_back(er);
 	}
 	return edgeRingList;
@@ -188,10 +187,8 @@ PolygonizeGraph::findLabeledEdgeRings(
 	// label the edge rings formed
 	long currLabel(1);
 	for (const auto de : dirEdges) {
-		auto pde = safe_cast<PolygonizeDirectedEdge*>(de);
-
 		if (de->isMarked()) continue;
-		if (pde->getLabel() >= 0) continue;
+		if (de->getLabel() >= 0) continue;
 
 		edgeRingStarts.push_back(de);
 
@@ -256,8 +253,8 @@ PolygonizeGraph::computeNextCWEdges(NodePtr node) {
 	DirectedEdgePtr prevDE = nullptr;
 
 	// the edges are stored in CCW order around the star
-	for(auto e : node->getSortedOutEdges()) {
-		auto outDE = e;
+	for(auto de : node->getSortedOutEdges()) {
+		auto outDE = de;
 		if (outDE->isMarked()) continue;
 		if (!startDE) startDE = outDE;
 		if (prevDE) {
@@ -290,17 +287,16 @@ PolygonizeGraph::computeNextCCWEdges(NodePtr node, long label) {
 	 */
   for(auto it = edges.rbegin(); it != edges.rend(); ++it)
   {
-    auto e = *it;
-    auto de = safe_cast<PolygonizeDirectedEdge*>(e);
+    auto de = *it;
+		auto sym = de->getSym();
 
-		auto sym = safe_cast<PolygonizeDirectedEdge*>(de->getSym());
-
-		auto outDE = (de->getLabel() == label)? e : nullptr;
-		auto inDE = (sym->getLabel() == label)? de->getSym() : nullptr;
+		auto outDE = (de->getLabel() == label)? de : nullptr;
+		auto inDE = (sym->getLabel() == label)? sym : nullptr;
 
 		if (!outDE && !inDE) continue;  // this edge is not in edgering
 
 		if (inDE) prevInDE = inDE;
+
 		if (outDE) {
 			if (prevInDE) {
 				prevInDE->setNext(outDE);
@@ -309,6 +305,7 @@ PolygonizeGraph::computeNextCCWEdges(NodePtr node, long label) {
 			if (!firstOutDE) firstOutDE = outDE;
 		}
 	}
+
 	if (prevInDE) {
 		assert(firstOutDE);
 		prevInDE->setNext(firstOutDE);
@@ -319,10 +316,10 @@ PolygonizeGraph::DirectedEdges
 PolygonizeGraph::findDirEdgesInRing(DirectedEdgePtr startDE) const {
 	auto de = startDE;
 	DirectedEdges edges;
+
 	do {
 		edges.push_back(de);
-    //de->getNext();
-		de = safe_cast<PolygonizeDirectedEdge *>(de)->getNext();
+		de = de->getNext();
 		assert(de);  // found NULL DE in ring
 		assert(de == startDE || !safe_cast<PolygonizeDirectedEdge *>(de)->isInRing());  // found DE already in ring
 	} while (de != startDE);
@@ -337,13 +334,16 @@ PolygonizeGraph::findEdgeRing(DirectedEdgePtr startDE) const {
 	// Now, when will we delete those EdgeRings ?
 	m_newEdgeRings.push_back(er);
 	do {
-		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
 		er->add(de);
+
+		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
 		e->setRing(er);
-		de = e->getNext();
+
+		de = de->getNext();
 		assert(de);  // found NULL DE in ring
 		assert(de == startDE || !safe_cast<PolygonizeDirectedEdge *>(de)->isInRing());  // found DE already in ring
-	} while (de.get() != startDE.get());
+	} while (de != startDE);
+
 	return er;
 }
 
@@ -362,22 +362,23 @@ PolygonizeGraph::deleteDangles() {
 		node->markAll(false);
 
 		/* get sorted edges in ascending order by angle with the positive x-axis */
-		for(auto oe : node->getSortedOutEdges()) {
-			auto de(safe_cast<PolygonizeDirectedEdge*>(oe));
+		for(auto de : node->getSortedOutEdges()) {
 			// delete this edge and its sym
 			de->setMarked(true);
-			auto sym(safe_cast<PolygonizeDirectedEdge*>(de->getSym()));
+			auto sym = de->getSym();
 			if (sym) sym->setMarked(true);
+
 			// save the line as a dangle
-			auto e(dynamic_cast<PolygonizeEdge*>(de->parentEdge()));
+			auto e = dynamic_cast<PolygonizeEdge*>(de->parentEdge());
 			auto ls(e->getLine());
+
 			if (uniqueDangles.insert(ls).second) {
 				dangleLines.push_back(ls);
 			}
 
-			auto toNode = de->getToNode();
 			// add the toNode to the list to be processed,
 			// if it is now a dangle
+			auto toNode = de->getToNode();
       if (toNode->getDegreeNonDeleted() == 1)
       {
         nodeStack.push_back(toNode);
