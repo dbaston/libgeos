@@ -90,7 +90,7 @@ LineMerger::add(const Geometry *geometry)
 void
 LineMerger::add(const LineString *lineString)
 {
-	if (factory==nullptr) factory=lineString->getFactory();
+	if (!factory) factory = lineString->getFactory();
 	graph.addEdge(lineString);
 	if (!mergedLineStrings) mergedLineStrings.reset(nullptr);
 }
@@ -114,72 +114,43 @@ LineMerger::merge()
 #if 1
 	for (size_t i=0; i<edgeStrings.size(); ++i)
 	{
-		EdgeString *edgeString=edgeStrings[i];
-		(*mergedLineStrings)[i]=edgeString->toLineString();
+		auto es = edgeStrings[i];
+		//EdgeString *edgeString=edgeStrings[i];
+		(*mergedLineStrings)[i] = es->toLineString();
 	}
 #else
-	for (auto e : edgeStrings)
+	for (auto &es : edgeStrings)
 	{
-		assert(e->toLineString());
-		mergedLineStrings->push_back(e->toLineString());
+		assert(es->toLineString());
+		mergedLineStrings->push_back(es->toLineString());
 	}
-
 #endif
 }
 
-void
-LineMerger::buildEdgeStringsForObviousStartNodes()
-{
-	buildEdgeStringsForNonDegree2Nodes();
-}
 
 void
 LineMerger::buildEdgeStringsForIsolatedLoops()
 {
-	buildEdgeStringsForUnprocessedNodes();
-}
-
-void
-LineMerger::buildEdgeStringsForUnprocessedNodes()
-{
-#if GEOS_DEBUG
-	cerr<<__FUNCTION__<<endl;
-#endif
-
 	for (auto &n : graph.getNodes()) {
 		auto node = n.second;
-#if GEOS_DEBUG
-		cerr<<"Node "<<i<<": "<<*node<<endl;
-#endif
+
 		if (!node->isMarked()) {
 			assert(node->getDegree()==2);
 			buildEdgeStringsStartingAt(node);
 			node->setMarked(true);
-#if GEOS_DEBUG
-			cerr<<" setMarked(true) : "<<*node<<endl;
-#endif
 		}
 	}
 }
 
 void
-LineMerger::buildEdgeStringsForNonDegree2Nodes()
+LineMerger::buildEdgeStringsForObviousStartNodes()
 {
-#if GEOS_DEBUG
-	cerr<<__FUNCTION__<<endl;
-#endif
-
 	for (auto &n : graph.getNodes()) {
 		auto node = n.second;
-#if GEOS_DEBUG
-		cerr<<"Node "<<i<<": "<<*node<<endl;
-#endif
+
 		if (node->getDegree()!=2) {
 			buildEdgeStringsStartingAt(node);
 			node->setMarked(true);
-#if GEOS_DEBUG
-			cerr<<" setMarked(true) : "<<*node<<endl;
-#endif
 		}
 	}
 }
@@ -189,35 +160,33 @@ LineMerger::buildEdgeStringsStartingAt(NodePtr node)
 {
 	for (auto &e : node->getOutEdges())
 	{
-		auto directedEdge = safe_cast<LineMergeDirectedEdge*> (e);
-		if (directedEdge->parentEdge()->isMarked()) {
-			continue;
-		}
-		edgeStrings.push_back(buildEdgeStringStartingWith(directedEdge));
+		if (e->parentEdge()->isMarked()) continue;
+
+		edgeStrings.push_back(buildEdgeStringStartingWith(e));
 	}
 }
 
 EdgeString*
-LineMerger::buildEdgeStringStartingWith(LineMergeDirectedEdge *start)
+LineMerger::buildEdgeStringStartingWith(DirectedEdgePtr start)
 {
 	EdgeString *edgeString = new EdgeString(factory);
-	LineMergeDirectedEdge *current=start;
+	DirectedEdgePtr current=start;
 	do {
 		edgeString->add(current);
 		current->parentEdge()->setMarked(true);
-		current=current->getNext();
-	} while (current!=nullptr && current!=start);
+		current = current->getNext();
+	} while (current && current != start);
+
 	return edgeString;
 }
 
 /**
  * Returns the LineStrings built by the merging process.
  */
-	std::unique_ptr<std::vector<LineString*>>
+std::unique_ptr<std::vector<LineString*>>
 LineMerger::getMergedLineStrings()
 {
 	merge();
-
 	return std::move(mergedLineStrings);
 }
 

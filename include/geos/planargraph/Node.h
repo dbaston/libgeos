@@ -130,7 +130,7 @@ public:
   size_t getDegreeNonDeleted() const;
 
 
-  /** @brief mark all edges as deleted*/
+  /** @brief mark all edges depending on value */
 	void markAll(bool value);
 
 	/**

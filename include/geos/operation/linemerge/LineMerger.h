@@ -79,6 +79,7 @@ namespace linemerge { // geos::operation::linemerge
 class GEOS_DLL LineMerger {
 public:
 	typedef NodeMap::NodePtr NodePtr;
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
 
 
 private:
@@ -97,13 +98,9 @@ private:
 
 	void buildEdgeStringsForIsolatedLoops();
 
-	void buildEdgeStringsForUnprocessedNodes();
-
-	void buildEdgeStringsForNonDegree2Nodes();
-
 	void buildEdgeStringsStartingAt(NodePtr node);
 
-	EdgeString* buildEdgeStringStartingWith(LineMergeDirectedEdge *start);
+	EdgeString* buildEdgeStringStartingWith(DirectedEdgePtr start);
 
 public:
 	LineMerger();

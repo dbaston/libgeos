@@ -23,6 +23,7 @@
 
 #include <geos/export.h>
 #include <vector>
+#include <memory>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -41,7 +42,12 @@ namespace geos {
 			class LineMergeDirectedEdge;
 		}
 	}
+  namespace planargraph {
+    class DirectedEdge;
+  }
 }
+
+using geos::planargraph::DirectedEdge;
 
 namespace geos {
 namespace operation { // geos::operation
@@ -54,8 +60,9 @@ namespace linemerge { // geos::operation::linemerge
  */
 class GEOS_DLL EdgeString {
 private:
+  typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
 	const geom::GeometryFactory *factory;
-	std::vector<LineMergeDirectedEdge*> directedEdges;
+	std::vector<DirectedEdgePtr> directedEdges;
 	geom::CoordinateSequence *coordinates;
 	geom::CoordinateSequence* getCoordinates();
 public:
@@ -71,7 +78,7 @@ public:
 	/**
 	* Adds a directed edge which is known to form part of this line.
 	*/
-	void add(LineMergeDirectedEdge *directedEdge);
+	void add(DirectedEdgePtr directedEdge);
 
 	/*
 	 * Converts this EdgeString into a LineString.

@@ -27,6 +27,7 @@
 //using namespace geos::planargraph;
 using namespace geos::geom;
 using geos::planargraph::Node;
+using geos::planargraph::DirectedEdge;
 
 namespace geos {
 namespace operation { // geos.operation
@@ -47,18 +48,18 @@ LineMergeDirectedEdge::LineMergeDirectedEdge(
  * or null if there are zero or multiple directed edges starting there.
  * @return
  */
-LineMergeDirectedEdge*
-LineMergeDirectedEdge::getNext()
+DirectedEdge::DirectedEdgePtr
+LineMergeDirectedEdge::getNext() const
 {
-	if (getToNode()->getDegree()!=2) {
+	if (getToNode()->getDegree() != 2) {
 		return nullptr;
 	}
-	if (getToNode()->getOutEdges().getEdges()[0]==getSym()) {
-	  return safe_cast<LineMergeDirectedEdge*>(getToNode()->getOutEdges().getEdges()[1]);
+	if (getToNode()->getOutEdges().getEdges()[0] == getSym()) {
+	  return getToNode()->getOutEdges().getEdges()[1];
 	}
-	assert(getToNode()->getOutEdges().getEdges()[1]==getSym());
+	assert(getToNode()->getOutEdges().getEdges()[1] == getSym());
 
-	auto nextedge = safe_cast<LineMergeDirectedEdge*>(getToNode()->getOutEdges().getEdges()[0]);
+	auto nextedge = getToNode()->getOutEdges().getEdges()[0];
 	assert(nextedge);
 
 	return nextedge;

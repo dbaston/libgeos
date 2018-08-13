@@ -54,7 +54,7 @@ EdgeString::~EdgeString() {
  * Adds a directed edge which is known to form part of this line.
  */
 void
-EdgeString::add(LineMergeDirectedEdge *directedEdge)
+EdgeString::add(DirectedEdgePtr directedEdge)
 {
 	directedEdges.push_back(directedEdge);
 }
@@ -67,7 +67,7 @@ EdgeString::getCoordinates()
 		int reverseDirectedEdges = 0;
 		coordinates=factory->getCoordinateSequenceFactory()->create();
 		for (std::size_t i=0, e=directedEdges.size(); i<e; ++i) {
-			LineMergeDirectedEdge* directedEdge = directedEdges[i];
+			auto directedEdge = directedEdges[i];
 			if (directedEdge->getEdgeDirection()) {
 				forwardDirectedEdges++;
 			} else {

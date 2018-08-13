@@ -70,7 +70,7 @@ public:
 	* if there are zero or multiple directed edges starting there.
 	* @return
 	*/
-	LineMergeDirectedEdge* getNext();
+	DirectedEdgePtr getNext() const override;
 };
 
 } // namespace geos::operation::linemerge
