@@ -62,6 +62,34 @@ bool Node::hasDegree(size_t degree) const {
 	return deStar.getDegree() == degree;
 }
 
+size_t
+Node::getDegreeNonDeleted() const {
+  size_t degree = 0;
+  for (const auto e : deStar) {
+    if (!e->isMarked()) ++degree;
+  }
+  return degree;
+}
+
+void
+Node::markAll(bool value) {
+  for (auto e : deStar) {
+    e->setMarked(value);
+    if (e->getSym()) e->getSym()->setMarked(value);
+  }
+}
+
+
+#if 0
+size_t
+Node::getDegree(long label) const {
+  size_t degree = 0;
+  for (const auto e : deStar) {
+    if (e.get()->getLabel() == label) ++degree;
+  }
+  return degree;
+}
+#endif
 
 } // namespace planargraph
 } // namespace geos

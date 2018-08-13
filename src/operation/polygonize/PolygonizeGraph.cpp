@@ -47,35 +47,6 @@ namespace geos {
 namespace operation {  // geos.operation
 namespace polygonize {  // geos.operation.polygonize
 
-int
-PolygonizeGraph::getDegreeNonDeleted(NodePtr node) const {
-	int degree = 0;
-	for (auto e : node->getOutEdges()) {
-		if (!safe_cast<PolygonizeDirectedEdge*>(e)->isMarked()) ++degree;
-	}
-	return degree;
-}
-
-int
-PolygonizeGraph::getDegree(NodePtr node, long label) const {
-	int degree = 0;
-	for (auto e : node->getOutEdges()) {
-		if (safe_cast<PolygonizeDirectedEdge*>(e)->getLabel() == label) ++degree;
-	}
-	return degree;
-}
-
-/**
- * marks them as Deleted
- */
-void
-PolygonizeGraph::deleteAllEdges(NodePtr node) {
-  for (auto e : node->getOutEdges()) {
-		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
-		de->setMarked(true);
-		if (de->getSym()) de->getSym()->setMarked(true);
-	}
-}
 
 /*
  * Create a new polygonization graph.
@@ -163,7 +134,7 @@ PolygonizeGraph::findIntersectionNodes(
 	do {
 		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
 		auto node = e->getFromNode();
-		if (getDegree(node, label) > 1) {
+		if (node->getDegree<PolygonizeDirectedEdge>(label) > 1) {
 			intNodes.push_back(node);
 		}
 		de = e->getNext();
@@ -392,7 +363,7 @@ PolygonizeGraph::deleteDangles() {
 	while (!nodeStack.empty()) {
 		auto node = nodeStack.back();
 		nodeStack.pop_back();
-		deleteAllEdges(node);
+		node->markAll(false);
 
 		/* get sorted edges in ascending order by angle with the positive x-axis */
 		for(auto oe : node->getSortedOutEdges()) {
@@ -411,12 +382,13 @@ PolygonizeGraph::deleteDangles() {
 			auto toNode = de->getToNode();
 			// add the toNode to the list to be processed,
 			// if it is now a dangle
-			if (getDegreeNonDeleted(toNode) == 1) {
-				nodeStack.push_back(toNode);
-			}
-		}
-	}
-	return dangleLines;
+      if (toNode->getDegreeNonDeleted() == 1)
+      {
+        nodeStack.push_back(toNode);
+      }
+    }
+  }
+  return dangleLines;
 }
 
 /* deprecated */

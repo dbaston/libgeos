@@ -70,11 +70,6 @@ class EdgeRing;
 class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 public:
 	bool empty() const {return m_nodeMap.empty();}
-	/**
-	 * \brief
-	 * Deletes all edges at a node
-	 */
-	void deleteAllEdges(NodePtr node);
 
 	/**
 	 * \brief
@@ -147,11 +142,6 @@ public:
 	void deleteDangles(std::vector<const LineString*> &dangleLines);
 
  private:
-	int getDegreeNonDeleted(NodePtr node) const;
-
-	int getDegree(NodePtr node, long label) const;
-
-
 	/**
 	 * \brief
 	 * Convert the maximal edge rings found by the initial graph traversal

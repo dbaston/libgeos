@@ -21,6 +21,7 @@
 #include <geos/planargraph/GraphComponent.h> // for inheritance
 #include <geos/planargraph/DirectedEdgeStar.h>
 #include <geos/planargraph/DirectedEdge.h>
+#include <geos/planargraph/detail.hpp>
 #include <algorithm>
 
 // Forward declarations
@@ -118,10 +119,25 @@ public:
 		return deStar.getDegree();
 	}
 
+#if 0
+  template <typename T>
+	size_t getDegreeNonDeleted() const;
+#endif
+
+  template <typename T>
+	size_t getDegree(long label) const;
+
+  size_t getDegreeNonDeleted() const;
+
+
+  /** @brief mark all edges as deleted*/
+	void markAll(bool value);
+
 	/**
 	 * \brief Returns the number of edges around this Node.
 	 */
 	bool hasDegree(size_t degree) const;
+
 
 #ifdef GEOS_USEDEPRECATED
 	/** @name deprecated */
@@ -151,6 +167,18 @@ public:
 	///@}
 #endif
 };
+
+
+template <typename T>
+size_t
+Node::getDegree(long label) const {
+  size_t degree = 0;
+  for (const auto e : deStar) {
+    if (safe_cast<T*>(e)->getLabel() == label) ++degree;
+  }
+  return degree;
+}
+
 
 /// Print a Node
 std::ostream& operator<<(std::ostream& os, const Node& n);

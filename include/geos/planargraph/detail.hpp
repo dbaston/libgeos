@@ -1,3 +1,8 @@
+
+#ifndef GEOS_PLANARGRAPH_DETAIL_HPP_
+#define GEOS_PLANARGRAPH_DETAIL_HPP_
+
+
 #include <vector>
 #include <algorithm>
 #include <memory>
@@ -97,3 +102,5 @@ safe_cast(D* ptr)
 }
 
 }  // namespace
+
+#endif  // GEOS_PLANARGRAPH_DETAIL_HPP_
