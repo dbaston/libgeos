@@ -115,8 +115,7 @@ void
 PolygonizeGraph::convertMaximalToMinimalEdgeRings(
 		const DirectedEdges ringEdges) {
 	for (const auto de : ringEdges) {
-		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
-		auto label = e->getLabel();
+		auto label = de->getLabel();
 		auto intNodes = findIntersectionNodes(de, label);
 		for (auto &n : intNodes) {
 			computeNextCCWEdges(n, label);
@@ -132,14 +131,13 @@ PolygonizeGraph::findIntersectionNodes(
 	auto de = startDE;
 
 	do {
-		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
-		auto node = e->getFromNode();
+		auto node = de->getFromNode();
 		if (node->getDegree<PolygonizeDirectedEdge>(label) > 1) {
 			intNodes.push_back(node);
 		}
-		de = e->getNext();
+		de = de->getNext();
 		assert(de);  // found NULL DE in ring
-		assert(de == startDE || !e->isInRing());  // found DE already in ring
+		assert(de == startDE || !safe_cast<PolygonizeDirectedEdge *>(de)->isInRing());  // found DE already in ring
 	} while (de != startDE);
 
 	return intNodes;
@@ -183,20 +181,21 @@ PolygonizeGraph::getEdgeRings(std::vector<EdgeRing*>& edgeRingList) {
 
 PolygonizeGraph::DirectedEdges
 PolygonizeGraph::findLabeledEdgeRings(
-		const DirectedEdges dirEdges) const {
+		const DirectedEdges dirEdges) const
+{
 	DirectedEdges edgeRingStarts;
 
 	// label the edge rings formed
 	long currLabel(1);
-	for (const auto e : dirEdges) {
-		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
+	for (const auto de : dirEdges) {
+		auto pde = safe_cast<PolygonizeDirectedEdge*>(de);
 
 		if (de->isMarked()) continue;
-		if (de->getLabel() >= 0) continue;
+		if (pde->getLabel() >= 0) continue;
 
-		edgeRingStarts.push_back(e);
+		edgeRingStarts.push_back(de);
 
-		auto edges = findDirEdgesInRing(e);
+		auto edges = findDirEdgesInRing(de);
 
 		label(edges, currLabel);
 
@@ -220,12 +219,10 @@ PolygonizeGraph::deleteCutEdges() {
 	 * Cut Edges are edges where both dirEdges have the same label.
 	 * Delete them, and record them
 	 */
-	for (auto e : m_dirEdges) {
-		auto de = safe_cast<PolygonizeDirectedEdge*>(e);
-
+	for (auto de : m_dirEdges) {
 		if (de->isMarked()) continue;
 
-		auto sym = safe_cast<PolygonizeDirectedEdge*>(de->getSym());
+		auto sym = de->getSym();
 
 		if (de->getLabel() == sym->getLabel()) {
 			de->setMarked(true);
@@ -250,9 +247,7 @@ void
 PolygonizeGraph::label(
 		const DirectedEdges &dirEdges,
 	 	long label) const {
-	for(auto e : dirEdges) {
-		safe_cast<PolygonizeDirectedEdge*>(e)->setLabel(label);
-	}
+	for(auto e : dirEdges) e->setLabel(label);
 }
 
 void
@@ -266,12 +261,12 @@ PolygonizeGraph::computeNextCWEdges(NodePtr node) {
 		if (outDE->isMarked()) continue;
 		if (!startDE) startDE = outDE;
 		if (prevDE) {
-			safe_cast<PolygonizeDirectedEdge*>(prevDE->getSym())->setNext(outDE);
+      prevDE->getSym()->setNext(outDE);
 		}
 		prevDE = outDE;
 	}
 	if (prevDE) {
-		safe_cast<PolygonizeDirectedEdge*>(prevDE->getSym())->setNext(startDE);
+		prevDE->getSym()->setNext(startDE);
 	}
 }
 
@@ -308,7 +303,7 @@ PolygonizeGraph::computeNextCCWEdges(NodePtr node, long label) {
 		if (inDE) prevInDE = inDE;
 		if (outDE) {
 			if (prevInDE) {
-				safe_cast<PolygonizeDirectedEdge*>(prevInDE)->setNext(outDE);
+				prevInDE->setNext(outDE);
 				prevInDE = nullptr;
 			}
 			if (!firstOutDE) firstOutDE = outDE;
@@ -316,7 +311,7 @@ PolygonizeGraph::computeNextCCWEdges(NodePtr node, long label) {
 	}
 	if (prevInDE) {
 		assert(firstOutDE);
-		safe_cast<PolygonizeDirectedEdge*>(prevInDE)->setNext(firstOutDE);
+		prevInDE->setNext(firstOutDE);
 	}
 }
 
@@ -326,6 +321,7 @@ PolygonizeGraph::findDirEdgesInRing(DirectedEdgePtr startDE) const {
 	DirectedEdges edges;
 	do {
 		edges.push_back(de);
+    //de->getNext();
 		de = safe_cast<PolygonizeDirectedEdge *>(de)->getNext();
 		assert(de);  // found NULL DE in ring
 		assert(de == startDE || !safe_cast<PolygonizeDirectedEdge *>(de)->isInRing());  // found DE already in ring
@@ -342,7 +338,7 @@ PolygonizeGraph::findEdgeRing(DirectedEdgePtr startDE) const {
 	m_newEdgeRings.push_back(er);
 	do {
 		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
-		er->add(e);
+		er->add(de);
 		e->setRing(er);
 		de = e->getNext();
 		assert(de);  // found NULL DE in ring

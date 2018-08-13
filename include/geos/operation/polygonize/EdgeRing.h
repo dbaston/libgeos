@@ -24,6 +24,8 @@
 #include <geos/export.h>
 
 #include <vector>
+#include <memory>
+
 #include "geos/geom/GeometryFactory.h"
 
 #ifdef _MSC_VER
@@ -46,6 +48,8 @@ namespace geos {
 	}
 }
 
+using geos::planargraph::DirectedEdge;
+
 namespace geos {
 namespace operation { // geos::operation
 namespace polygonize { // geos::operation::polygonize
@@ -55,7 +59,12 @@ namespace polygonize { // geos::operation::polygonize
  * a ring of a polygon.  The ring may be either an outer shell or a hole.
  */
 class GEOS_DLL EdgeRing {
-	typedef std::vector<const planargraph::DirectedEdge*> DeList;
+#if 0
+	typedef DirectedEdge* DirectedEdgePtr;
+#else
+	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+#endif
+	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 	typedef std::vector<geom::Geometry*> GeomVect;
 
 public:
@@ -120,7 +129,7 @@ public:
 	 *
 	 * @param de the DirectedEdge to add. Ownership to the caller.
 	 */
-	void add(const planargraph::DirectedEdge *de);
+	void add(DirectedEdgePtr de);
 
 	/** \brief
 	 * Tests whether this ring is a hole.
@@ -201,7 +210,7 @@ private:
 	 */
 	const geom::GeometryFactory factory;
 
-	std::vector<const planargraph::DirectedEdge*> deList;
+	DirectedEdges deList;
 
 	// cache the following data for efficiency
 	mutable geom::LinearRing *ring;

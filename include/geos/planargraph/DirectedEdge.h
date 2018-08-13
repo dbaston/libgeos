@@ -225,6 +225,11 @@ public:
 	 */
 	std::string print() const;
 
+  virtual long getLabel() const {return -1;}
+  virtual void setLabel(long) { }
+  virtual DirectedEdgePtr getNext() const {return nullptr;}
+  virtual void setNext(DirectedEdgePtr&) { }
+
 #ifdef GEOS_USEDEPRECATED
 	/** @name deprecated */
 	///@{

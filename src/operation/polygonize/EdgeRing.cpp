@@ -157,7 +157,7 @@ EdgeRing::~EdgeRing()
 
 /*public*/
 void
-EdgeRing::add(const DirectedEdge *de){
+EdgeRing::add(DirectedEdgePtr de){
     deList.push_back(de);
 }
 

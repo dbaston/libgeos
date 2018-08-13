@@ -90,18 +90,18 @@ public:
 	/*
 	 * Returns the identifier attached to this directed edge.
 	 */
-	long getLabel() const;
+	long getLabel() const override;
 
 	/*
 	 * Attaches an identifier to this directed edge.
 	 */
-	void setLabel(long newLabel);
+	void setLabel(long newLabel) override;
 
 	/*
 	 * Returns the next directed edge in the EdgeRing that this
 	 * directed edge is a member of.
 	 */
-	DirectedEdgePtr getNext() const;
+	DirectedEdgePtr getNext() const override;
 
 	/*
 	 * Sets the next directed edge in the EdgeRing that this
