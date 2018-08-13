@@ -25,6 +25,7 @@
 #include <geos/geom/CoordinateSequenceFactory.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/LineString.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <vector>
 #include <cassert>
@@ -48,6 +49,7 @@ EdgeString::EdgeString(const GeometryFactory *newFactory):
 }
 
 EdgeString::~EdgeString() {
+  delete coordinates;
 }
 
 /**
@@ -59,28 +61,32 @@ EdgeString::add(DirectedEdgePtr directedEdge)
 	directedEdges.push_back(directedEdge);
 }
 
-CoordinateSequence *
+EdgeString::CoordinatesPtr
 EdgeString::getCoordinates()
 {
 	if (coordinates==nullptr) {
 		int forwardDirectedEdges = 0;
 		int reverseDirectedEdges = 0;
-		coordinates=factory->getCoordinateSequenceFactory()->create();
-		for (std::size_t i=0, e=directedEdges.size(); i<e; ++i) {
-			auto directedEdge = directedEdges[i];
-			if (directedEdge->getEdgeDirection()) {
-				forwardDirectedEdges++;
-			} else {
-				reverseDirectedEdges++;
-			}
+		coordinates = factory->getCoordinateSequenceFactory()->create();
 
-			assert(dynamic_cast<LineMergeEdge*>(directedEdge->parentEdge()));
-			LineMergeEdge* lme=static_cast<LineMergeEdge*>( directedEdge->parentEdge());
+    for (auto it = directedEdges.begin(); it !=directedEdges.end(); ++it)
+    {
+      auto directedEdge = *it;
 
-			coordinates->add(lme->getLine()->getCoordinatesRO(),
+      if (directedEdge->getEdgeDirection()) {
+        ++forwardDirectedEdges;
+      } else {
+        ++reverseDirectedEdges;
+      }
+
+			auto lme= safe_cast<LineMergeEdge*>(directedEdge->parentEdge());
+
+			coordinates->add(
+          lme->getLine()->getCoordinatesRO(),
 					false,
 					directedEdge->getEdgeDirection());
 		}
+
 		if (reverseDirectedEdges > forwardDirectedEdges) {
 			CoordinateSequence::reverse(coordinates);
 		}

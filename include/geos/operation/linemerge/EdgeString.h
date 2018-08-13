@@ -61,10 +61,14 @@ namespace linemerge { // geos::operation::linemerge
 class GEOS_DLL EdgeString {
 private:
   typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
+  typedef geom::CoordinateSequence* CoordinatesPtr;
+  //typedef std::shared_ptr<geom::CoordinateSequence> CoordinatesPtr;
+
 	const geom::GeometryFactory *factory;
 	std::vector<DirectedEdgePtr> directedEdges;
-	geom::CoordinateSequence *coordinates;
-	geom::CoordinateSequence* getCoordinates();
+	CoordinatesPtr coordinates;
+
+	CoordinatesPtr getCoordinates();
 public:
 	/*
 	 * \brief

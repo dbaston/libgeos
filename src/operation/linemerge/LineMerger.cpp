@@ -59,7 +59,6 @@ LineMerger::LineMerger():
 
 LineMerger::~LineMerger()
 {
-	for (auto e : edgeStrings) delete e;
 }
 
 
