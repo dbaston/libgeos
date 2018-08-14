@@ -49,7 +49,6 @@ EdgeString::EdgeString(const GeometryFactory *newFactory):
 }
 
 EdgeString::~EdgeString() {
-  delete coordinates;
 }
 
 /**
@@ -59,15 +58,17 @@ void
 EdgeString::add(DirectedEdgePtr directedEdge)
 {
 	directedEdges.push_back(directedEdge);
+  coordinates.reset();
 }
 
-EdgeString::CoordinatesPtr
+void
 EdgeString::getCoordinates()
 {
 	if (coordinates==nullptr) {
 		int forwardDirectedEdges = 0;
 		int reverseDirectedEdges = 0;
-		coordinates = factory->getCoordinateSequenceFactory()->create();
+		//coordinates = factory->getCoordinateSequenceFactory()->create();
+		coordinates.reset(factory->getCoordinateSequenceFactory()->create());
 
     for (auto &directedEdge : directedEdges)
     {
@@ -87,10 +88,9 @@ EdgeString::getCoordinates()
 		}
 
 		if (reverseDirectedEdges > forwardDirectedEdges) {
-			CoordinateSequence::reverse(coordinates);
+			CoordinateSequence::reverse(coordinates.get());
 		}
 	}
-	return coordinates;
 }
 
 /*
@@ -99,7 +99,8 @@ EdgeString::getCoordinates()
 LineString*
 EdgeString::toLineString()
 {
-	return factory->createLineString(getCoordinates());
+	getCoordinates();
+	return factory->createLineString(coordinates.get());
 }
 
 } // namespace geos.operation.linemerge
