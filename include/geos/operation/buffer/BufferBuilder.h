@@ -25,9 +25,12 @@
 
 #include <vector>
 
+#if 0
 #include <geos/operation/buffer/BufferOp.h> // for inlines (BufferOp enums)
 #include <geos/operation/buffer/OffsetCurveBuilder.h> // for inline (OffsetCurveBuilder enums)
-#include <geos/geomgraph/EdgeList.h> // for composition
+#endif
+#include <geos/operation/buffer/BufferParameters.h>
+#include <geos/geomgraph/EdgeList.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -42,7 +45,7 @@ namespace geos {
 		class GeometryFactory;
 	}
 	namespace algorithm {
-		class CGAlgorithms;
+		//class CGAlgorithms;
 		class LineIntersector;
 	}
 	namespace noding {
@@ -64,6 +67,7 @@ namespace geos {
 		}
 	}
 }
+
 
 namespace geos {
 namespace operation { // geos.operation

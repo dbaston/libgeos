@@ -19,46 +19,61 @@
  *
  **********************************************************************/
 
+#include <geos/operation/buffer/BufferBuilder.h>
+
 #include <geos/geom/GeometryFactory.h>
-#include <geos/geom/Location.h>
 #include <geos/geom/Geometry.h>
 #include <geos/geom/Polygon.h>
-#include <geos/geom/GeometryCollection.h>
 #include <geos/geom/LineString.h>
-#include <geos/geom/MultiLineString.h>
-#include <geos/operation/buffer/BufferBuilder.h>
+#include <geos/geom/Location.h>
+
+#include <geos/geomgraph/Node.h>
+#include <geos/geomgraph/Edge.h>
+#include <geos/geomgraph/Label.h>
+#include <geos/geomgraph/Position.h>
+
+#include <geos/noding/IntersectionAdder.h>
+#include <geos/noding/NodedSegmentString.h>
+#include <geos/noding/SegmentString.h>
+#include <geos/noding/MCIndexNoder.h>
+
+#include <geos/algorithm/LineIntersector.h>
+
+#include <geos/operation/linemerge/LineMerger.h>
+
+#include <geos/operation/overlay/PolygonBuilder.h>
+#include <geos/operation/overlay/snap/SnapOverlayOp.h>
+#include <geos/operation/overlay/OverlayOp.h>
+#include <geos/operation/overlay/OverlayNodeFactory.h>
+
+#include <geos/operation/buffer/SubgraphDepthLocater.h>
 #include <geos/operation/buffer/OffsetCurveBuilder.h>
 #include <geos/operation/buffer/OffsetCurveSetBuilder.h>
 #include <geos/operation/buffer/BufferSubgraph.h>
-#include <geos/operation/buffer/SubgraphDepthLocater.h>
+
+#include <geos/util/Interrupt.h>
+
+#if 0
+#include <geos/geom/GeometryCollection.h>
+#include <geos/geom/MultiLineString.h>
 #include <geos/operation/overlay/OverlayOp.h>
-#include <geos/operation/overlay/snap/SnapOverlayOp.h>
-#include <geos/operation/overlay/PolygonBuilder.h>
-#include <geos/operation/overlay/OverlayNodeFactory.h>
 #include <geos/operation/linemerge/LineMerger.h>
-#include <geos/algorithm/LineIntersector.h>
-#include <geos/noding/IntersectionAdder.h>
-#include <geos/noding/SegmentString.h>
-#include <geos/noding/MCIndexNoder.h>
-#include <geos/noding/NodedSegmentString.h>
-#include <geos/geomgraph/Position.h>
 #include <geos/geomgraph/PlanarGraph.h>
-#include <geos/geomgraph/Label.h>
-#include <geos/geomgraph/Node.h>
-#include <geos/geomgraph/Edge.h>
 #include <geos/util/GEOSException.h>
 #include <geos/io/WKTWriter.h> // for debugging
 #include <geos/util/IllegalArgumentException.h>
 #include <geos/profiler.h>
-#include <geos/util/Interrupt.h>
 #include <geos/planargraph/detail.hpp>
 
-#include <cassert>
-#include <vector>
-#include <iomanip>
-#include <algorithm>
-#include <iostream>
 
+#include <iomanip>
+#include <iostream>
+#endif
+
+#include <vector>
+#include <algorithm>
+#include <memory>
+#include <cassert>
 // Debug single sided buffer
 //#define GEOS_DEBUG_SSB 1
 
@@ -70,13 +85,33 @@
 #define JTS_DEBUG 0
 #endif
 
-//using namespace std;
-using namespace geos::geom;
-using namespace geos::geomgraph;
-using namespace geos::noding;
-using namespace geos::algorithm;
-using namespace geos::operation::overlay;
-using namespace geos::operation::linemerge;
+
+/* Only Pointers */
+using geos::geom::PrecisionModel;
+using geos::geom::CoordinateSequence;
+using geos::geom::Coordinate;
+using geos::noding::Noder;
+
+/* Complete data */
+using geos::noding::MCIndexNoder;
+using geos::noding::SegmentString;
+using geos::noding::IntersectionAdder;
+using geos::noding::NodedSegmentString;
+
+using geos::operation::overlay::PolygonBuilder;
+using geos::operation::linemerge::LineMerger;
+using geos::geom::Geometry;
+using geos::geom::GeometryFactory;
+using geos::geom::LineString;
+using geos::geom::Location;
+using geos::geom::Polygon;
+using geos::operation::overlay::OverlayOp;
+using geos::operation::overlay::OverlayNodeFactory;
+using geos::geomgraph::Node;
+using geos::geomgraph::Edge;
+using geos::geomgraph::Label;
+using geos::geomgraph::Position;
+using geos::algorithm::LineIntersector;
 
 namespace {
 
