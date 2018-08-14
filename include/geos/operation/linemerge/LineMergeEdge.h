@@ -41,20 +41,21 @@ namespace linemerge { // geos::operation::linemerge
  * whether this Edge has been logically deleted from the graph.
  */
 class GEOS_DLL LineMergeEdge: public planargraph::Edge {
-private:
-	const geom::LineString *line;
-
 public:
+  using LinePtr = const geos::geom::LineString*;
 	/**
 	 * Constructs a LineMergeEdge with vertices given by the specified
 	 * LineString.
 	 */
-	LineMergeEdge(const geom::LineString *newLine);
+	LineMergeEdge(LinePtr &newLine);
 
 	/**
 	 * Returns the LineString specifying the vertices of this edge.
 	 */
-	const geom::LineString* getLine() const;
+	LinePtr getLine() const;
+
+private:
+	LinePtr line;
 };
 
 
