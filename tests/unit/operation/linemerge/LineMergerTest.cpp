@@ -100,7 +100,7 @@ namespace tut
       ensure_equals(actualGeometries.size(), expectedGeometries.size());
       for (auto g : actualGeometries)
       {
-        ensure( contains(actualGeometries, g, compareDirections) );
+        ensure( contains(expectedGeometries, g, compareDirections) );
       }
     }
 
