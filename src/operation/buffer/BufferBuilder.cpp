@@ -51,6 +51,7 @@
 #include <geos/util/IllegalArgumentException.h>
 #include <geos/profiler.h>
 #include <geos/util/Interrupt.h>
+#include <geos/planargraph/detail.hpp>
 
 #include <cassert>
 #include <vector>
@@ -94,6 +95,22 @@ convertSegStrings(const GeometryFactory* fact, Iterator it, Iterator et)
   return std::unique_ptr<Geometry>(fact->buildGeometry(lines));
 }
 
+template <typename T>
+void
+clearRawPtrs(T container)
+{
+  for(auto &e : container) delete e;
+  container.clear();
+}
+
+template <typename T>
+void
+clearRawPtrs(T *container)
+{
+  for(auto &e : *container) delete e;
+  delete container;
+}
+
 }
 
 namespace geos {
@@ -132,6 +149,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
 {
    // Returns the line used to create a single-sided buffer.
    // Input requirement: Must be a LineString.
+
    const LineString* l = dynamic_cast< const LineString* >( g );
    if ( !l ) throw util::IllegalArgumentException("BufferBuilder::bufferLineSingleSided only accept linestrings");
 
@@ -140,27 +158,22 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
 
    // Get geometry factory and precision model.
    const PrecisionModel* precisionModel = workingPrecisionModel;
-   if ( !precisionModel ) precisionModel = l->getPrecisionModel();
+   if ( !precisionModel ) precisionModel = g->getPrecisionModel();
 
    assert( precisionModel );
+   // TODO remove there was already an if that makes a throw
    assert( l );
 
-   geomFact = l->getFactory();
+   geomFact = g->getFactory();
 
    // First, generate the two-sided buffer using a butt-cap.
-   BufferParameters modParams = bufParams;
+   auto modParams = bufParams;
    modParams.setEndCapStyle(BufferParameters::CAP_FLAT);
    modParams.setSingleSided(false); // ignore parameter for areal-only geometries
-   std::unique_ptr<Geometry> buf;
 
-   // This is a (temp?) hack to workaround the fact that
-   // BufferBuilder BufferParamaters are immutable after
-   // construction, while we want to force the end cap
-   // style to FLAT for single-sided buffering
-   {
-      BufferBuilder tmp(modParams);
-      buf.reset( tmp.buffer( l, distance ) );
-   }
+   std::unique_ptr<Geometry> buf;
+   buf.reset( BufferBuilder(modParams).buffer( g, distance ) );
+
 
    // Create MultiLineStrings from this polygon.
    std::unique_ptr<Geometry> bufLineString ( buf->getBoundary() );
@@ -176,6 +189,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
 
    {
        std::unique_ptr< CoordinateSequence > coords(g->getCoordinates());
+       /* lineList gets modifyed here*/
        curveBuilder.getSingleSidedLineCurve(coords.get(), distance,
            lineList, leftSide, !leftSide);
        coords.reset();
@@ -183,14 +197,16 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
 
    // Create a SegmentString from these coordinates.
    SegmentString::NonConstVect curveList;
-   for ( unsigned int i = 0; i < lineList.size(); ++i )
+   for (const auto &seq  : lineList)
    {
-      CoordinateSequence* seq = lineList[i];
-
-      // SegmentString takes ownership of CoordinateSequence
-      SegmentString* ss = new NodedSegmentString(seq, nullptr);
-      curveList.push_back( ss );
+      curveList.push_back( new NodedSegmentString(seq, nullptr) );
    }
+
+   /*
+    *  clearing without deleting the CoordinateSequence*
+    *  Not used anymore
+    *  the coordinateSequence* is used somewhere else
+    */
    lineList.clear();
 
 
@@ -198,28 +214,23 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
    Noder* noder = getNoder( precisionModel );
    noder->computeNodes( &curveList );
 
-   SegmentString::NonConstVect* nodedEdges = noder->getNodedSubstrings();
+   auto nodedEdges = noder->getNodedSubstrings();
 
    // Create a geometry out of the noded substrings.
    std::vector< Geometry* >* singleSidedNodedEdges =
       new std::vector< Geometry * >();
    singleSidedNodedEdges->reserve(nodedEdges->size());
-   for ( std::size_t i = 0, n = nodedEdges->size(); i < n; ++i )
+
+   for (auto &ss : *nodedEdges)
    {
-      SegmentString* ss = ( *nodedEdges )[i];
-
-      Geometry* tmp = geomFact->createLineString(
-                        ss->getCoordinates()->clone()
-                      );
-      delete ss;
-
-      singleSidedNodedEdges->push_back( tmp );
+     singleSidedNodedEdges->push_back(
+         geomFact->createLineString(
+           ss->getCoordinates()->clone()));
    }
 
-   delete nodedEdges;
 
-   for (size_t i=0, n=curveList.size(); i<n; ++i) delete curveList[i];
-   curveList.clear();
+   clearRawPtrs(nodedEdges);
+   clearRawPtrs(curveList);
 
    std::unique_ptr<Geometry> singleSided ( geomFact->createMultiLineString(
       singleSidedNodedEdges ) );
@@ -338,7 +349,6 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
       mergedLines->pop_back();
    }
 
-   // Clean up.
    if ( noder != workingNoder ) delete noder;
    buf.reset();
    singleSided.reset();
