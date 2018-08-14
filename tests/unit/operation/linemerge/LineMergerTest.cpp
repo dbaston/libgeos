@@ -89,12 +89,7 @@ namespace tut
     template <class TargetContainer>
     void delAll(TargetContainer& geoms)
     {
-      for (typename TargetContainer::const_iterator i = geoms.begin(),
-           e = geoms.end(); i != e; ++i)
-      {
-        Geom* g = dynamic_cast<Geom*>(*i);
-        delete g;
-      }
+      for (auto g : geoms) delete g;
     }
 
     template <class TargetContainer1, class TargetContainer2>
@@ -103,11 +98,8 @@ namespace tut
                         bool compareDirections)
     {
       ensure_equals(actualGeometries.size(), expectedGeometries.size());
-      for (typename TargetContainer1::const_iterator
-          i = expectedGeometries.begin(),
-          e = expectedGeometries.end(); i != e; ++i)
+      for (auto g : actualGeometries)
       {
-        Geom* g = dynamic_cast<Geom*>(*i);
         ensure( contains(actualGeometries, g, compareDirections) );
       }
     }
@@ -116,14 +108,12 @@ namespace tut
     static bool contains(TargetContainer& actualGeometries,
                          const Geom* g, bool exact)
     {
-      for (typename TargetContainer::const_iterator
-           i = actualGeometries.begin(),
-           e = actualGeometries.end(); i != e; ++i)
+      for (auto element : actualGeometries)
       {
-        Geom* element = dynamic_cast<Geom*>(*i);
         if (exact && element->equalsExact(g)) {
           return true;
         }
+
         if (!exact && element->equals(g)) {
           return true;
         }

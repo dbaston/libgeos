@@ -69,9 +69,8 @@ EdgeString::getCoordinates()
 		int reverseDirectedEdges = 0;
 		coordinates = factory->getCoordinateSequenceFactory()->create();
 
-    for (auto it = directedEdges.begin(); it !=directedEdges.end(); ++it)
+    for (auto &directedEdge : directedEdges)
     {
-      auto directedEdge = *it;
 
       if (directedEdge->getEdgeDirection()) {
         ++forwardDirectedEdges;
