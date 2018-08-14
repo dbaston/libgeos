@@ -25,10 +25,6 @@
 
 #include <vector>
 
-#if 0
-#include <geos/operation/buffer/BufferOp.h> // for inlines (BufferOp enums)
-#include <geos/operation/buffer/OffsetCurveBuilder.h> // for inline (OffsetCurveBuilder enums)
-#endif
 #include <geos/operation/buffer/BufferParameters.h>
 #include <geos/geomgraph/EdgeList.h>
 
