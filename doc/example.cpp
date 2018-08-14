@@ -1030,7 +1030,8 @@ cout<<"-------------------------------------------------------------------------
 	/////////////////////////////////////////////
 	LineMerger lm;
 	lm.add(geoms);
-	vector<LineString *> *mls = lm.getMergedLineStrings();
+	//vector<LineString *> *mls = lm.getMergedLineStrings();
+	auto mls = lm.getMergedLineStrings().release();
 	newgeoms = new vector<Geometry *>;
 	for (unsigned int i=0; i<mls->size(); i++)
 		newgeoms->push_back((*mls)[i]);
