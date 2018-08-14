@@ -59,17 +59,11 @@ namespace linemerge { // geos::operation::linemerge
  * be output by the line-merging process.
  */
 class GEOS_DLL EdgeString {
-private:
+public:
   typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
   typedef geom::CoordinateSequence* CoordinatesPtr;
   //typedef std::shared_ptr<geom::CoordinateSequence> CoordinatesPtr;
 
-	const geom::GeometryFactory *factory;
-	std::vector<DirectedEdgePtr> directedEdges;
-	CoordinatesPtr coordinates;
-
-	CoordinatesPtr getCoordinates();
-public:
 	/*
 	 * \brief
 	 * Constructs an EdgeString with the given factory used to
@@ -88,6 +82,18 @@ public:
 	 * Converts this EdgeString into a LineString.
 	 */
 	geom::LineString* toLineString();
+
+
+private:
+	CoordinatesPtr getCoordinates();
+
+  /*
+   * data
+   */
+	const geom::GeometryFactory *factory;
+	std::vector<DirectedEdgePtr> directedEdges;
+	CoordinatesPtr coordinates;
+
 };
 
 } // namespace geos::operation::linemerge
