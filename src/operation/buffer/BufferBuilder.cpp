@@ -343,7 +343,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
 	lineMerge.getMergedLineStrings() );
 
    // Convert the result into a std::vector< Geometry* >.
-   std::vector< Geometry* >* mergedLinesGeom = new std::vector< Geometry* >();
+   std::vector< Geometry* > mergedLinesGeom = std::vector< Geometry* >();
    const Coordinate& startPoint = l->getCoordinatesRO()->front();
    const Coordinate& endPoint = l->getCoordinatesRO()->back();
    for (auto ml : *mergedLines)
@@ -379,7 +379,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
          // Add the coordinates to the resultant line string.
          if ( coords->size() > 1 )
          {
-            mergedLinesGeom->push_back( geomFact->createLineString( coords.release() ) );
+            mergedLinesGeom.push_back( geomFact->createLineString( coords.release() ) );
          }
       }
    }
@@ -393,20 +393,17 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
    singleSided.reset();
    intersectedLines.reset();
 
-   if ( mergedLinesGeom->size() > 1 )
+   if ( mergedLinesGeom.size() > 1 )
    {
-      return geomFact->createMultiLineString( mergedLinesGeom );
+      return geomFact->createMultiLineString( &mergedLinesGeom );
    }
-   else if ( mergedLinesGeom->size() == 1 )
+   else if ( mergedLinesGeom.size() == 1 )
    {
-
-      Geometry* single = (*mergedLinesGeom)[0];
-      delete mergedLinesGeom;
+      Geometry* single = (mergedLinesGeom)[0];
       return single;
    }
    else
    {
-      delete mergedLinesGeom;
       return geomFact->createLineString();
    }
 }
