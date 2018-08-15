@@ -94,6 +94,8 @@ public:
 		return getAt(0);
 	}
 
+  bool empty() const {return size() == 0;}
+
 	const Coordinate& operator[] (std::size_t i) const {
 		return getAt(i);
 	}

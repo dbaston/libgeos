@@ -130,6 +130,8 @@ convertSegStrings(const GeometryFactory* fact, Iterator it, Iterator et)
   return std::unique_ptr<Geometry>(fact->buildGeometry(lines));
 }
 
+
+
 template <typename T>
 void
 clearRawPtrs(T container)
@@ -146,7 +148,44 @@ clearRawPtrs(T *container)
   delete container;
 }
 
+}  // namespace
+
+
+/** Remove end points if they are a part of the original line to be
+ * buffered.
+ */
+static void
+remove_endpoints(
+    CoordinateSequence::Ptr &coords,
+    const Coordinate& point,
+    const double &ptDistAllowance,
+    const double &segLengthAllowance,
+    bool front) {
+  if (coords->empty()) return;
+
+  auto current = front ? coords->front() : coords->back();
+
+  // Clean up the front of the list.
+  // Loop until the line's end is not inside the buffer width from
+  // the startPoint.
+  while ( coords->size() > 1 &&
+      current.distance( point ) < ptDistAllowance )
+  {
+    // Record the end segment length.
+    auto segLength = current.distance( ( *coords )[ front? 1 : coords->size() - 2 ] );
+
+    // stop looping if the segment
+    // length is larger than the buffer width.
+    if ( segLength > segLengthAllowance ) break;
+
+    // If the first point is less than buffer width away from the
+    // reference point, then delete the point.
+    coords->deleteAt( front? 0 : coords->size() - 1 );
+
+    current = front ? coords->front() : coords->back();
+  }
 }
+
 
 namespace geos {
 namespace operation { // geos.operation
@@ -320,58 +359,11 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
          // epsilon is removed.
          const double segLengthAllowance = 1.02 * distance;
 
-         // Clean up the front of the list.
-         // Loop until the line's end is not inside the buffer width from
-         // the startPoint.
-         while ( coords->size() > 1 &&
-                 coords->front().distance( startPoint ) < ptDistAllowance )
-         {
-            // Record the end segment length.
-            double segLength = coords->front().distance( ( *coords )[1] );
-            // Stop looping if there are no more points, or if the segment
-            // length is larger than the buffer width.
-            if ( coords->size() <= 1 || segLength > segLengthAllowance )
-            {
-               break;
-            }
-            // If the first point is less than buffer width away from the
-            // reference point, then delete the point.
-            coords->deleteAt( 0 );
-         }
-         while ( coords->size() > 1 &&
-                 coords->front().distance( endPoint ) < ptDistAllowance )
-         {
-            double segLength = coords->front().distance( ( *coords )[1] );
-            if ( coords->size() <= 1 || segLength > segLengthAllowance )
-            {
-               break;
-            }
-            coords->deleteAt( 0 );
-         }
+         remove_endpoints(coords, startPoint, ptDistAllowance, segLengthAllowance, true);
+         remove_endpoints(coords, endPoint, ptDistAllowance, segLengthAllowance, true);
+         remove_endpoints(coords, startPoint, ptDistAllowance, segLengthAllowance, false);
+         remove_endpoints(coords, endPoint, ptDistAllowance, segLengthAllowance, false);
 
-         // Clean up the back of the list.
-         while ( coords->size() > 1 &&
-                 coords->back().distance( startPoint ) < ptDistAllowance )
-         {
-            double segLength = coords->back().distance(
-               ( *coords )[coords->size()-2] );
-            if ( coords->size() <= 1 || segLength > segLengthAllowance )
-            {
-               break;
-            }
-            coords->deleteAt( coords->size()-1 );
-         }
-         while ( coords->size() > 1 &&
-                 coords->back().distance( endPoint ) < ptDistAllowance )
-         {
-            double segLength = coords->back().distance(
-               ( *coords )[coords->size()-2] );
-            if ( coords->size() <= 1 || segLength > segLengthAllowance )
-            {
-               break;
-            }
-            coords->deleteAt( coords->size()-1 );
-         }
 
          // Add the coordinates to the resultant line string.
          if ( coords->size() > 1 )
