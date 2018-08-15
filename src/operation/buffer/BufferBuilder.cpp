@@ -148,6 +148,13 @@ clearRawPtrs(T *container)
   delete container;
 }
 
+template <typename T>
+void
+destroyGeometries(const GeometryFactory *f, T &container) {
+  for(auto &e : *container) f->destroyGeometry(e);
+  container->clear();
+}
+
 }  // namespace
 
 
@@ -185,6 +192,9 @@ remove_endpoints(
     current = front ? coords->front() : coords->back();
   }
 }
+
+
+
 
 
 namespace geos {
@@ -336,12 +346,13 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
    std::vector< Geometry* >* mergedLinesGeom = new std::vector< Geometry* >();
    const Coordinate& startPoint = l->getCoordinatesRO()->front();
    const Coordinate& endPoint = l->getCoordinatesRO()->back();
-   while( !mergedLines->empty() )
+   for (auto ml : *mergedLines)
    {
       // Remove end points if they are a part of the original line to be
       // buffered.
-      CoordinateSequence::Ptr coords(mergedLines->back()->getCoordinates());
-      if ( nullptr != coords.get() )
+      //CoordinateSequence::Ptr coords(mergedLines->back()->getCoordinates());
+      CoordinateSequence::Ptr coords(ml->getCoordinates());
+      if ( coords )
       {
          // Use 98% of the buffer width as the point-distance requirement - this
          // is to ensure that the point that is "distance" +/- epsilon is not
@@ -371,10 +382,11 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
             mergedLinesGeom->push_back( geomFact->createLineString( coords.release() ) );
          }
       }
-
-      geomFact->destroyGeometry( mergedLines->back() );
-      mergedLines->pop_back();
    }
+
+   destroyGeometries(geomFact, mergedLines);
+
+
 
    if ( noder != workingNoder ) delete noder;
    buf.reset();
