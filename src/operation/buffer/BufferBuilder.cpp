@@ -163,7 +163,7 @@ destroyGeometries(const GeometryFactory *f, T &container) {
  * @return the empty result geometry, transferring ownership to caller.
  */
 Geometry*
-emptyPolygon(const GeometryFactory *f)
+emptyPolygon(const GeometryFactory * const f)
 {
   return f->createPolygon(nullptr, nullptr);
 }
@@ -265,7 +265,7 @@ BufferBuilder::~BufferBuilder()
 
 /*public*/
 Geometry*
-BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
+BufferBuilder::bufferLineSingleSided( const Geometry * const line, double distance,
                                       bool leftSide )
 {
    // Returns the line used to create a single-sided buffer.
@@ -274,17 +274,23 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
    const auto l = dynamic_cast< const LineString* >( line );
    if ( !l ) throw util::IllegalArgumentException("BufferBuilder::bufferLineSingleSided only accept linestrings");
    assert( l );
+   return bufferLineSingleSided(*l, distance, leftSide);
+}
 
+Geometry*
+BufferBuilder::bufferLineSingleSided( const LineString &line, double distance,
+                                      bool leftSide )
+{
    // Nothing to do for a distance of zero
-   if ( distance == 0 ) return line->clone();
+   if ( distance == 0 ) return line.clone();
 
    // Get geometry factory and precision model.
    const PrecisionModel* precisionModel = workingPrecisionModel;
-   if ( !precisionModel ) precisionModel = line->getPrecisionModel();
+   if ( !precisionModel ) precisionModel = line.getPrecisionModel();
 
    assert( precisionModel );
 
-   geomFact = line->getFactory();
+   geomFact = line.getFactory();
 
    // First, generate the two-sided buffer using a butt-cap.
    auto modParams = bufParams;
@@ -292,7 +298,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
    modParams.setSingleSided(false); // ignore parameter for areal-only geometries
 
    std::unique_ptr<Geometry> buf;
-   buf.reset( BufferBuilder(modParams).buffer( line, distance ) );
+   buf.reset( BufferBuilder(modParams).buffer( &line, distance ) );
 
 
    // Create MultiLineStrings from this polygon.
@@ -308,7 +314,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
    std::vector< CoordinateSequence* > lineList;
 
    {
-       std::unique_ptr< CoordinateSequence > coords(line->getCoordinates());
+       std::unique_ptr< CoordinateSequence > coords(line.getCoordinates());
        /* lineList gets modifyed here*/
        curveBuilder.getSingleSidedLineCurve(coords.get(), distance,
            lineList, leftSide, !leftSide);
@@ -380,8 +386,8 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
 
    // Convert the result into a std::vector< Geometry* >.
    std::vector< Geometry* > mergedLinesGeom = std::vector< Geometry* >();
-   const Coordinate& startPoint = l->getCoordinatesRO()->front();
-   const Coordinate& endPoint = l->getCoordinatesRO()->back();
+   const Coordinate& startPoint = line.getCoordinatesRO()->front();
+   const Coordinate& endPoint = line.getCoordinatesRO()->back();
 
    // Use 98% of the buffer width as the point-distance requirement - this
    // is to ensure that the point that is "distance" +/- epsilon is not
@@ -393,7 +399,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
    // Let the length of the line play a factor in the distance, which is still
    // going to be bounded by 98%. Take 10% of the length of the line  from the buffer distance
    // to try and minimize any artifacts.
-   const double ptDistAllowance = std::max(distance - line->getLength() * 0.1, distance * 0.98);
+   const double ptDistAllowance = std::max(distance - line.getLength() * 0.1, distance * 0.98);
 
    // Use 102% of the buffer width as the line-length requirement - this
    // is to ensure that line segments that is length "distance" +/-
@@ -454,7 +460,8 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 {
   assert(g);
 
-  const PrecisionModel *precisionModel= workingPrecisionModel? workingPrecisionModel : g->getPrecisionModel();
+  /* Not changing pointer nor pointed object */
+  const PrecisionModel * const precisionModel = workingPrecisionModel? workingPrecisionModel : g->getPrecisionModel();
 
   assert(precisionModel);
 

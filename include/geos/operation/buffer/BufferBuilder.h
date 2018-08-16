@@ -39,6 +39,7 @@ namespace geos {
   namespace geom {
     class PrecisionModel;
     class Geometry;
+    class LineString;
     class GeometryFactory;
   }
   namespace algorithm {
@@ -148,7 +149,9 @@ public:
      *
      * @note Not in JTS: this is a GEOS extension
    */
-  geom::Geometry* bufferLineSingleSided( const geom::Geometry* g,
+  geom::Geometry* bufferLineSingleSided( const geom::LineString &g,
+                                  double distance, bool leftSide ) ;
+  geom::Geometry* bufferLineSingleSided( const geom::Geometry * const g,
                                   double distance, bool leftSide ) ;
     // throw (GEOSException);
 
