@@ -551,7 +551,7 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 
 /*private*/
 Noder*
-BufferBuilder::getNoder(const PrecisionModel* pm)
+BufferBuilder::getNoder(const PrecisionModel* const pm)
 {
   // this doesn't change workingNoder precisionModel!
   if (workingNoder != nullptr) return workingNoder;

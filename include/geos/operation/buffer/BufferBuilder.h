@@ -194,7 +194,7 @@ private:
   /// check is performed to ensure it will use the
   /// given PrecisionModel
   ///
-  noding::Noder* getNoder(const geom::PrecisionModel* precisionModel);
+  noding::Noder* getNoder(const geom::PrecisionModel* const precisionModel);
 
   /*
    * Data
