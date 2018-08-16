@@ -89,6 +89,7 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <functional>
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4099)
@@ -317,6 +318,43 @@ char* gstrdup(std::string const& str)
     return gstrdup_s(str.c_str(), str.size());
 }
 
+
+template <typename RT, RT value>
+RT
+excecute(GEOSContextHandle_t &extHandle,
+    std::function<RT(const Geometry*, const Geometry*)> &lambda,
+    const Geometry* &g1, const Geometry* &g2)
+{
+    if ( 0 == extHandle )
+    {
+        return value;
+    }
+
+    GEOSContextHandleInternal_t *handle = 0;
+    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
+    if ( handle->initialized == 0 )
+    {
+        return value;
+    }
+
+    try
+    {
+        bool result = lambda(g1, g2);
+        return result;
+    }
+
+    catch (const std::exception &e)
+    {
+        handle->ERROR_MESSAGE("%s", e.what());
+    }
+    catch (...)
+    {
+        handle->ERROR_MESSAGE("Unknown exception thrown");
+    }
+    return value;
+}
+
+
 } // namespace anonymous
 
 extern "C" {
@@ -421,10 +459,13 @@ GEOSFree_r (GEOSContextHandle_t extHandle, void* buffer)
 // relate()-related functions
 //  return 0 = false, 1 = true, 2 = error occured
 //-----------------------------------------------------------
-
 char
 GEOSDisjoint_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
+  std::function<char(const Geometry*, const Geometry*)> bar = [](const Geometry *lg1, const Geometry *lg2)->char{return lg1->disjoint(lg2);};
+
+  return excecute<char, 2>(extHandle, bar, g1, g2);
+#if 0
     if ( 0 == extHandle )
     {
         return 2;
@@ -439,7 +480,7 @@ GEOSDisjoint_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry
 
     try
     {
-        bool result = g1->disjoint(g2);
+        bool result = bar(g1,g2);
         return result;
     }
 
@@ -456,6 +497,7 @@ GEOSDisjoint_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry
     }
 
     return 2;
+#endif
 }
 
 char
