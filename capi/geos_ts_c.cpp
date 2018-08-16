@@ -321,9 +321,8 @@ char* gstrdup(std::string const& str)
 
 template <typename RT, RT value>
 RT
-excecute(GEOSContextHandle_t &extHandle,
-    std::function<RT(const Geometry*, const Geometry*)> &lambda,
-    const Geometry* &g1, const Geometry* &g2)
+execute(GEOSContextHandle_t &extHandle,
+    std::function<RT()> lambda)
 {
     if ( 0 == extHandle )
     {
@@ -339,7 +338,7 @@ excecute(GEOSContextHandle_t &extHandle,
 
     try
     {
-        return lambda(g1, g2);
+        return lambda();
     }
 
     catch (const std::exception &e)
@@ -495,61 +494,31 @@ GEOSFree_r (GEOSContextHandle_t extHandle, void* buffer)
 char
 GEOSDisjoint_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->disjoint(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&](){ return g1->disjoint(g2); });
 }
 
 char
 GEOSTouches_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->touches(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&](){ return g1->touches(g2);});
 }
 
 char
 GEOSIntersects_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->intersects(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&](){ return g1->intersects(g2);});
 }
 
 char
 GEOSCrosses_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->crosses(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&](){ return g1->crosses(g2); });
 }
 
 char
 GEOSWithin_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->within(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&](){ return g1->within(g2); });
 }
 
 // call g1->contains(g2)
@@ -559,49 +528,25 @@ GEOSWithin_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *
 char
 GEOSContains_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->contains(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&](){ return g1->contains(g2); });
 }
 
 char
 GEOSOverlaps_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->overlaps(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&]() { return g1->overlaps(g2); });
 }
 
 char
 GEOSCovers_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->covers(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&]() { return g1->covers(g2); });
 }
 
 char
 GEOSCoveredBy_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->coveredBy(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&]() { return g1->coveredBy(g2); });
 }
 
 
@@ -939,13 +884,7 @@ GEOSisValidDetail_r(GEOSContextHandle_t extHandle, const Geometry *g,
 char
 GEOSEquals_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar =
-    [](const Geometry *lg1, const Geometry *lg2)->char
-    {
-      return lg1->equals(lg2);
-    };
-
-  return excecute<char, 2>(extHandle, bar, g1, g2);
+  return execute<char, 2>(extHandle, [&]() { return g1->equals(g2); });
 }
 
 char
