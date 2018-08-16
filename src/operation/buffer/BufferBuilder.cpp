@@ -664,7 +664,6 @@ BufferBuilder::createSubgraphs(geos::geomgraph::PlanarGraph *graph, std::vector<
 	graph->getNodes(nodes);
 	for (const auto &node : nodes)
   {
-		//Node *node=nodes[i];
 		if (!node->isVisited())
     {
 			BufferSubgraph *subgraph=new BufferSubgraph();
@@ -692,9 +691,8 @@ BufferBuilder::buildSubgraphs(const std::vector<BufferSubgraph*>& subgraphList,
 	std::cerr << __FUNCTION__ << " got " << subgraphList.size() << " subgraphs" << std::endl;
 #endif
 	std::vector<BufferSubgraph*> processedGraphs;
-	for (size_t i=0, n=subgraphList.size(); i<n; i++)
+	for (const auto &subgraph : subgraphList)
 	{
-		BufferSubgraph *subgraph=subgraphList[i];
 		Coordinate *p=subgraph->getRightmostCoordinate();
 		assert(p);
 
