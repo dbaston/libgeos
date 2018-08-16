@@ -593,7 +593,6 @@ std::cerr << "after noding: "
 
 	for (const auto segStr : *nodedSegStrings)
 	{
-		//SegmentString* segStr = *i;
 		const Label* oldLabel = static_cast<const Label*>(segStr->getData());
 
 		CoordinateSequence* cs = CoordinateSequence::removeRepeatedPoints(segStr->getCoordinates());
@@ -610,10 +609,8 @@ std::cerr << "after noding: "
 
 		// will take care of the Edge ownership
 		insertUniqueEdge(edge);
-		//delete segStr;
 	}
 
-	//delete nodedSegStrings;
   clearRawPtrs(nodedSegStrings);
 
 	if ( noder != workingNoder ) delete noder;
@@ -642,10 +639,9 @@ BufferBuilder::insertUniqueEdge(Edge *e)
 		existingLabel.merge(labelToMerge);
 
 		// compute new depth delta of sum of edges
-		int mergeDelta = depthDelta(labelToMerge);
-		int existingDelta = existingEdge->getDepthDelta();
-		int newDelta = existingDelta + mergeDelta;
-		existingEdge->setDepthDelta(newDelta);
+		auto mergeDelta = depthDelta(labelToMerge);
+		auto existingDelta = existingEdge->getDepthDelta();
+		existingEdge->setDepthDelta(existingDelta + mergeDelta);
 
 		// we have memory release responsibility
 		delete e;
