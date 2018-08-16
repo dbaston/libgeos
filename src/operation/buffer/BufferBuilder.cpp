@@ -166,7 +166,7 @@ destroyGeometries(const GeometryFactory *f, T &container) {
 Geometry*
 emptyPolygon(const GeometryFactory *f)
 {
-	return f->createPolygon(nullptr, nullptr);
+  return f->createPolygon(nullptr, nullptr);
 }
 
 }  // namespace
@@ -235,13 +235,13 @@ BufferBuilder::BufferBuilder(const BufferParameters& nBufParams)
 int
 BufferBuilder::depthDelta(const Label& label)
 {
-	int lLoc=label.getLocation(0, Position::LEFT);
-	int rLoc=label.getLocation(0, Position::RIGHT);
-	if (lLoc== Location::INTERIOR && rLoc== Location::EXTERIOR)
-		return 1;
-	else if (lLoc== Location::EXTERIOR && rLoc== Location::INTERIOR)
-		return -1;
-	return 0;
+  int lLoc=label.getLocation(0, Position::LEFT);
+  int rLoc=label.getLocation(0, Position::RIGHT);
+  if (lLoc== Location::INTERIOR && rLoc== Location::EXTERIOR)
+    return 1;
+  else if (lLoc== Location::EXTERIOR && rLoc== Location::INTERIOR)
+    return -1;
+  return 0;
 }
 
 //static CGAlgorithms rCGA;
@@ -249,7 +249,7 @@ BufferBuilder::depthDelta(const Label& label)
 
 BufferBuilder::~BufferBuilder()
 {
-	delete intersectionAdder;
+  delete intersectionAdder;
 }
 
 /*public*/
@@ -365,7 +365,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
    LineMerger lineMerge;
    lineMerge.add( intersectedLines.get() );
    std::unique_ptr< std::vector< LineString* > > mergedLines (
-	lineMerge.getMergedLineStrings() );
+  lineMerge.getMergedLineStrings() );
 
    // Convert the result into a std::vector< Geometry* >.
    std::vector< Geometry* > mergedLinesGeom = std::vector< Geometry* >();
@@ -439,157 +439,157 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
 /*public*/
 Geometry*
 BufferBuilder::buffer(const Geometry *g, double distance)
-	// throw(GEOSException *)
+  // throw(GEOSException *)
 {
-	assert(g);
+  assert(g);
 
-	const PrecisionModel *precisionModel= workingPrecisionModel? workingPrecisionModel : g->getPrecisionModel();
+  const PrecisionModel *precisionModel= workingPrecisionModel? workingPrecisionModel : g->getPrecisionModel();
 
-	assert(precisionModel);
+  assert(precisionModel);
 
-	// factory must be the same as the one used by the input
-	geomFact=g->getFactory();
+  // factory must be the same as the one used by the input
+  geomFact=g->getFactory();
 
   { // This scope is here to force release of resources owned by
     // OffsetCurveSetBuilder when we're doing with it
 
-	OffsetCurveBuilder curveBuilder(precisionModel, bufParams);
-	OffsetCurveSetBuilder curveSetBuilder(*g, distance, curveBuilder);
+  OffsetCurveBuilder curveBuilder(precisionModel, bufParams);
+  OffsetCurveSetBuilder curveSetBuilder(*g, distance, curveBuilder);
 
   GEOS_CHECK_FOR_INTERRUPTS();
 
-	std::vector<SegmentString*>& bufferSegStrList=curveSetBuilder.getCurves();
+  std::vector<SegmentString*>& bufferSegStrList=curveSetBuilder.getCurves();
 
 #if GEOS_DEBUG
-	std::cerr << "OffsetCurveSetBuilder got " << bufferSegStrList.size()
-	          << " curves" << std::endl;
+  std::cerr << "OffsetCurveSetBuilder got " << bufferSegStrList.size()
+            << " curves" << std::endl;
 #endif
-	// short-circuit test
-	if (bufferSegStrList.size()<=0) {
-		return emptyPolygon(geomFact);
-	}
+  // short-circuit test
+  if (bufferSegStrList.size()<=0) {
+    return emptyPolygon(geomFact);
+  }
 
 #if GEOS_DEBUG
-	std::cerr<<"BufferBuilder::buffer computing NodedEdges"<<std::endl;
+  std::cerr<<"BufferBuilder::buffer computing NodedEdges"<<std::endl;
 #endif
 
-	computeNodedEdges(bufferSegStrList, precisionModel);
+  computeNodedEdges(bufferSegStrList, precisionModel);
 
   GEOS_CHECK_FOR_INTERRUPTS();
 
   } // bufferSegStrList and contents are released here
 
 #if GEOS_DEBUG > 1
-	std::cerr << std::endl << edgeList << std::endl;
+  std::cerr << std::endl << edgeList << std::endl;
 #endif
 
-	Geometry* resultGeom=nullptr;
-	std::unique_ptr< std::vector<Geometry*> > resultPolyList;
-	std::vector<BufferSubgraph*> subgraphList;
+  Geometry* resultGeom=nullptr;
+  std::unique_ptr< std::vector<Geometry*> > resultPolyList;
+  std::vector<BufferSubgraph*> subgraphList;
 
-	try {
-		geos::geomgraph::PlanarGraph graph(OverlayNodeFactory::instance());
-		graph.addEdges(edgeList.getEdges());
+  try {
+    geos::geomgraph::PlanarGraph graph(OverlayNodeFactory::instance());
+    graph.addEdges(edgeList.getEdges());
 
     GEOS_CHECK_FOR_INTERRUPTS();
 
-		createSubgraphs(&graph, subgraphList);
+    createSubgraphs(&graph, subgraphList);
 
 #if GEOS_DEBUG
-	std::cerr<<"Created "<<subgraphList.size()<<" subgraphs"<<std::endl;
+  std::cerr<<"Created "<<subgraphList.size()<<" subgraphs"<<std::endl;
 #if GEOS_DEBUG > 1
-	for (size_t i=0, n=subgraphList.size(); i<n; i++)
-		std::cerr << std::setprecision(10) << *(subgraphList[i]) << std::endl;
+  for (size_t i=0, n=subgraphList.size(); i<n; i++)
+    std::cerr << std::setprecision(10) << *(subgraphList[i]) << std::endl;
 #endif
 #endif
 
     GEOS_CHECK_FOR_INTERRUPTS();
 
-		{ // scope for earlier PolygonBuilder cleanupt
-		  PolygonBuilder polyBuilder(geomFact);
-		  buildSubgraphs(subgraphList, polyBuilder);
+    { // scope for earlier PolygonBuilder cleanupt
+      PolygonBuilder polyBuilder(geomFact);
+      buildSubgraphs(subgraphList, polyBuilder);
 
-		  resultPolyList.reset( polyBuilder.getPolygons() );
-		}
+      resultPolyList.reset( polyBuilder.getPolygons() );
+    }
 
-		// Get rid of the subgraphs, shouldn't be needed anymore
+    // Get rid of the subgraphs, shouldn't be needed anymore
     for (size_t i=0, n=subgraphList.size(); i<n; i++) delete subgraphList[i];
     subgraphList.clear();
 
 #if GEOS_DEBUG
-	std::cerr << "PolygonBuilder got " << resultPolyList->size()
-	          << " polygons" << std::endl;
+  std::cerr << "PolygonBuilder got " << resultPolyList->size()
+            << " polygons" << std::endl;
 #if GEOS_DEBUG > 1
-	for (size_t i=0, n=resultPolyList->size(); i<n; i++)
-		std::cerr << (*resultPolyList)[i]->toString() << std::endl;
+  for (size_t i=0, n=resultPolyList->size(); i<n; i++)
+    std::cerr << (*resultPolyList)[i]->toString() << std::endl;
 #endif
 #endif
 
-		// just in case ...
-		if ( resultPolyList->empty() ) return emptyPolygon(geomFact);
+    // just in case ...
+    if ( resultPolyList->empty() ) return emptyPolygon(geomFact);
 
-		// resultPolyList ownership transferred here
-		resultGeom=geomFact->buildGeometry(resultPolyList.release());
+    // resultPolyList ownership transferred here
+    resultGeom=geomFact->buildGeometry(resultPolyList.release());
 
-	} catch (const util::GEOSException& /* exc */) {
+  } catch (const util::GEOSException& /* exc */) {
 
-		// In case they're still around
+    // In case they're still around
     clearRawPtrs(subgraphList);
 
-		throw;
-	}
+    throw;
+  }
 
-	return resultGeom;
+  return resultGeom;
 }
 
 /*private*/
 Noder*
 BufferBuilder::getNoder(const PrecisionModel* pm)
 {
-	// this doesn't change workingNoder precisionModel!
-	if (workingNoder != nullptr) return workingNoder;
+  // this doesn't change workingNoder precisionModel!
+  if (workingNoder != nullptr) return workingNoder;
 
-	// otherwise use a fast (but non-robust) noder
+  // otherwise use a fast (but non-robust) noder
 
-	if ( li ) // reuse existing IntersectionAdder and LineIntersector
-	{
-		li->setPrecisionModel(pm);
-		assert(intersectionAdder!=nullptr);
-	}
-	else
-	{
-		li.reset(new LineIntersector(pm));
-		intersectionAdder = new IntersectionAdder(*li);
-	}
+  if ( li ) // reuse existing IntersectionAdder and LineIntersector
+  {
+    li->setPrecisionModel(pm);
+    assert(intersectionAdder!=nullptr);
+  }
+  else
+  {
+    li.reset(new LineIntersector(pm));
+    intersectionAdder = new IntersectionAdder(*li);
+  }
 
-	MCIndexNoder* noder = new MCIndexNoder(intersectionAdder);
+  MCIndexNoder* noder = new MCIndexNoder(intersectionAdder);
 
 #if 0
-	/* CoordinateArraySequence.cpp:84:
-	 * virtual const geos::Coordinate& geos::CoordinateArraySequence::getAt(size_t) const:
-	 * Assertion `pos<vect->size()' failed.
-	 */
-	//Noder* noder = new snapround::SimpleSnapRounder(*pm);
+  /* CoordinateArraySequence.cpp:84:
+   * virtual const geos::Coordinate& geos::CoordinateArraySequence::getAt(size_t) const:
+   * Assertion `pos<vect->size()' failed.
+   */
+  //Noder* noder = new snapround::SimpleSnapRounder(*pm);
 
-	Noder* noder = new IteratedNoder(pm);
+  Noder* noder = new IteratedNoder(pm);
 
-	Noder noder = new SimpleSnapRounder(pm);
-	Noder noder = new MCIndexSnapRounder(pm);
-	Noder noder = new ScaledNoder(
-		new MCIndexSnapRounder(new PrecisionModel(1.0)),
-			pm.getScale());
+  Noder noder = new SimpleSnapRounder(pm);
+  Noder noder = new MCIndexSnapRounder(pm);
+  Noder noder = new ScaledNoder(
+    new MCIndexSnapRounder(new PrecisionModel(1.0)),
+      pm.getScale());
 #endif
 
-	return noder;
+  return noder;
 
 }
 
 /* private */
 void
 BufferBuilder::computeNodedEdges(SegmentString::NonConstVect& bufferSegStrList,
-		const PrecisionModel *precisionModel) // throw(GEOSException)
+    const PrecisionModel *precisionModel) // throw(GEOSException)
 {
-	Noder* noder = getNoder( precisionModel );
+  Noder* noder = getNoder( precisionModel );
 
 #if JTS_DEBUG
 geos::io::WKTWriter wktWriter; wktWriter.setTrim(true);
@@ -600,10 +600,10 @@ std::cerr << "before noding: "
      ) << std::endl;
 #endif
 
-	noder->computeNodes(&bufferSegStrList);
+  noder->computeNodes(&bufferSegStrList);
 
-	SegmentString::NonConstVect* nodedSegStrings = \
-			noder->getNodedSubstrings();
+  SegmentString::NonConstVect* nodedSegStrings = \
+      noder->getNodedSubstrings();
 
 #if JTS_DEBUG
 std::cerr << "after noding: "
@@ -614,138 +614,138 @@ std::cerr << "after noding: "
 #endif
 
 
-	for (const auto segStr : *nodedSegStrings)
-	{
-		const Label* oldLabel = static_cast<const Label*>(segStr->getData());
+  for (const auto segStr : *nodedSegStrings)
+  {
+    const Label* oldLabel = static_cast<const Label*>(segStr->getData());
 
     CoordinateSequence::Ptr cs( CoordinateSequence::removeRepeatedPoints(segStr->getCoordinates()) );
 
-		// don't insert collapsed edges
-		if ( cs->size() < 2 ) continue;
+    // don't insert collapsed edges
+    if ( cs->size() < 2 ) continue;
 
-		// Edge takes ownership of the CoordinateSequence
-		Edge* edge = new Edge(cs.release(), *oldLabel);
+    // Edge takes ownership of the CoordinateSequence
+    Edge* edge = new Edge(cs.release(), *oldLabel);
 
-		// will take care of the Edge ownership
-		insertUniqueEdge(edge);
-	}
+    // will take care of the Edge ownership
+    insertUniqueEdge(edge);
+  }
 
   clearRawPtrs(nodedSegStrings);
 
-	if ( noder != workingNoder ) delete noder;
+  if ( noder != workingNoder ) delete noder;
 }
 
 /*private*/
 void
 BufferBuilder::insertUniqueEdge(Edge *e)
 {
-	//<FIX> MD 8 Oct 03  speed up identical edge lookup
-	// fast lookup
-	Edge *existingEdge = edgeList.findEqualEdge(e);
-	// If an identical edge already exists, simply update its label
-	if (existingEdge != nullptr) {
-		Label& existingLabel = existingEdge->getLabel();
-		Label labelToMerge = e->getLabel();
+  //<FIX> MD 8 Oct 03  speed up identical edge lookup
+  // fast lookup
+  Edge *existingEdge = edgeList.findEqualEdge(e);
+  // If an identical edge already exists, simply update its label
+  if (existingEdge != nullptr) {
+    Label& existingLabel = existingEdge->getLabel();
+    Label labelToMerge = e->getLabel();
 
-		// check if new edge is in reverse direction to existing edge
-		// if so, must flip the label before merging it
-		if (! existingEdge->isPointwiseEqual(e))
-		{
-			labelToMerge = e->getLabel();
-			labelToMerge.flip();
-		}
+    // check if new edge is in reverse direction to existing edge
+    // if so, must flip the label before merging it
+    if (! existingEdge->isPointwiseEqual(e))
+    {
+      labelToMerge = e->getLabel();
+      labelToMerge.flip();
+    }
 
-		existingLabel.merge(labelToMerge);
+    existingLabel.merge(labelToMerge);
 
-		// compute new depth delta of sum of edges
-		auto mergeDelta = depthDelta(labelToMerge);
-		auto existingDelta = existingEdge->getDepthDelta();
-		existingEdge->setDepthDelta(existingDelta + mergeDelta);
+    // compute new depth delta of sum of edges
+    auto mergeDelta = depthDelta(labelToMerge);
+    auto existingDelta = existingEdge->getDepthDelta();
+    existingEdge->setDepthDelta(existingDelta + mergeDelta);
 
-		// we have memory release responsibility
-		delete e;
+    // we have memory release responsibility
+    delete e;
 
-	} else {   // no matching existing edge was found
+  } else {   // no matching existing edge was found
 
-		// add this new edge to the list of edges in this graph
-		edgeList.add(e);
+    // add this new edge to the list of edges in this graph
+    edgeList.add(e);
 
-		e->setDepthDelta(depthDelta(e->getLabel()));
-	}
+    e->setDepthDelta(depthDelta(e->getLabel()));
+  }
 }
 
 bool BufferSubgraphGT(BufferSubgraph *first, BufferSubgraph *second) {
-	return  (first->compareTo(second)>0);
+  return  (first->compareTo(second)>0);
 }
 
 /*private*/
 void
 BufferBuilder::createSubgraphs(geos::geomgraph::PlanarGraph *graph, std::vector<BufferSubgraph*>& subgraphList)
 {
-	std::vector<Node*> nodes;
-	graph->getNodes(nodes);
-	for (const auto &node : nodes)
+  std::vector<Node*> nodes;
+  graph->getNodes(nodes);
+  for (const auto &node : nodes)
   {
-		if (!node->isVisited())
+    if (!node->isVisited())
     {
-			BufferSubgraph *subgraph=new BufferSubgraph();
-			subgraph->create(node);
-			subgraphList.push_back(subgraph);
-		}
-	}
+      BufferSubgraph *subgraph=new BufferSubgraph();
+      subgraph->create(node);
+      subgraphList.push_back(subgraph);
+    }
+  }
 
-	/*
-	 * Sort the subgraphs in descending order of their rightmost coordinate
-	 * This ensures that when the Polygons for the subgraphs are built,
-	 * subgraphs for shells will have been built before the subgraphs for
-	 * any holes they contain
-	 */
+  /*
+   * Sort the subgraphs in descending order of their rightmost coordinate
+   * This ensures that when the Polygons for the subgraphs are built,
+   * subgraphs for shells will have been built before the subgraphs for
+   * any holes they contain
+   */
     std::sort(subgraphList.begin(), subgraphList.end(), BufferSubgraphGT);
 }
 
 /*private*/
 void
 BufferBuilder::buildSubgraphs(const std::vector<BufferSubgraph*>& subgraphList,
-		PolygonBuilder& polyBuilder)
+    PolygonBuilder& polyBuilder)
 {
 
 #if GEOS_DEBUG
-	std::cerr << __FUNCTION__ << " got " << subgraphList.size() << " subgraphs" << std::endl;
+  std::cerr << __FUNCTION__ << " got " << subgraphList.size() << " subgraphs" << std::endl;
 #endif
-	std::vector<BufferSubgraph*> processedGraphs;
-	for (const auto &subgraph : subgraphList)
-	{
-		Coordinate *p=subgraph->getRightmostCoordinate();
-		assert(p);
+  std::vector<BufferSubgraph*> processedGraphs;
+  for (const auto &subgraph : subgraphList)
+  {
+    Coordinate *p=subgraph->getRightmostCoordinate();
+    assert(p);
 
 #if GEOS_DEBUG
-		std::cerr << " " << i << ") Subgraph[" << subgraph << "]" << std::endl;
-		std::cerr << "  rightmost Coordinate " << *p;
+    std::cerr << " " << i << ") Subgraph[" << subgraph << "]" << std::endl;
+    std::cerr << "  rightmost Coordinate " << *p;
 #endif
-		SubgraphDepthLocater locater(&processedGraphs);
+    SubgraphDepthLocater locater(&processedGraphs);
 #if GEOS_DEBUG
-		std::cerr << " after SubgraphDepthLocater processedGraphs contain "
-		          << processedGraphs.size()
-		          << " elements" << std::endl;
+    std::cerr << " after SubgraphDepthLocater processedGraphs contain "
+              << processedGraphs.size()
+              << " elements" << std::endl;
 #endif
-		int outsideDepth=locater.getDepth(*p);
+    int outsideDepth=locater.getDepth(*p);
 #if GEOS_DEBUG
-		std::cerr << " Depth of rightmost coordinate: " << outsideDepth << std::endl;
+    std::cerr << " Depth of rightmost coordinate: " << outsideDepth << std::endl;
 #endif
-		subgraph->computeDepth(outsideDepth);
-		subgraph->findResultEdges();
+    subgraph->computeDepth(outsideDepth);
+    subgraph->findResultEdges();
 #if GEOS_DEBUG
-		std::cerr << " after computeDepth and findResultEdges subgraph contain:" << std::endl
-		          << "   " << subgraph->getDirectedEdges()->size() << " DirecteEdges " << std::endl
-		          << "   " << subgraph->getNodes()->size() << " Nodes " << std::endl;
+    std::cerr << " after computeDepth and findResultEdges subgraph contain:" << std::endl
+              << "   " << subgraph->getDirectedEdges()->size() << " DirecteEdges " << std::endl
+              << "   " << subgraph->getNodes()->size() << " Nodes " << std::endl;
 #endif
-		processedGraphs.push_back(subgraph);
+    processedGraphs.push_back(subgraph);
 #if GEOS_DEBUG
-		std::cerr << " added " << subgraph << " to processedGraphs, new size is "
-		          << processedGraphs.size() << std::endl;
+    std::cerr << " added " << subgraph << " to processedGraphs, new size is "
+              << processedGraphs.size() << std::endl;
 #endif
-		polyBuilder.add(subgraph->getDirectedEdges(), subgraph->getNodes());
-	}
+    polyBuilder.add(subgraph->getDirectedEdges(), subgraph->getNodes());
+  }
 }
 
 } // namespace geos.operation.buffer
