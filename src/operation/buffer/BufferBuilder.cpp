@@ -228,12 +228,17 @@ depthDelta(const Label& label)
   return 0;
 }
 
-
-
-
 namespace geos {
 namespace operation { // geos.operation
 namespace buffer { // geos.operation.buffer
+
+/*
+ * for sorting
+ */
+bool BufferSubgraphGT(BufferSubgraph *first, BufferSubgraph *second) {
+  return  first->compareTo(second) > 0;
+}
+
 
 #if PROFILE
 static Profiler *profiler = Profiler::instance();
@@ -256,7 +261,6 @@ BufferBuilder::BufferBuilder(const BufferParameters& nBufParams)
 
 BufferBuilder::~BufferBuilder()
 {
-  delete intersectionAdder;
 }
 
 /*public*/
@@ -337,7 +341,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
       new std::vector< Geometry * >();
    singleSidedNodedEdges->reserve(nodedEdges->size());
 
-   for (auto &ss : *nodedEdges)
+   for (const auto &ss : *nodedEdges)
    {
      singleSidedNodedEdges->push_back(
          geomFact->createLineString(
@@ -490,7 +494,6 @@ BufferBuilder::buffer(const Geometry *g, double distance)
   std::cerr << std::endl << edgeList << std::endl;
 #endif
 
-  Geometry* resultGeom=nullptr;
   std::unique_ptr< std::vector<Geometry*> > resultPolyList;
   std::vector<BufferSubgraph*> subgraphList;
 
@@ -503,10 +506,10 @@ BufferBuilder::buffer(const Geometry *g, double distance)
     createSubgraphs(&graph, subgraphList);
 
 #if GEOS_DEBUG
-  std::cerr<<"Created "<<subgraphList.size()<<" subgraphs"<<std::endl;
+    std::cerr<<"Created "<<subgraphList.size()<<" subgraphs"<<std::endl;
 #if GEOS_DEBUG > 1
-  for (size_t i=0, n=subgraphList.size(); i<n; i++)
-    std::cerr << std::setprecision(10) << *(subgraphList[i]) << std::endl;
+    for (size_t i=0, n=subgraphList.size(); i<n; i++)
+      std::cerr << std::setprecision(10) << *(subgraphList[i]) << std::endl;
 #endif
 #endif
 
@@ -520,23 +523,22 @@ BufferBuilder::buffer(const Geometry *g, double distance)
     }
 
     // Get rid of the subgraphs, shouldn't be needed anymore
-    for (size_t i=0, n=subgraphList.size(); i<n; i++) delete subgraphList[i];
-    subgraphList.clear();
+    clearRawPtrs(subgraphList);
 
 #if GEOS_DEBUG
-  std::cerr << "PolygonBuilder got " << resultPolyList->size()
-            << " polygons" << std::endl;
+    std::cerr << "PolygonBuilder got " << resultPolyList->size()
+      << " polygons" << std::endl;
 #if GEOS_DEBUG > 1
-  for (size_t i=0, n=resultPolyList->size(); i<n; i++)
-    std::cerr << (*resultPolyList)[i]->toString() << std::endl;
+    for (const auto &p : *resultPolyList)
+      std::cerr << p->toString() << std::endl;
 #endif
 #endif
+
 
     // just in case ...
     if ( resultPolyList->empty() ) return emptyPolygon(geomFact);
 
-    // resultPolyList ownership transferred here
-    resultGeom=geomFact->buildGeometry(resultPolyList.release());
+    return geomFact->buildGeometry(resultPolyList.release());
 
   } catch (const util::GEOSException& /* exc */) {
 
@@ -545,8 +547,6 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 
     throw;
   }
-
-  return resultGeom;
 }
 
 /*private*/
@@ -566,10 +566,10 @@ BufferBuilder::getNoder(const PrecisionModel* pm)
   else
   {
     li.reset(new LineIntersector(pm));
-    intersectionAdder = new IntersectionAdder(*li);
+    intersectionAdder.reset(new IntersectionAdder(*li));
   }
 
-  MCIndexNoder* noder = new MCIndexNoder(intersectionAdder);
+  MCIndexNoder* noder = new MCIndexNoder(intersectionAdder.get());
 
 #if 0
   /* CoordinateArraySequence.cpp:84:
@@ -681,9 +681,6 @@ BufferBuilder::insertUniqueEdge(Edge *e)
   }
 }
 
-bool BufferSubgraphGT(BufferSubgraph *first, BufferSubgraph *second) {
-  return  (first->compareTo(second)>0);
-}
 
 /*private*/
 void

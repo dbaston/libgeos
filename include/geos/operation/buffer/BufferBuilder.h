@@ -205,7 +205,7 @@ private:
 
   std::unique_ptr<algorithm::LineIntersector> li;
 
-  noding::IntersectionAdder* intersectionAdder;
+  std::unique_ptr<noding::IntersectionAdder> intersectionAdder;
 
   noding::Noder* workingNoder;
 
