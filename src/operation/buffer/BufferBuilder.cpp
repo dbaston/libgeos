@@ -155,6 +155,20 @@ destroyGeometries(const GeometryFactory *f, T &container) {
   container->clear();
 }
 
+/**
+ * Gets the standard result for an empty buffer.
+ * Since buffer always returns a polygonal result,
+ * this is chosen to be an empty polygon.
+ *
+ * @return the empty result geometry, transferring ownership to caller.
+ */
+
+Geometry*
+emptyPolygon(const GeometryFactory *f)
+{
+	return f->createPolygon(nullptr, nullptr);
+}
+
 }  // namespace
 
 
@@ -205,6 +219,19 @@ namespace buffer { // geos.operation.buffer
 static Profiler *profiler = Profiler::instance();
 #endif
 
+BufferBuilder::BufferBuilder(const BufferParameters& nBufParams)
+  :
+    bufParams(nBufParams),
+    workingPrecisionModel(nullptr),
+    li(nullptr),
+    intersectionAdder(nullptr),
+    workingNoder(nullptr),
+    geomFact(nullptr),
+    edgeList()
+  {}
+
+
+
 int
 BufferBuilder::depthDelta(const Label& label)
 {
@@ -222,7 +249,6 @@ BufferBuilder::depthDelta(const Label& label)
 
 BufferBuilder::~BufferBuilder()
 {
-	delete li; // could be NULL
 	delete intersectionAdder;
 }
 
@@ -294,7 +320,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
 
 
    // Node these SegmentStrings.
-   Noder* noder = getNoder( precisionModel );
+   auto noder = getNoder( precisionModel );
    noder->computeNodes( &curveList );
 
    auto nodedEdges = noder->getNodedSubstrings();
@@ -415,12 +441,11 @@ Geometry*
 BufferBuilder::buffer(const Geometry *g, double distance)
 	// throw(GEOSException *)
 {
-	const PrecisionModel *precisionModel=workingPrecisionModel;
-	if (precisionModel==nullptr)
-		precisionModel=g->getPrecisionModel();
+	assert(g);
+
+	const PrecisionModel *precisionModel= workingPrecisionModel? workingPrecisionModel : g->getPrecisionModel();
 
 	assert(precisionModel);
-	assert(g);
 
 	// factory must be the same as the one used by the input
 	geomFact=g->getFactory();
@@ -441,7 +466,7 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 #endif
 	// short-circuit test
 	if (bufferSegStrList.size()<=0) {
-		return createEmptyResultGeometry();
+		return emptyPolygon(geomFact);
 	}
 
 #if GEOS_DEBUG
@@ -501,7 +526,7 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 #endif
 
 		// just in case ...
-		if ( resultPolyList->empty() ) return createEmptyResultGeometry();
+		if ( resultPolyList->empty() ) return emptyPolygon(geomFact);
 
 		// resultPolyList ownership transferred here
 		resultGeom=geomFact->buildGeometry(resultPolyList.release());
@@ -533,7 +558,7 @@ BufferBuilder::getNoder(const PrecisionModel* pm)
 	}
 	else
 	{
-		li = new LineIntersector(pm);
+		li.reset(new LineIntersector(pm));
 		intersectionAdder = new IntersectionAdder(*li);
 	}
 
@@ -650,10 +675,7 @@ BufferBuilder::insertUniqueEdge(Edge *e)
 }
 
 bool BufferSubgraphGT(BufferSubgraph *first, BufferSubgraph *second) {
-	if (first->compareTo(second)>0)
-		return true;
-	else
-		return false;
+	return  (first->compareTo(second)>0);
 }
 
 /*private*/
@@ -724,14 +746,6 @@ BufferBuilder::buildSubgraphs(const std::vector<BufferSubgraph*>& subgraphList,
 #endif
 		polyBuilder.add(subgraph->getDirectedEdges(), subgraph->getNodes());
 	}
-}
-
-/*private*/
-geom::Geometry*
-BufferBuilder::createEmptyResultGeometry() const
-{
-	geom::Geometry* emptyGeom = geomFact->createPolygon(nullptr, nullptr);
-	return emptyGeom;
 }
 
 } // namespace geos.operation.buffer

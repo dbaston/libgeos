@@ -24,6 +24,7 @@
 #include <geos/export.h>
 
 #include <vector>
+#include <memory>
 
 #include <geos/operation/buffer/BufferParameters.h>
 #include <geos/geomgraph/EdgeList.h>
@@ -98,16 +99,7 @@ public:
 	 *                   kept alive for the whole lifetime of
 	 *                   the buffer builder.
 	 */
-	BufferBuilder(const BufferParameters& nBufParams)
-		:
-		bufParams(nBufParams),
-		workingPrecisionModel(nullptr),
-		li(nullptr),
-		intersectionAdder(nullptr),
-		workingNoder(nullptr),
-		geomFact(nullptr),
-		edgeList()
-	{}
+	BufferBuilder(const BufferParameters& nBufParams);
 
 	~BufferBuilder();
 
@@ -167,20 +159,6 @@ private:
 	 */
 	static int depthDelta(const geomgraph::Label& label);
 
-	const BufferParameters& bufParams;
-
-	const geom::PrecisionModel* workingPrecisionModel;
-
-	algorithm::LineIntersector* li;
-
-	noding::IntersectionAdder* intersectionAdder;
-
-	noding::Noder* workingNoder;
-
-	const geom::GeometryFactory* geomFact;
-
-	geomgraph::EdgeList edgeList;
-
 	std::vector<geomgraph::Label *> newLabels;
 
 	void computeNodedEdges(std::vector<noding::SegmentString*>& bufSegStr,
@@ -224,19 +202,27 @@ private:
 	///
 	noding::Noder* getNoder(const geom::PrecisionModel* precisionModel);
 
+  /*
+   * Data
+   */
+	const BufferParameters& bufParams;
 
-	/**
-	 * Gets the standard result for an empty buffer.
-	 * Since buffer always returns a polygonal result,
-	 * this is chosen to be an empty polygon.
-	 *
-	 * @return the empty result geometry, transferring ownership to caller.
-	 */
-	geom::Geometry* createEmptyResultGeometry() const;
+	const geom::PrecisionModel* workingPrecisionModel;
 
-    // Declare type as noncopyable
-    BufferBuilder(const BufferBuilder& other) = delete;
-    BufferBuilder& operator=(const BufferBuilder& rhs) = delete;
+  std::unique_ptr<algorithm::LineIntersector> li;
+
+	noding::IntersectionAdder* intersectionAdder;
+
+	noding::Noder* workingNoder;
+
+	const geom::GeometryFactory* geomFact;
+
+	geomgraph::EdgeList edgeList;
+
+
+  // Declare type as noncopyable
+  BufferBuilder(const BufferBuilder& other) = delete;
+  BufferBuilder& operator=(const BufferBuilder& rhs) = delete;
 };
 
 } // namespace geos::operation::buffer
