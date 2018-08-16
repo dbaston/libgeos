@@ -509,9 +509,7 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 	} catch (const util::GEOSException& /* exc */) {
 
 		// In case they're still around
-		for (size_t i=0, n=subgraphList.size(); i<n; i++)
-			delete subgraphList[i];
-		subgraphList.clear();
+    clearRawPtrs(subgraphList);
 
 		throw;
 	}
@@ -595,17 +593,13 @@ std::cerr << "after noding: "
 	{
 		const Label* oldLabel = static_cast<const Label*>(segStr->getData());
 
-		CoordinateSequence* cs = CoordinateSequence::removeRepeatedPoints(segStr->getCoordinates());
-		if ( cs->size() < 2 )
-		{
-			// don't insert collapsed edges
-			// we need to take care of the memory here as cs is a new sequence
-			delete cs;
-			continue;
-		}
+    CoordinateSequence::Ptr cs( CoordinateSequence::removeRepeatedPoints(segStr->getCoordinates()) );
+
+		// don't insert collapsed edges
+		if ( cs->size() < 2 ) continue;
 
 		// Edge takes ownership of the CoordinateSequence
-		Edge* edge = new Edge(cs, *oldLabel);
+		Edge* edge = new Edge(cs.release(), *oldLabel);
 
 		// will take care of the Edge ownership
 		insertUniqueEdge(edge);
