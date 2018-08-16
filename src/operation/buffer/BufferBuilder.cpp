@@ -228,27 +228,26 @@ BufferBuilder::~BufferBuilder()
 
 /*public*/
 Geometry*
-BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
+BufferBuilder::bufferLineSingleSided( const Geometry* line, double distance,
                                       bool leftSide )
 {
    // Returns the line used to create a single-sided buffer.
    // Input requirement: Must be a LineString.
 
-   const LineString* l = dynamic_cast< const LineString* >( g );
+   const auto l = dynamic_cast< const LineString* >( line );
    if ( !l ) throw util::IllegalArgumentException("BufferBuilder::bufferLineSingleSided only accept linestrings");
+   assert( l );
 
    // Nothing to do for a distance of zero
-   if ( distance == 0 ) return g->clone();
+   if ( distance == 0 ) return line->clone();
 
    // Get geometry factory and precision model.
    const PrecisionModel* precisionModel = workingPrecisionModel;
-   if ( !precisionModel ) precisionModel = g->getPrecisionModel();
+   if ( !precisionModel ) precisionModel = line->getPrecisionModel();
 
    assert( precisionModel );
-   // TODO remove there was already an if that makes a throw
-   assert( l );
 
-   geomFact = g->getFactory();
+   geomFact = line->getFactory();
 
    // First, generate the two-sided buffer using a butt-cap.
    auto modParams = bufParams;
@@ -256,14 +255,14 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
    modParams.setSingleSided(false); // ignore parameter for areal-only geometries
 
    std::unique_ptr<Geometry> buf;
-   buf.reset( BufferBuilder(modParams).buffer( g, distance ) );
+   buf.reset( BufferBuilder(modParams).buffer( line, distance ) );
 
 
    // Create MultiLineStrings from this polygon.
    std::unique_ptr<Geometry> bufLineString ( buf->getBoundary() );
 
 #ifdef GEOS_DEBUG_SSB
-   std::cerr << "input|" << *l << std::endl;
+   std::cerr << "input|" << *line << std::endl;
    std::cerr << "buffer|" << *bufLineString << std::endl;
 #endif
 
@@ -272,7 +271,7 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
    std::vector< CoordinateSequence* > lineList;
 
    {
-       std::unique_ptr< CoordinateSequence > coords(g->getCoordinates());
+       std::unique_ptr< CoordinateSequence > coords(line->getCoordinates());
        /* lineList gets modifyed here*/
        curveBuilder.getSingleSidedLineCurve(coords.get(), distance,
            lineList, leftSide, !leftSide);
@@ -346,6 +345,24 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
    std::vector< Geometry* > mergedLinesGeom = std::vector< Geometry* >();
    const Coordinate& startPoint = l->getCoordinatesRO()->front();
    const Coordinate& endPoint = l->getCoordinatesRO()->back();
+
+   // Use 98% of the buffer width as the point-distance requirement - this
+   // is to ensure that the point that is "distance" +/- epsilon is not
+   // included.
+   //
+   // Let's try and estimate a more accurate bound instead of just assuming
+   // 98%. With 98%, the episilon grows as the buffer distance grows,
+   // so that at large distance, artifacts may skip through this filter
+   // Let the length of the line play a factor in the distance, which is still
+   // going to be bounded by 98%. Take 10% of the length of the line  from the buffer distance
+   // to try and minimize any artifacts.
+   const double ptDistAllowance = std::max(distance - line->getLength() * 0.1, distance * 0.98);
+
+   // Use 102% of the buffer width as the line-length requirement - this
+   // is to ensure that line segments that is length "distance" +/-
+   // epsilon is removed.
+   const double segLengthAllowance = 1.02 * distance;
+
    for (auto ml : *mergedLines)
    {
       // Remove end points if they are a part of the original line to be
@@ -354,21 +371,6 @@ BufferBuilder::bufferLineSingleSided( const Geometry* g, double distance,
       CoordinateSequence::Ptr coords(ml->getCoordinates());
       if ( coords )
       {
-         // Use 98% of the buffer width as the point-distance requirement - this
-         // is to ensure that the point that is "distance" +/- epsilon is not
-         // included.
-         //
-         // Let's try and estimate a more accurate bound instead of just assuming
-         // 98%. With 98%, the episilon grows as the buffer distance grows,
-         // so that at large distance, artifacts may skip through this filter
-         // Let the length of the line play a factor in the distance, which is still
-         // going to be bounded by 98%. Take 10% of the length of the line  from the buffer distance
-         // to try and minimize any artifacts.
-         const double ptDistAllowance = std::max(distance - l->getLength()*0.1, distance * 0.98);
-         // Use 102% of the buffer width as the line-length requirement - this
-         // is to ensure that line segments that is length "distance" +/-
-         // epsilon is removed.
-         const double segLengthAllowance = 1.02 * distance;
 
          remove_endpoints(coords, startPoint, ptDistAllowance, segLengthAllowance, true);
          remove_endpoints(coords, endPoint, ptDistAllowance, segLengthAllowance, true);
@@ -589,16 +591,12 @@ std::cerr << "after noding: "
 #endif
 
 
-	for (SegmentString::NonConstVect::iterator
-		i=nodedSegStrings->begin(), e=nodedSegStrings->end();
-		i!=e;
-		++i)
+	for (const auto segStr : *nodedSegStrings)
 	{
-		SegmentString* segStr = *i;
+		//SegmentString* segStr = *i;
 		const Label* oldLabel = static_cast<const Label*>(segStr->getData());
 
 		CoordinateSequence* cs = CoordinateSequence::removeRepeatedPoints(segStr->getCoordinates());
-		delete segStr;
 		if ( cs->size() < 2 )
 		{
 			// don't insert collapsed edges
@@ -612,9 +610,11 @@ std::cerr << "after noding: "
 
 		// will take care of the Edge ownership
 		insertUniqueEdge(edge);
+		//delete segStr;
 	}
 
-	delete nodedSegStrings;
+	//delete nodedSegStrings;
+  clearRawPtrs(nodedSegStrings);
 
 	if ( noder != workingNoder ) delete noder;
 }
