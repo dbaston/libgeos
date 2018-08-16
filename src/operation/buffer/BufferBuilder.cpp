@@ -162,7 +162,6 @@ destroyGeometries(const GeometryFactory *f, T &container) {
  *
  * @return the empty result geometry, transferring ownership to caller.
  */
-
 Geometry*
 emptyPolygon(const GeometryFactory *f)
 {
@@ -171,6 +170,11 @@ emptyPolygon(const GeometryFactory *f)
 
 }  // namespace
 
+
+/*
+ * Free functions
+ *   Do not use members
+ */
 
 /** Remove end points if they are a part of the original line to be
  * buffered.
@@ -208,6 +212,22 @@ remove_endpoints(
 }
 
 
+/**
+ * Compute the change in depth as an edge is crossed from R to L
+ */
+static
+int
+depthDelta(const Label& label)
+{
+  int lLoc=label.getLocation(0, Position::LEFT);
+  int rLoc=label.getLocation(0, Position::RIGHT);
+  if (lLoc== Location::INTERIOR && rLoc== Location::EXTERIOR)
+    return 1;
+  else if (lLoc== Location::EXTERIOR && rLoc== Location::INTERIOR)
+    return -1;
+  return 0;
+}
+
 
 
 
@@ -230,19 +250,6 @@ BufferBuilder::BufferBuilder(const BufferParameters& nBufParams)
     edgeList()
   {}
 
-
-
-int
-BufferBuilder::depthDelta(const Label& label)
-{
-  int lLoc=label.getLocation(0, Position::LEFT);
-  int rLoc=label.getLocation(0, Position::RIGHT);
-  if (lLoc== Location::INTERIOR && rLoc== Location::EXTERIOR)
-    return 1;
-  else if (lLoc== Location::EXTERIOR && rLoc== Location::INTERIOR)
-    return -1;
-  return 0;
-}
 
 //static CGAlgorithms rCGA;
 //CGAlgorithms *BufferBuilder::cga=&rCGA;
