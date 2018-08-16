@@ -213,7 +213,6 @@ private:
 
   geomgraph::EdgeList edgeList;
 
-  std::vector<geomgraph::Label *> newLabels;
 
   // Declare type as noncopyable
   BufferBuilder(const BufferBuilder& other) = delete;
