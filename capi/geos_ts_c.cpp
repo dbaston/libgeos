@@ -339,8 +339,7 @@ excecute(GEOSContextHandle_t &extHandle,
 
     try
     {
-        bool result = lambda(g1, g2);
-        return result;
+        return lambda(g1, g2);
     }
 
     catch (const std::exception &e)
@@ -352,6 +351,40 @@ excecute(GEOSContextHandle_t &extHandle,
         handle->ERROR_MESSAGE("Unknown exception thrown");
     }
     return value;
+}
+
+template <typename RT>
+RT*
+excecute(GEOSContextHandle_t &extHandle,
+    std::function<RT*(const Geometry*, const Geometry*)> &lambda,
+    const Geometry* &g1, const Geometry* &g2)
+{
+    if ( 0 == extHandle )
+    {
+        return NULL;
+    }
+
+    GEOSContextHandleInternal_t *handle = 0;
+    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
+    if ( handle->initialized == 0 )
+    {
+        return NULL;
+    }
+
+    try
+    {
+        return lambda(g1, g2);
+    }
+
+    catch (const std::exception &e)
+    {
+        handle->ERROR_MESSAGE("%s", e.what());
+    }
+    catch (...)
+    {
+        handle->ERROR_MESSAGE("Unknown exception thrown");
+    }
+    return NULL;
 }
 
 
@@ -462,170 +495,61 @@ GEOSFree_r (GEOSContextHandle_t extHandle, void* buffer)
 char
 GEOSDisjoint_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-  std::function<char(const Geometry*, const Geometry*)> bar = [](const Geometry *lg1, const Geometry *lg2)->char{return lg1->disjoint(lg2);};
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
+    {
+      return lg1->disjoint(lg2);
+    };
 
   return excecute<char, 2>(extHandle, bar, g1, g2);
-#if 0
-    if ( 0 == extHandle )
-    {
-        return 2;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( handle->initialized == 0 )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = bar(g1,g2);
-        return result;
-    }
-
-    // TODO: mloskot is going to replace these double-catch block
-    // with a macro to remove redundant code in this and
-    // following functions.
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
-#endif
 }
 
 char
 GEOSTouches_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->touches(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->touches(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 char
 GEOSIntersects_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->intersects(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->intersects(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 char
 GEOSCrosses_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->crosses(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->crosses(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 char
 GEOSWithin_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->within(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->within(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 // call g1->contains(g2)
@@ -635,129 +559,49 @@ GEOSWithin_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *
 char
 GEOSContains_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->contains(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->contains(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 char
 GEOSOverlaps_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->overlaps(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->overlaps(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 char
 GEOSCovers_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->covers(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->covers(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 char
 GEOSCoveredBy_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->coveredBy(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->coveredBy(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 
@@ -840,45 +684,26 @@ GEOSRelatePatternMatch_r(GEOSContextHandle_t extHandle, const char *mat,
 char *
 GEOSRelate_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
-    {
-        return NULL;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
+  std::function<char* (const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char*
     {
         using geos::geom::IntersectionMatrix;
 
-        IntersectionMatrix* im = g1->relate(g2);
+        IntersectionMatrix* im = lg1->relate(lg2);
         if (0 == im)
         {
             return 0;
         }
 
-        char *result = gstrdup(im->toString());
+        char * result = gstrdup(im->toString());
 
         delete im;
         im = 0;
 
         return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return NULL;
+  return excecute<char>(extHandle, bar, g1, g2);
 }
 
 char *
@@ -1114,33 +939,13 @@ GEOSisValidDetail_r(GEOSContextHandle_t extHandle, const Geometry *g,
 char
 GEOSEquals_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*)> bar =
+    [](const Geometry *lg1, const Geometry *lg2)->char
     {
-        return 2;
-    }
+      return lg1->equals(lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->equals(g2);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, bar, g1, g2);
 }
 
 char
