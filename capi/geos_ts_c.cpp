@@ -319,11 +319,11 @@ char* gstrdup(std::string const& str)
 }
 
 
-template <typename RT, RT value>
+template <typename RT, RT value, typename T1, typename T2>
 RT
 excecute(GEOSContextHandle_t &extHandle,
-    std::function<RT(const Geometry*, const Geometry*)> &lambda,
-    const Geometry* &g1, const Geometry* &g2)
+    std::function<RT(T1, T2)> &lambda,
+    T1 &g1, T2 &g2)
 {
     if ( 0 == extHandle )
     {
