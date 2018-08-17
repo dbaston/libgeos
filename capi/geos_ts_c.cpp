@@ -647,39 +647,19 @@ char
 GEOSRelatePatternMatch_r(GEOSContextHandle_t extHandle, const char *mat,
                            const char *pat)
 {
-    if ( 0 == extHandle )
-    {
-        return 2;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
+  std::function<char(const char *, const char*)> lambda =
+    [](const char *lmat, const char *lpat)->char
     {
         using geos::geom::IntersectionMatrix;
 
-        std::string m(mat);
-        std::string p(pat);
+        std::string m(lmat);
+        std::string p(lpat);
         IntersectionMatrix im(m);
 
-        bool result = im.matches(p);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+        return im.matches(p);
+    };
 
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, mat, pat);
 }
 
 char *
@@ -1222,69 +1202,29 @@ GEOSArea_r(GEOSContextHandle_t extHandle, const Geometry *g, double *area)
 int
 GEOSLength_r(GEOSContextHandle_t extHandle, const Geometry *g, double *length)
 {
-    assert(0 != length);
+  assert(0 != length);
+  std::function<int(const Geometry*, double*)> lambda =
+    [](const Geometry *lg1, double * llength)->int
+    {
+      *llength = lg1->getLength();
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 2;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *length = g->getLength();
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 2>(extHandle, lambda, g, length);
 }
 
 CoordinateSequence *
 GEOSNearestPoints_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
 {
-    if ( 0 == extHandle )
+  std::function<CoordinateSequence *(const Geometry*, const Geometry *)> lambda =
+    [](const Geometry *lg1, const Geometry * lg2)->CoordinateSequence *
     {
-        return NULL;
-    }
+      if (lg1->isEmpty() || lg2->isEmpty()) return 0;
+      return geos::operation::distance::DistanceOp::nearestPoints(lg1, lg2);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
-    {
-        if (g1->isEmpty() || g2->isEmpty()) return 0;
-        return geos::operation::distance::DistanceOp::nearestPoints(g1, g2);
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return NULL;
+  return excecute<CoordinateSequence *, nullptr>(extHandle, lambda, g1, g2);
 }
-
 
 Geometry *
 GEOSGeomFromWKT_r(GEOSContextHandle_t extHandle, const char *wkt)
