@@ -1264,33 +1264,13 @@ GEOSGeomFromWKT_r(GEOSContextHandle_t extHandle, const char *wkt)
 char *
 GEOSGeomToWKT_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 {
-    if ( 0 == extHandle )
+  std::function<char *(const Geometry*)> lambda =
+    [](const Geometry *lg1)->char *
     {
-        return NULL;
-    }
+        return gstrdup(lg1->toString());
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
-    {
-
-        char *result = gstrdup(g1->toString());
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-    return NULL;
+  return excecute<char *, nullptr>(extHandle, lambda, g1);
 }
 
 // Remember to free the result!
@@ -1499,140 +1479,56 @@ GEOSisEmpty_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 char
 GEOSisSimple_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*)> lambda =
+    [](const Geometry *lg1)->char
     {
-        return 2;
-    }
+      return lg1->isSimple();
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        return g1->isSimple();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-        return 2;
-    }
-
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-        return 2;
-    }
+  return excecute<char, 2>(extHandle, lambda, g1);
 }
 
 char
 GEOSisRing_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*)> lambda =
+    [](const Geometry *lg1)->char
     {
-        return 2;
-    }
+        const LineString *ls = dynamic_cast<const LineString *>(lg1);
+        return ( ls ) ?  ls->isRing() : 0;
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        const LineString *ls = dynamic_cast<const LineString *>(g);
-        if ( ls ) {
-            return (ls->isRing());
-        } else {
-            return 0;
-        }
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-        return 2;
-    }
-
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-        return 2;
-    }
+  return excecute<char, 2>(extHandle, lambda, g);
 }
-
 
 
 //free the result of this
 char *
 GEOSGeomType_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 {
-    if ( 0 == extHandle )
+  std::function<char*(const Geometry*)> lambda =
+    [](const Geometry *lg1)->char*
     {
-        return NULL;
-    }
+        std::string s = lg1->getGeometryType();
+        return gstrdup(s);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
-    {
-        std::string s = g1->getGeometryType();
-
-        char *result = gstrdup(s);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return NULL;
+  return excecute<char*, nullptr>(extHandle, lambda, g1);
 }
 
 // Return postgis geometry type index
 int
 GEOSGeomTypeId_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*)> lambda =
+    [](const Geometry *lg1)->int
     {
-        return -1;
-    }
+        return lg1->getGeometryTypeId();
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return -1;
-    }
-
-    try
-    {
-        return g1->getGeometryTypeId();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return -1;
+  return excecute<int, -1>(extHandle, lambda, g1);
 }
+
 
 //-------------------------------------------------------------------
 // GEOS functions that return geometries
