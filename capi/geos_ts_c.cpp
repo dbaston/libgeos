@@ -4174,36 +4174,15 @@ GEOSWKTReader_destroy_r(GEOSContextHandle_t extHandle, WKTReader *reader)
 Geometry*
 GEOSWKTReader_read_r(GEOSContextHandle_t extHandle, WKTReader *reader, const char *wkt)
 {
-    assert(0 != reader);
+  assert(0 != reader);
+  std::function<Geometry*(WKTReader*, const char *)> lambda =
+    [](WKTReader *lreader, const char *lwkt)->Geometry*
+    {
+      const std::string wktstring(lwkt);
+      return lreader->read(wktstring);
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        const std::string wktstring(wkt);
-        Geometry *g = reader->read(wktstring);
-        return g;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<Geometry*, nullptr>(extHandle, lambda, reader, wkt);
 }
 
 /* WKT Writer */
@@ -4281,40 +4260,19 @@ GEOSWKTWriter_destroy_r(GEOSContextHandle_t extHandle, WKTWriter *Writer)
     }
 }
 
-
 char*
 GEOSWKTWriter_write_r(GEOSContextHandle_t extHandle, WKTWriter *writer, const Geometry *geom)
 {
-    assert(0 != writer);
+  assert(0 != writer);
 
-    if ( 0 == extHandle )
+  std::function<char*(WKTWriter*, const Geometry*)> lambda =
+    [](WKTWriter *lwriter, const Geometry *lgeom)->char*
     {
-        return NULL;
-    }
+      std::string sgeom(lwriter->write(lgeom));
+      return gstrdup(sgeom);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
-    {
-        std::string sgeom(writer->write(geom));
-        char *result = gstrdup(sgeom);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return NULL;
+  return excecute<char*, nullptr>(extHandle, lambda, writer, geom);
 }
 
 void
@@ -4393,34 +4351,13 @@ GEOSWKTWriter_getOutputDimension_r(GEOSContextHandle_t extHandle, WKTWriter *wri
 {
     assert(0 != writer);
 
-    if ( 0 == extHandle )
+  std::function<int(WKTWriter*)> lambda =
+    [](WKTWriter *lwriter)->int
     {
-        return -1;
-    }
+        return lwriter->getOutputDimension();
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return -1;
-    }
-
-    int  dim = -1;
-
-    try
-    {
-        dim = writer->getOutputDimension();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return dim;
+  return excecute<int, -1>(extHandle, lambda, writer);
 }
 
 void
