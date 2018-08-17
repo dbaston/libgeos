@@ -354,11 +354,11 @@ excecute(GEOSContextHandle_t &extHandle,
 }
 
 
-template <typename RT, RT value>
+template <typename RT, RT value, typename T1>
 RT
 excecute(GEOSContextHandle_t &extHandle,
-    std::function<RT(const Geometry*)> &lambda,
-    const Geometry* &g1)
+    std::function<RT(T1)> &lambda,
+    T1 &g1)
 {
     if ( 0 == extHandle )
     {
@@ -1448,32 +1448,13 @@ GEOSGeomFromHEX_buf_r(GEOSContextHandle_t extHandle, const unsigned char *hex, s
 char
 GEOSisEmpty_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*)> lambda =
+    [](const Geometry *lg1)->char
     {
-        return 2;
-    }
+      return lg1->isEmpty();
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        return g1->isEmpty();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, g1);
 }
 
 char
@@ -1790,37 +1771,17 @@ GEOSMinimumClearanceLine_r(GEOSContextHandle_t extHandle, const Geometry *g)
 int
 GEOSMinimumClearance_r(GEOSContextHandle_t extHandle, const Geometry *g, double *d)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*, double *)> lambda =
+    [](const Geometry *lg, double *ld)->int
     {
-        return 2;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        geos::precision::MinimumClearance mc(g);
+        geos::precision::MinimumClearance mc(lg);
         double res = mc.getDistance();
-        *d = res;
+        *ld = res;
         return 0;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return 2;
+  return excecute<int, 2>(extHandle, lambda, g, d);
 }
-
 
 Geometry *
 GEOSDifference_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2)
@@ -2186,35 +2147,16 @@ GEOSSetSRID_r(GEOSContextHandle_t extHandle, Geometry *g, int srid)
 int
 GEOSGetNumCoordinates_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
-    assert(0 != g);
+  assert(0 != g);
+  std::function<int(const Geometry*)> lambda =
+    [](const Geometry *lg1)->int
+    {
+      return static_cast<int>(lg1->getNumPoints());
+    };
 
-    if ( 0 == extHandle )
-    {
-        return -1;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return -1;
-    }
-
-    try
-    {
-        return static_cast<int>(g->getNumPoints());
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return -1;
+  return excecute<int, -1>(extHandle, lambda, g);
 }
+
 
 /*
  * Return -1 on exception, 0 otherwise.
@@ -2223,35 +2165,14 @@ GEOSGetNumCoordinates_r(GEOSContextHandle_t extHandle, const Geometry *g)
 int
 GEOSNormalize_r(GEOSContextHandle_t extHandle, Geometry *g)
 {
-    assert(0 != g);
-
-    if ( 0 == extHandle )
+  std::function<int(Geometry*)> lambda =
+    [](Geometry *lg)->int
     {
-        return -1;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return -1;
-    }
-
-    try
-    {
-        g->normalize();
+        lg->normalize();
         return 0; // SUCCESS
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return -1;
+  return excecute<int, -1>(extHandle, lambda, g);
 }
 
 int
