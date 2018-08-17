@@ -3999,248 +3999,102 @@ GEOSGeom_getDimensions_r(GEOSContextHandle_t extHandle, const Geometry *g)
 int
 GEOSGeom_getCoordinateDimension_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*)> lambda =
+    [](const Geometry *lg)->int
     {
-        return 0;
-    }
+      return lg->getCoordinateDimension();
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        return g->getCoordinateDimension();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, g);
 }
 
 int
 GEOSGeom_getXMin_r(GEOSContextHandle_t extHandle, const Geometry *g, double *value)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*, double *)> lambda =
+    [](const Geometry *lg, double *lvalue)->int
     {
-        return 0;
-    }
+      if (lg->isEmpty()) return 0;
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
+      *lvalue = lg->getEnvelopeInternal()->getMinX();
+      return 1;
+    };
 
-    try
-    {
-        if (g->isEmpty())
-        {
-            return 0;
-        }
-
-        *value = g->getEnvelopeInternal()->getMinX();
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, g, value);
 }
 
 int
 GEOSGeom_getXMax_r(GEOSContextHandle_t extHandle, const Geometry *g, double *value)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*, double *)> lambda =
+    [](const Geometry *lg, double *lvalue)->int
     {
-        return 0;
-    }
+      if (lg->isEmpty()) return 0;
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
+      *lvalue = lg->getEnvelopeInternal()->getMaxX();
+      return 1;
+    };
 
-    try
-    {
-        if (g->isEmpty())
-        {
-            return 0;
-        }
-
-        *value = g->getEnvelopeInternal()->getMaxX();
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, g, value);
 }
 
 int
 GEOSGeom_getYMin_r(GEOSContextHandle_t extHandle, const Geometry *g, double *value)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*, double *)> lambda =
+    [](const Geometry *lg, double *lvalue)->int
     {
-        return 0;
-    }
+      if (lg->isEmpty()) return 0;
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
+      *lvalue = lg->getEnvelopeInternal()->getMinY();
+      return 1;
+    };
 
-    try
-    {
-        if (g->isEmpty())
-        {
-            return 0;
-        }
-
-        *value = g->getEnvelopeInternal()->getMinY();
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, g, value);
 }
 
 int
 GEOSGeom_getYMax_r(GEOSContextHandle_t extHandle, const Geometry *g, double *value)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*, double *)> lambda =
+    [](const Geometry *lg, double *lvalue)->int
     {
-        return 0;
-    }
+      if (lg->isEmpty()) return 0;
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
+      *lvalue = lg->getEnvelopeInternal()->getMaxY();
+      return 1;
+    };
 
-    try
-    {
-        if (g->isEmpty())
-        {
-            return 0;
-        }
-
-        *value = g->getEnvelopeInternal()->getMaxY();
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, g, value);
 }
 
 Geometry *
 GEOSSimplify_r(GEOSContextHandle_t extHandle, const Geometry *g1, double tolerance)
 {
-    if ( 0 == extHandle )
-    {
-        return NULL;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
+  std::function<Geometry*(const Geometry*, double)> lambda =
+    [](const Geometry *lg, double ltolerance)->Geometry*
     {
         using namespace geos::simplify;
-        Geometry::Ptr g(DouglasPeuckerSimplifier::simplify(g1, tolerance));
+        Geometry::Ptr g(DouglasPeuckerSimplifier::simplify(lg, ltolerance));
         return g.release();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return NULL;
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1, tolerance);
 }
 
 Geometry *
 GEOSTopologyPreserveSimplify_r(GEOSContextHandle_t extHandle, const Geometry *g1, double tolerance)
 {
-    if ( 0 == extHandle )
-    {
-        return NULL;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
+  std::function<Geometry*(const Geometry*, double)> lambda =
+    [](const Geometry *lg, double ltolerance)->Geometry*
     {
         using namespace geos::simplify;
-        Geometry::Ptr g(TopologyPreservingSimplifier::simplify(g1, tolerance));
+        Geometry::Ptr g(TopologyPreservingSimplifier::simplify(lg, ltolerance));
         return g.release();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return NULL;
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1, tolerance);
 }
-
 
 /* WKT Reader */
 WKTReader *
