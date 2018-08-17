@@ -353,57 +353,23 @@ excecute(GEOSContextHandle_t &extHandle,
     return value;
 }
 
-template <typename RT>
-RT*
+
+template <typename RT, RT value>
+RT
 excecute(GEOSContextHandle_t &extHandle,
-    std::function<RT*(const Geometry*, const Geometry*)> &lambda,
-    const Geometry* &g1, const Geometry* &g2)
-{
-    if ( 0 == extHandle )
-    {
-        return NULL;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( handle->initialized == 0 )
-    {
-        return NULL;
-    }
-
-    try
-    {
-        return lambda(g1, g2);
-    }
-
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-    return NULL;
-}
-
-
-template <typename RT>
-RT*
-excecute(GEOSContextHandle_t &extHandle,
-    std::function<RT*(const Geometry*)> &lambda,
+    std::function<RT(const Geometry*)> &lambda,
     const Geometry* &g1)
 {
     if ( 0 == extHandle )
     {
-        return NULL;
+        return value;
     }
 
     GEOSContextHandleInternal_t *handle = 0;
     handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
     if ( handle->initialized == 0 )
     {
-        return NULL;
+        return value;
     }
 
     try
@@ -419,7 +385,7 @@ excecute(GEOSContextHandle_t &extHandle,
     {
         handle->ERROR_MESSAGE("Unknown exception thrown");
     }
-    return NULL;
+    return value;
 }
 
 
@@ -738,7 +704,7 @@ GEOSRelate_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *
         return result;
     };
 
-  return excecute<char>(extHandle, lambda, g1, g2);
+  return excecute<char*, nullptr>(extHandle, lambda, g1, g2);
 }
 
 char *
@@ -1741,7 +1707,7 @@ GEOSEnvelope_r(GEOSContextHandle_t extHandle, const Geometry *g1)
       return lg1->getEnvelope();
     };
 
-  return excecute(extHandle, lambda, g1);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1);
 }
 
 Geometry *
@@ -1753,7 +1719,7 @@ GEOSIntersection_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geom
       return lg1->intersection(lg2);
     };
 
-  return excecute(extHandle, lambda, g1, g2);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1, g2);
 }
 
 Geometry *
@@ -1942,7 +1908,7 @@ GEOSConvexHull_r(GEOSContextHandle_t extHandle, const Geometry *g1)
       return  lg1->convexHull();
     };
 
-  return excecute(extHandle, lambda, g1);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1);
 }
 
 
@@ -1956,7 +1922,7 @@ GEOSMinimumRotatedRectangle_r(GEOSContextHandle_t extHandle, const Geometry *g)
       return m.getMinimumRectangle();
     };
 
-  return excecute(extHandle, lambda, g);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g);
 }
 
 Geometry *
@@ -1969,7 +1935,7 @@ GEOSMinimumWidth_r(GEOSContextHandle_t extHandle, const Geometry *g)
       return m.getDiameter();
     };
 
-  return excecute(extHandle, lambda, g);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g);
 }
 
 Geometry *
@@ -1982,7 +1948,7 @@ GEOSMinimumClearanceLine_r(GEOSContextHandle_t extHandle, const Geometry *g)
       return mc.getLine().release();
     };
 
-  return excecute(extHandle, lambda, g);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g);
 }
 
 int
@@ -2029,7 +1995,7 @@ GEOSDifference_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geomet
       return lg1->difference(lg2);
     };
 
-  return excecute(extHandle, lambda, g1, g2);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1, g2);
 }
 
 Geometry *
@@ -2041,7 +2007,7 @@ GEOSBoundary_r(GEOSContextHandle_t extHandle, const Geometry *g1)
       return lg1->getBoundary();
     };
 
-  return excecute(extHandle, lambda, g1);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1);
 }
 
 Geometry *
@@ -2053,7 +2019,7 @@ GEOSSymDifference_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geo
       return lg1->symDifference(lg2);
     };
 
-  return excecute(extHandle, lambda, g1, g2);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g1, g2);
 }
 
 Geometry *
@@ -3477,7 +3443,7 @@ GEOSReverse_r(GEOSContextHandle_t extHandle, const Geometry *g)
       return  lg1->reverse();
     };
 
-  return excecute(extHandle, lambda, g);
+  return excecute<Geometry*, nullptr>(extHandle, lambda, g);
 }
 
 
@@ -3492,7 +3458,7 @@ GEOSGeom_getUserData_r(GEOSContextHandle_t extHandle, const Geometry *g)
       return  lg1->getUserData();
     };
 
-  return excecute(extHandle, lambda, g);
+  return excecute<void*, nullptr>(extHandle, lambda, g);
 }
 
 int
