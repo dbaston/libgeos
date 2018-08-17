@@ -2217,32 +2217,13 @@ GEOSGetNumInteriorRings_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 int
 GEOSGetNumGeometries_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*)> lambda =
+    [](const Geometry *lg)->int
     {
-        return -1;
-    }
+        return static_cast<int>(lg->getNumGeometries());
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return -1;
-    }
-
-    try
-    {
-        return static_cast<int>(g1->getNumGeometries());
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return -1;
+  return excecute<int, -1>(extHandle, lambda, g1);
 }
 
 
@@ -2253,32 +2234,13 @@ GEOSGetNumGeometries_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 const Geometry *
 GEOSGetGeometryN_r(GEOSContextHandle_t extHandle, const Geometry *g1, int n)
 {
-    if ( 0 == extHandle )
+  std::function<const Geometry*(const Geometry*, int)> lambda =
+    [](const Geometry *lg, int ln)->const Geometry*
     {
-        return NULL;
-    }
+        return lg->getGeometryN(ln);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
-    {
-        return g1->getGeometryN(n);
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return NULL;
+  return excecute<const Geometry*, nullptr>(extHandle, lambda, g1, n);
 }
 
 /*
@@ -3221,34 +3183,14 @@ GEOSGeom_getUserData_r(GEOSContextHandle_t extHandle, const Geometry *g)
 int
 GEOSGetSRID_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
-    assert(0 != g);
+  assert(0 != g);
+  std::function<int(const Geometry*)> lambda =
+    [](const Geometry *lg)->int
+    {
+      return lg->getSRID();
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        return g->getSRID();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, g);
 }
 
 const char* GEOSversion()
@@ -3266,30 +3208,17 @@ const char* GEOSjtsport()
 char
 GEOSHasZ_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
-    assert(0 != g);
+  assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*)> lambda =
+    [](const Geometry *lg)->char
     {
-        return -1;
-    }
+      assert(0 != lg->getCoordinate());
+      double az = lg->getCoordinate()->z;
+      return static_cast<char>(FINITE(az));
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return -1;
-    }
-
-    if (g->isEmpty())
-    {
-        return false;
-    }
-    assert(0 != g->getCoordinate());
-
-    double az = g->getCoordinate()->z;
-    //handle->ERROR_MESSAGE("ZCoord: %g", az);
-
-    return static_cast<char>(FINITE(az));
+  return excecute<char, -1>(extHandle, lambda, g);
 }
 
 int
@@ -3555,34 +3484,15 @@ GEOSCoordSeq_getSize_r(GEOSContextHandle_t extHandle, const CoordinateSequence *
     assert(0 != cs);
     assert(0 != size);
 
-    if ( 0 == extHandle )
+  std::function<int(const CoordinateSequence*,  unsigned int*)> lambda =
+    [](const CoordinateSequence *lcs,  unsigned int *lsize)->int
     {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        const std::size_t sz = cs->getSize();
-        *size = static_cast<unsigned int>(sz);
+        const std::size_t sz = lcs->getSize();
+        *lsize = static_cast<unsigned int>(sz);
         return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, cs, size);
 }
 
 int
@@ -3591,36 +3501,15 @@ GEOSCoordSeq_getDimensions_r(GEOSContextHandle_t extHandle, const CoordinateSequ
     assert(0 != cs);
     assert(0 != dims);
 
-    if ( 0 == extHandle )
+  std::function<int(const CoordinateSequence*,  unsigned int*)> lambda =
+    [](const CoordinateSequence *lcs,  unsigned int *ldims)->int
     {
-        return 0;
-    }
+      const std::size_t dim = lcs->getDimension();
+      *ldims = static_cast<unsigned int>(dim);
+      return 1;
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        const std::size_t dim = cs->getDimension();
-        *dims = static_cast<unsigned int>(dim);
-
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, cs, dims);
 }
 
 int
@@ -3629,32 +3518,14 @@ GEOSCoordSeq_isCCW_r(GEOSContextHandle_t extHandle, const CoordinateSequence *cs
     assert(cs != nullptr);
     assert(val != nullptr);
 
-    if (extHandle == nullptr) {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = nullptr;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
+  std::function<int(const CoordinateSequence*,  char*)> lambda =
+    [](const CoordinateSequence *lcs,  char *lval)->int
     {
-        return 0;
-    }
-    try
-    {
-        *val = geos::algorithm::CGAlgorithms::isCCW(cs);
+        *lval = geos::algorithm::CGAlgorithms::isCCW(lcs);
         return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
+    };
 
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, cs, val);
 }
 
 void
@@ -4116,32 +3987,13 @@ GEOSGeom_getPrecision_r(GEOSContextHandle_t extHandle, const GEOSGeometry *g)
 int
 GEOSGeom_getDimensions_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
-    if ( 0 == extHandle )
+  std::function<int(const Geometry*)> lambda =
+    [](const Geometry *lg)->int
     {
-        return 0;
-    }
+      return (int) lg->getDimension();
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        return (int) g->getDimension();
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, g);
 }
 
 int
