@@ -4802,29 +4802,13 @@ GEOSWKBWriter_getIncludeSRID_r(GEOSContextHandle_t extHandle, const GEOSWKBWrite
 {
     assert(0 != writer);
 
-    if ( 0 == extHandle )
+  std::function<char(const GEOSWKBWriter*)> lambda =
+    [](const GEOSWKBWriter *lwriter)->char
     {
-        return -1;
-    }
+       return static_cast<char>(lwriter->getIncludeSRID());
+    };
 
-    int ret = -1;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 != handle->initialized )
-    {
-        try
-        {
-            int srid = writer->getIncludeSRID();
-            ret = srid;
-        }
-        catch (...)
-        {
-            handle->ERROR_MESSAGE("Unknown exception thrown");
-        }
-    }
-
-    return static_cast<char>(ret);
+  return excecute<char, -1>(extHandle, lambda, writer);
 }
 
 void
@@ -4860,34 +4844,13 @@ GEOSWKBWriter_setIncludeSRID_r(GEOSContextHandle_t extHandle, GEOSWKBWriter* wri
 const geos::geom::prep::PreparedGeometry*
 GEOSPrepare_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
-    if ( 0 == extHandle )
+  std::function<const geos::geom::prep::PreparedGeometry* (const Geometry*)> lambda =
+    [](const Geometry *lg)->const geos::geom::prep::PreparedGeometry*
     {
-        return 0;
-    }
+      return geos::geom::prep::PreparedGeometryFactory::prepare(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    const geos::geom::prep::PreparedGeometry* prep = 0;
-
-    try
-    {
-        prep = geos::geom::prep::PreparedGeometryFactory::prepare(g);
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return prep;
+  return excecute<const geos::geom::prep::PreparedGeometry*, nullptr>(extHandle, lambda, g);
 }
 
 void
@@ -4938,33 +4901,13 @@ GEOSPreparedContains_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->contains(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->contains(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -4974,33 +4917,13 @@ GEOSPreparedContainsProperly_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->containsProperly(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->containsProperly(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5010,33 +4933,13 @@ GEOSPreparedCoveredBy_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->coveredBy(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->coveredBy(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5046,33 +4949,13 @@ GEOSPreparedCovers_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->covers(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->covers(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5082,33 +4965,13 @@ GEOSPreparedCrosses_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->crosses(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->crosses(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5118,33 +4981,13 @@ GEOSPreparedDisjoint_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->disjoint(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->disjoint(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5154,33 +4997,13 @@ GEOSPreparedIntersects_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->intersects(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->intersects(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5190,33 +5013,13 @@ GEOSPreparedOverlaps_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->overlaps(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->overlaps(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5226,33 +5029,13 @@ GEOSPreparedTouches_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->touches(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->touches(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 char
@@ -5262,33 +5045,13 @@ GEOSPreparedWithin_r(GEOSContextHandle_t extHandle,
     assert(0 != pg);
     assert(0 != g);
 
-    if ( 0 == extHandle )
+  std::function<char (const geos::geom::prep::PreparedGeometry*, const Geometry*)> lambda =
+    [](const geos::geom::prep::PreparedGeometry *lpg, const Geometry *lg)->char
     {
-        return 2;
-    }
+        return lpg->within(lg);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = pg->within(g);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, pg, g);
 }
 
 //-----------------------------------------------------------------
