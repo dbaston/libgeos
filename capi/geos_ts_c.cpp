@@ -4716,28 +4716,13 @@ GEOSWKBWriter_getOutputDimension_r(GEOSContextHandle_t extHandle, const GEOSWKBW
 {
     assert(0 != writer);
 
-    if ( 0 == extHandle )
+  std::function<int(const GEOSWKBWriter*)> lambda =
+    [](const GEOSWKBWriter *lwriter)->int
     {
-        return 0;
-    }
+      return lwriter->getOutputDimension();
+    };
 
-    int ret = 0;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 != handle->initialized )
-    {
-        try
-        {
-            ret = writer->getOutputDimension();
-        }
-        catch (...)
-        {
-            handle->ERROR_MESSAGE("Unknown exception thrown");
-        }
-    }
-
-    return ret;
+  return excecute<int, 0>(extHandle, lambda, writer);
 }
 
 void
@@ -4774,29 +4759,13 @@ GEOSWKBWriter_getByteOrder_r(GEOSContextHandle_t extHandle, const GEOSWKBWriter*
 {
     assert(0 != writer);
 
-    if ( 0 == extHandle )
+  std::function<int(const GEOSWKBWriter*)> lambda =
+    [](const GEOSWKBWriter *lwriter)->int
     {
-        return 0;
-    }
+      return lwriter->getByteOrder();
+    };
 
-    int ret = 0;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 != handle->initialized )
-    {
-        try
-        {
-            ret = writer->getByteOrder();
-        }
-
-        catch (...)
-        {
-            handle->ERROR_MESSAGE("Unknown exception thrown");
-        }
-    }
-
-    return ret;
+  return excecute<int, 0>(extHandle, lambda, writer);
 }
 
 void
