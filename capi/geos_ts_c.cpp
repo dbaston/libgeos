@@ -318,6 +318,62 @@ char* gstrdup(std::string const& str)
     return gstrdup_s(str.c_str(), str.size());
 }
 
+template <typename RT, RT value, typename T1, typename T2, typename T3, typename T4>
+RT
+excecute(GEOSContextHandle_t &extHandle,
+    std::function<RT(T1, T2, T3, T4)> &lambda,
+    T1 &d1, T2 &d2, T3 &d3, T4 &d4)
+{
+    if ( 0 == extHandle ) return value;
+
+    GEOSContextHandleInternal_t *handle = 0;
+    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
+    if ( handle->initialized == 0 ) return value;
+
+    try
+    {
+        return lambda(d1, d2, d3, d4);
+    }
+
+    catch (const std::exception &e)
+    {
+        handle->ERROR_MESSAGE("%s", e.what());
+    }
+    catch (...)
+    {
+        handle->ERROR_MESSAGE("Unknown exception thrown");
+    }
+    return value;
+}
+
+template <typename RT, RT value, typename T1, typename T2, typename T3>
+RT
+excecute(GEOSContextHandle_t &extHandle,
+    std::function<RT(T1, T2, T3)> &lambda,
+    T1 &d1, T2 &d2, T3 d3)
+{
+    if ( 0 == extHandle ) return value;
+
+    GEOSContextHandleInternal_t *handle = 0;
+    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
+    if ( handle->initialized == 0 ) return value;
+
+    try
+    {
+        return lambda(d1, d2, d3);
+    }
+
+    catch (const std::exception &e)
+    {
+        handle->ERROR_MESSAGE("%s", e.what());
+    }
+    catch (...)
+    {
+        handle->ERROR_MESSAGE("Unknown exception thrown");
+    }
+    return value;
+}
+
 
 template <typename RT, RT value, typename T1, typename T2>
 RT
@@ -387,6 +443,7 @@ excecute(GEOSContextHandle_t &extHandle,
     }
     return value;
 }
+
 
 
 } // namespace anonymous
@@ -613,34 +670,14 @@ GEOSCoveredBy_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometr
 char
 GEOSRelatePattern_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, const char *pat)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry*, const char *)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, const char *lpat)->char
     {
-        return 2;
-    }
+        std::string s(lpat);
+        return lg1->relate(lg2, s);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        std::string s(pat);
-        bool result = g1->relate(g2, s);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+  return excecute<char, 2>(extHandle, lambda, g1, g2, pat);
 }
 
 char
@@ -807,19 +844,8 @@ GEOSisValid_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 char *
 GEOSisValidReason_r(GEOSContextHandle_t extHandle, const Geometry *g1)
 {
-    if ( 0 == extHandle )
-    {
-        return NULL;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
+  std::function<char*(const Geometry*)> lambda =
+    [](const Geometry *lg1)->char*
     {
         using geos::operation::valid::IsValidOp;
         using geos::operation::valid::TopologyValidationError;
@@ -827,7 +853,7 @@ GEOSisValidReason_r(GEOSContextHandle_t extHandle, const Geometry *g1)
         char* result = 0;
         char const* const validstr = "Valid Geometry";
 
-        IsValidOp ivo(g1);
+        IsValidOp ivo(lg1);
         TopologyValidationError *err = ivo.getValidationError();
         if (0 != err)
         {
@@ -845,17 +871,9 @@ GEOSisValidReason_r(GEOSContextHandle_t extHandle, const Geometry *g1)
         }
 
         return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return 0;
+  return excecute<char*, nullptr>(extHandle, lambda, g1);
 }
 
 char
@@ -932,135 +950,55 @@ GEOSEquals_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *
 char
 GEOSEqualsExact_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double tolerance)
 {
-    if ( 0 == extHandle )
+  std::function<char(const Geometry*, const Geometry *, double)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double ltolerance)->char
     {
-        return 2;
-    }
+        return lg1->equalsExact(lg2, ltolerance);
+    };
 
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 2;
-    }
-
-    try
-    {
-        bool result = g1->equalsExact(g2, tolerance);
-        return result;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 2;
+    return excecute<char, 0>(extHandle, lambda, g1, g2, tolerance);
 }
 
 int
 GEOSDistance_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double *dist)
 {
-    assert(0 != dist);
+  assert(0 != dist);
+  std::function<char(const Geometry*, const Geometry *, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->char
+    {
+      *ldist = lg1->distance(lg2);
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *dist = g1->distance(g2);
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+    return excecute<char, 0>(extHandle, lambda, g1, g2, dist);
 }
 
 int
 GEOSDistanceIndexed_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double *dist)
 {
-    assert(0 != dist);
+  assert(0 != dist);
+  std::function<char(const Geometry*, const Geometry *, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->char
+    {
+      *ldist = IndexedFacetDistance::distance(lg1, lg2);
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *dist = IndexedFacetDistance::distance(g1, g2);
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+    return excecute<char, 0>(extHandle, lambda, g1, g2, dist);
 }
 
 int
 GEOSHausdorffDistance_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double *dist)
 {
-    assert(0 != dist);
+  assert(0 != dist);
+  std::function<char(const Geometry*, const Geometry *, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->char
+    {
+      *ldist = DiscreteHausdorffDistance::distance(*lg1, *lg2);
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *dist = DiscreteHausdorffDistance::distance(*g1, *g2);
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+    return excecute<char, 0>(extHandle, lambda, g1, g2, dist);
 }
 
 int
@@ -5730,54 +5668,28 @@ int
 GEOSBufferParams_setQuadrantSegments_r(GEOSContextHandle_t extHandle,
   GEOSBufferParams* p, int segs)
 {
-    if ( 0 == extHandle ) return 0;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized ) return 0;
-
-    try
+  std::function<int(GEOSBufferParams*, int)> lambda =
+    [](GEOSBufferParams* lp, int lsegs)->int
     {
-        p->setQuadrantSegments(segs);
+        lp->setQuadrantSegments(lsegs);
         return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, p, segs);
 }
 
 int
 GEOSBufferParams_setSingleSided_r(GEOSContextHandle_t extHandle,
   GEOSBufferParams* p, int ss)
 {
-    if ( 0 == extHandle ) return 0;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized ) return 0;
-
-    try
+  std::function<int(GEOSBufferParams*, int)> lambda =
+    [](GEOSBufferParams* lp, int lss)->int
     {
-        p->setSingleSided( (ss != 0) );
+        lp->setSingleSided( (lss != 0) );
         return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, p, ss);
 }
 
 Geometry *
