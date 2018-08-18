@@ -1005,7 +1005,7 @@ int
 GEOSHausdorffDistanceDensify_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double densifyFrac, double *dist)
 {
   assert(0 != dist);
-  std::function<char(const Geometry*, const Geometry *, double, double*)> lambda =
+  std::function<int(const Geometry*, const Geometry *, double, double*)> lambda =
     [](const Geometry *lg1, const Geometry *lg2, double ldensifyFrac, double *ldist)->int
     {
       *ldist = DiscreteHausdorffDistance::distance(*lg1, *lg2, ldensifyFrac);
@@ -1046,15 +1046,15 @@ GEOSFrechetDistanceDensify_r(GEOSContextHandle_t extHandle, const Geometry *g1, 
 int
 GEOSArea_r(GEOSContextHandle_t extHandle, const Geometry *g, double *area)
 {
-    assert(0 != area);
-  std::function<int(const Geometry*, double)> lambda =
-    [](const Geometry *lg1, double larea)->int
+  assert(0 != area);
+  std::function<int(const Geometry*, double*)> lambda =
+    [](const Geometry *lg, double* larea)->int
     {
       *larea = lg->getArea();
       return 1;
     };
 
-    return excecute<int, 0>(extHandle, lambda, g1, area);
+    return excecute<int, 0>(extHandle, lambda, g, area);
 }
 
 int
