@@ -956,185 +956,105 @@ GEOSEqualsExact_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geome
         return lg1->equalsExact(lg2, ltolerance);
     };
 
-    return excecute<char, 0>(extHandle, lambda, g1, g2, tolerance);
+    return excecute<char, 2>(extHandle, lambda, g1, g2, tolerance);
 }
 
 int
 GEOSDistance_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double *dist)
 {
   assert(0 != dist);
-  std::function<char(const Geometry*, const Geometry *, double*)> lambda =
-    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->char
+  std::function<int(const Geometry*, const Geometry *, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->int
     {
       *ldist = lg1->distance(lg2);
       return 1;
     };
 
-    return excecute<char, 0>(extHandle, lambda, g1, g2, dist);
+    return excecute<int, 0>(extHandle, lambda, g1, g2, dist);
 }
 
 int
 GEOSDistanceIndexed_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double *dist)
 {
   assert(0 != dist);
-  std::function<char(const Geometry*, const Geometry *, double*)> lambda =
-    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->char
+  std::function<int(const Geometry*, const Geometry *, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->int
     {
       *ldist = IndexedFacetDistance::distance(lg1, lg2);
       return 1;
     };
 
-    return excecute<char, 0>(extHandle, lambda, g1, g2, dist);
+    return excecute<int, 0>(extHandle, lambda, g1, g2, dist);
 }
 
 int
 GEOSHausdorffDistance_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double *dist)
 {
   assert(0 != dist);
-  std::function<char(const Geometry*, const Geometry *, double*)> lambda =
-    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->char
+  std::function<int(const Geometry*, const Geometry *, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->int
     {
       *ldist = DiscreteHausdorffDistance::distance(*lg1, *lg2);
       return 1;
     };
 
-    return excecute<char, 0>(extHandle, lambda, g1, g2, dist);
+    return excecute<int, 0>(extHandle, lambda, g1, g2, dist);
 }
 
 int
 GEOSHausdorffDistanceDensify_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double densifyFrac, double *dist)
 {
-    assert(0 != dist);
+  assert(0 != dist);
+  std::function<char(const Geometry*, const Geometry *, double, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double ldensifyFrac, double *ldist)->int
+    {
+      *ldist = DiscreteHausdorffDistance::distance(*lg1, *lg2, ldensifyFrac);
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *dist = DiscreteHausdorffDistance::distance(*g1, *g2, densifyFrac);
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+    return excecute<int, 0>(extHandle, lambda, g1, g2, densifyFrac, dist);
 }
 
 int
 GEOSFrechetDistance_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double *dist)
 {
-    assert(0 != dist);
+  assert(0 != dist);
+  std::function<int(const Geometry*, const Geometry *, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double *ldist)->int
+    {
+      *ldist = DiscreteFrechetDistance::distance(*lg1, *lg2);
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *dist = DiscreteFrechetDistance::distance(*g1, *g2);
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+    return excecute<int, 0>(extHandle, lambda, g1, g2, dist);
 }
 
 int
 GEOSFrechetDistanceDensify_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double densifyFrac, double *dist)
 {
-    assert(0 != dist);
+  assert(0 != dist);
+  std::function<int(const Geometry*, const Geometry *, double, double*)> lambda =
+    [](const Geometry *lg1, const Geometry *lg2, double ldensifyFrac, double *ldist)->int
+    {
+      *ldist = DiscreteFrechetDistance::distance(*lg1, *lg2, ldensifyFrac);
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *dist = DiscreteFrechetDistance::distance(*g1, *g2, densifyFrac);
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+    return excecute<int, 0>(extHandle, lambda, g1, g2, densifyFrac, dist);
 }
 
 int
 GEOSArea_r(GEOSContextHandle_t extHandle, const Geometry *g, double *area)
 {
     assert(0 != area);
+  std::function<int(const Geometry*, double)> lambda =
+    [](const Geometry *lg1, double larea)->int
+    {
+      *larea = lg->getArea();
+      return 1;
+    };
 
-    if ( 0 == extHandle )
-    {
-        return 0;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return 0;
-    }
-
-    try
-    {
-        *area = g->getArea();
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-
-    return 0;
+    return excecute<int, 0>(extHandle, lambda, g1, area);
 }
 
 int
