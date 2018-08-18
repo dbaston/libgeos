@@ -5476,48 +5476,32 @@ GEOSGeometry*
 GEOSGeom_extractUniquePoints_r(GEOSContextHandle_t extHandle,
                               const GEOSGeometry* g)
 {
-    if ( 0 == extHandle ) return 0;
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( handle->initialized == 0 ) return 0;
-
-    using namespace geos::geom;
-    using namespace geos::util;
-
-    try
+  std::function<GEOSGeometry* (const GEOSGeometry*)> lambda =
+    [](const GEOSGeometry *lg)->GEOSGeometry*
     {
+      using namespace geos::geom;
+      using namespace geos::util;
 
-    /* 1: extract points */
-    std::vector<const Coordinate*> coords;
-    UniqueCoordinateArrayFilter filter(coords);
-    g->apply_ro(&filter);
+      /* 1: extract points */
+      std::vector<const Coordinate*> coords;
+      UniqueCoordinateArrayFilter filter(coords);
+      lg->apply_ro(&filter);
 
-    /* 2: for each point, create a geometry and put into a vector */
-    std::vector<Geometry*>* points = new std::vector<Geometry*>();
-    points->reserve(coords.size());
-    const GeometryFactory* factory = g->getFactory();
-    for (std::vector<const Coordinate*>::iterator it=coords.begin(),
-                                             itE=coords.end();
-                                             it != itE; ++it)
-    {
-        Geometry* point = factory->createPoint(*(*it));
+      /* 2: for each point, create a geometry and put into a vector */
+      std::vector<Geometry*>* points = new std::vector<Geometry*>();
+      points->reserve(coords.size());
+      const GeometryFactory* factory = lg->getFactory();
+      for (const auto c : coords)
+      {
+        Geometry* point = factory->createPoint(*c);
         points->push_back(point);
-    }
+      }
 
-    /* 3: create a multipoint */
-    return factory->createMultiPoint(points);
+      /* 3: create a multipoint */
+      return factory->createMultiPoint(points);
+    };
 
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-        return 0;
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-        return 0;
-    }
+  return excecute<GEOSGeometry*, nullptr>(extHandle, lambda, g);
 }
 
 int GEOSOrientationIndex_r(GEOSContextHandle_t extHandle,
@@ -5697,88 +5681,49 @@ int
 GEOSBufferParams_setEndCapStyle_r(GEOSContextHandle_t extHandle,
   GEOSBufferParams* p, int style)
 {
-    if ( 0 == extHandle ) return 0;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized ) return 0;
-
-    try
+  std::function<int(GEOSBufferParams*, int)> lambda =
+    [](GEOSBufferParams* lp, int lstyle)->int
     {
-        if ( style > BufferParameters::CAP_SQUARE )
-        {
-        	throw IllegalArgumentException("Invalid buffer endCap style");
-        }
-        p->setEndCapStyle(static_cast<BufferParameters::EndCapStyle>(style));
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+      if ( lstyle > BufferParameters::CAP_SQUARE )
+      {
+        throw IllegalArgumentException("Invalid buffer endCap style");
+      }
+      lp->setEndCapStyle(static_cast<BufferParameters::EndCapStyle>(lstyle));
+      return 1;
+    };
 
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, p, style);
 }
 
 int
 GEOSBufferParams_setJoinStyle_r(GEOSContextHandle_t extHandle,
   GEOSBufferParams* p, int style)
 {
-    if ( 0 == extHandle ) return 0;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized ) return 0;
-
-    try
+  std::function<int(GEOSBufferParams*, int)> lambda =
+    [](GEOSBufferParams* lp, int lstyle)->int
     {
-        if ( style > BufferParameters::JOIN_BEVEL ) {
-        	throw IllegalArgumentException("Invalid buffer join style");
-        }
-        p->setJoinStyle(static_cast<BufferParameters::JoinStyle>(style));
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+      if ( lstyle > BufferParameters::JOIN_BEVEL ) {
+        throw IllegalArgumentException("Invalid buffer join style");
+      }
+      lp->setJoinStyle(static_cast<BufferParameters::JoinStyle>(lstyle));
+      return 1;
+    };
 
-    return 0;
+  return excecute<int, 0>(extHandle, lambda, p, style);
 }
 
 int
 GEOSBufferParams_setMitreLimit_r(GEOSContextHandle_t extHandle,
   GEOSBufferParams* p, double limit)
 {
-    if ( 0 == extHandle ) return 0;
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized ) return 0;
-
-    try
+  std::function<int(GEOSBufferParams*, double)> lambda =
+    [](GEOSBufferParams* lp, double llimit)->int
     {
-        p->setMitreLimit(limit);
+        lp->setMitreLimit(llimit);
         return 1;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
+    };
 
-    return 0;
+        return excecute<int, 0>(extHandle, lambda, p, limit);
 }
 
 int
