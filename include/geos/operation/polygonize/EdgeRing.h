@@ -59,15 +59,12 @@ namespace polygonize { // geos::operation::polygonize
  * a ring of a polygon.  The ring may be either an outer shell or a hole.
  */
 class GEOS_DLL EdgeRing {
-#if 0
-	typedef DirectedEdge* DirectedEdgePtr;
-#else
 	typedef std::shared_ptr<DirectedEdge> DirectedEdgePtr;
-#endif
 	typedef std::vector<DirectedEdgePtr> DirectedEdges;
 	typedef std::vector<geom::Geometry*> GeomVect;
 
 public:
+  using EdgeRingPtr = std::unique_ptr<EdgeRing>;
 	/**
 	 * \brief
 	 * Find the innermost enclosing shell EdgeRing
@@ -88,12 +85,14 @@ public:
 	 */
 
 	EdgeRing* findEdgeRingContaining(
-			const std::vector<EdgeRing*> shellList);
+			const std::vector<EdgeRingPtr> &shellList);
 
+#if 0
 	//[[deprecated]]
 	static EdgeRing* findEdgeRingContaining(
 			EdgeRing *testEr,
 			std::vector<EdgeRing*> *shellList);
+#endif
 
 	/**
 	 * \brief

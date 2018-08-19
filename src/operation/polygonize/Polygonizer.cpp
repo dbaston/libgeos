@@ -280,62 +280,83 @@ Polygonizer::polygonize()
 }
 
 /* private */
-vector<EdgeRing*>
-Polygonizer::findValidRings(const vector<EdgeRing*>& edgeRingList) const
+vector<Polygonizer::EdgeRingPtr>
+Polygonizer::findValidRings(vector<EdgeRingPtr>& edgeRingList) const
 {
-	vector<EdgeRing*> validEdgeRingList;
-	for (const auto &er : edgeRingList)
+	vector<EdgeRingPtr> validEdgeRingList;
+	for (auto &er : edgeRingList)
 	{
 		if (er->isValid())
 		{
-			validEdgeRingList.push_back(er);
+			validEdgeRingList.push_back(std::move(er));
 		}
 		else
 		{
-			invalidRingLines.push_back(er->getLineString());
+      /* TODO check how the linestirngs are build */
+			invalidRingLines.push_back(er.release()->getLineString());
 		}
 		GEOS_CHECK_FOR_INTERRUPTS();
 	}
+  edgeRingList.clear();
 	return validEdgeRingList;
 }
 
 /* private */
 void
-Polygonizer::findShellsAndHoles(const vector<EdgeRing*>& edgeRingList)
+Polygonizer::findShellsAndHoles(vector<EdgeRingPtr>& edgeRingList)
 {
 	holeList.clear();
 	shellList.clear();
-	for (const auto &er : edgeRingList) {
+	for (auto &er : edgeRingList) {
 		if (er->isHole())
-			holeList.push_back(er);
+			holeList.push_back(std::move(er));
 		else
-			shellList.push_back(er);
+			shellList.push_back(std::move(er));
 
 		GEOS_CHECK_FOR_INTERRUPTS();
 	}
+  edgeRingList.clear();
 }
 
 /* private */
 void
-Polygonizer::assignHolesToShells(const vector<EdgeRing*>& holeList, const vector<EdgeRing*>& shellList)
+Polygonizer::assignHolesToShells(vector<EdgeRingPtr>& holeList, vector<EdgeRingPtr>& shellList)
 {
-	for (const auto &holeER : holeList) {
-		assignHoleToShell(*holeER, shellList);
-		GEOS_CHECK_FOR_INTERRUPTS();
-	}
+#ifndef NDEBUG
+  size_t count(0);
+#endif
+	for (auto &holeER : holeList) {
+    auto shell = holeER->findEdgeRingContaining(shellList);
+
+    if (shell) {
+      shell->addHole(holeER.release()->getRingOwnership());
+    }
+    GEOS_CHECK_FOR_INTERRUPTS();
+#ifndef NDEBUG
+  ++count;
+#endif
+  }
+
+#ifndef NDEBUG
+  assert(holeList.size() == count);
+#endif
+  holeList.clear();
 }
 
+#if 0
 /* private */
 void
-Polygonizer::assignHoleToShell(EdgeRing &holeER,
-		const vector<EdgeRing*>& shellList)
+Polygonizer::assignHoleToShell(
+    EdgeRingPtr holeER,
+		const vector<EdgeRingPtr>& shellList)
 {
-	auto shell = holeER.findEdgeRingContaining(shellList);
+	auto shell = holeER->findEdgeRingContaining(shellList);
 
-	if (shell)
-		shell->addHole(holeER.getRingOwnership());
+	if (shell) {
+		shell->addHole(holeER.release()->getRingOwnership());
+  }
 }
-
+#endif
 
 } // namespace geos.operation.polygonize
 } // namespace geos.operation

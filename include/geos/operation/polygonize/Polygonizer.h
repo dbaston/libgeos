@@ -184,6 +184,8 @@ public:
 
 
 private:
+  using EdgeRingPtr = std::unique_ptr<EdgeRing>;
+
 	/**
 	 * Add every linear element in a geometry into the polygonizer graph.
 	 */
@@ -209,16 +211,50 @@ private:
 	void clear();
 
 
-	std::vector<EdgeRing*> findValidRings(const std::vector<EdgeRing*>& edgeRingList) const;
+  /** @brief
+   * separates into valid & invalid rings
+   *
+   * invalid rings are saved as LineStrings (they are not rings)
+   *
+   * post condition: The edgeRingList does not own the rings
+   *
+   * @return the valid rings
+   */
+	std::vector<EdgeRingPtr> findValidRings(std::vector<EdgeRingPtr>& edgeRingList) const;
 
-	void findShellsAndHoles(const std::vector<EdgeRing*>& edgeRingList);
 
-	static void assignHolesToShells(const std::vector<EdgeRing*>& holeList,
-			const std::vector<EdgeRing*>& shellList);
+  /** @brief
+   *
+   * Separates the rings as: Holes or Shells
+   *
+   * The edge rings are owned by
+   * * holeList
+   * * shellList
+   *
+   * post condition: The edgeRingList does not own the rings (size == 0)
+   */
+	void findShellsAndHoles(std::vector<EdgeRingPtr>& edgeRingList);
 
+  /** @brief
+   *
+   * precondition: a holes must belong to a shell
+   * (use NDEBUG to check this assertion)
+   *
+   * * Holes are assigned to shells they belong to
+   *
+   * post condition:
+   * * The holeList does not own the hole rings (size == 0)
+   * * for all holes: A shell owns the hole as Linestring*
+   */
+	static void assignHolesToShells(
+      std::vector<EdgeRingPtr>& holeList,
+			std::vector<EdgeRingPtr>& shellList);
+
+#if 0
 	static void assignHoleToShell(
-			EdgeRing &holeER,
-			const std::vector<EdgeRing*>& shellList);
+			EdgeRingPtr holeER,
+			const std::vector<EdgeRingPtr>& shellList);
+#endif
 
 	/*
 	 * Data
@@ -232,8 +268,8 @@ private:
 	std::vector<const geom::LineString*> cutEdges;
 	mutable std::vector<geom::LineString*> invalidRingLines;
 
-	std::vector<EdgeRing*> holeList;
-	std::vector<EdgeRing*> shellList;
+	std::vector<EdgeRingPtr> holeList;
+	std::vector<EdgeRingPtr> shellList;
 	std::vector<geom::Polygon*> polyList;
 };
 

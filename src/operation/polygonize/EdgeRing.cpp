@@ -50,7 +50,7 @@ namespace polygonize { // geos.operation.polygonize
 /*public*/
 EdgeRing *
 EdgeRing::findEdgeRingContaining(
-    const vector<EdgeRing*> shellList)
+    const vector<EdgeRingPtr> &shellList)
 {
     if ( !getRingInternal()) return nullptr;
 
@@ -60,7 +60,7 @@ EdgeRing::findEdgeRingContaining(
     EdgeRing *minShell = nullptr;
     const Envelope *minEnv = nullptr;
 
-    for(auto tryShell : shellList) {
+    for(auto &tryShell : shellList) {
         auto tryRing = tryShell->getRingInternal();
         const Envelope *tryEnv = tryRing->getEnvelopeInternal();
 
@@ -90,7 +90,7 @@ EdgeRing::findEdgeRingContaining(
         // than the current minimum ring
         if (isContained) {
             if (!minShell || minEnv->contains(tryEnv)) {
-                minShell = tryShell;
+                minShell = tryShell.get();
             }
         }
     }
@@ -98,12 +98,14 @@ EdgeRing::findEdgeRingContaining(
 }
 
 
+#if 0
 /*public static deprecated*/
 EdgeRing *
 EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
     vector<EdgeRing*> *shellList) {
 	return testEr->findEdgeRingContaining(*shellList);
 }
+#endif
 
 /*public static*/
 const Coordinate
