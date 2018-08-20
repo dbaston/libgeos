@@ -84,8 +84,10 @@ public:
 	 * @return null if no containing EdgeRing is found
 	 */
 
-	EdgeRing* findEdgeRingContaining(
-			const std::vector<EdgeRingPtr> &shellList);
+  //std::vector<EdgeRingPtr>::const_iterator
+  std::vector<EdgeRingPtr>::const_iterator
+  findEdgeRingContaining(
+		const	std::vector<EdgeRingPtr> &shellList);
 
 #if 0
 	//[[deprecated]]

@@ -237,13 +237,12 @@ private:
 
   /** @brief
    *
-   * precondition: a holes must belong to a shell
-   * (use NDEBUG to check this assertion)
+   * precondition: holes might belong to a shell
    *
    * * Holes are assigned to shells they belong to
    *
    * post condition:
-   * * The holeList does not own the hole rings (size == 0)
+   * * The holeList has dangle holes (no shell found for them)
    * * for all holes: A shell owns the hole as Linestring*
    */
 	static void assignHolesToShells(
@@ -267,8 +266,9 @@ private:
 	std::vector<const geom::LineString*> dangles;
 	std::vector<const geom::LineString*> cutEdges;
 	mutable std::vector<geom::LineString*> invalidRingLines;
+	std::vector<EdgeRingPtr> m_dangleHoles;
 
-	std::vector<EdgeRingPtr> holeList;
+	std::vector<EdgeRingPtr> m_holeList;
 	std::vector<EdgeRingPtr> shellList;
 	std::vector<geom::Polygon*> polyList;
 };
