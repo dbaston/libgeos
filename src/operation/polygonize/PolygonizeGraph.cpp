@@ -59,7 +59,7 @@ PolygonizeGraph::PolygonizeGraph(const GeometryFactory *newFactory)
  * Destroy a PolygonizeGraph
  */
 PolygonizeGraph::~PolygonizeGraph() {
-	for (auto e : m_newEdgeRings) delete e;
+	//for (auto e : m_newEdgeRings) delete e;
 	for (auto c : m_newCoords) delete c;
 }
 
@@ -144,9 +144,9 @@ PolygonizeGraph::findIntersectionNodes(
 }
 
 /* public */
-std::vector<EdgeRing*>
+std::vector<PolygonizeGraph::EdgeRingPtr>
 PolygonizeGraph::getEdgeRings() {
-	std::vector<EdgeRing*> edgeRingList;
+	std::vector<EdgeRingPtr> edgeRingList;
 	// maybe could optimize this, since most of these pointers should
 	// be set correctly already
 	// by deleteCutEdges()
@@ -165,18 +165,18 @@ PolygonizeGraph::getEdgeRings() {
 		if (de->isMarked()) continue;
 		if (safe_cast<PolygonizeDirectedEdge*>(de)->isInRing()) continue;
 
-		auto er = findEdgeRing(de);
-		edgeRingList.push_back(er);
+		edgeRingList.emplace_back(findEdgeRing(de));
 	}
 	return edgeRingList;
 }
 
+#if 0
 /* public [[deprecated]] */
 void
 PolygonizeGraph::getEdgeRings(std::vector<EdgeRing*>& edgeRingList) {
 	edgeRingList = getEdgeRings();
 }
-
+#endif
 
 PolygonizeGraph::DirectedEdges
 PolygonizeGraph::findLabeledEdgeRings(
@@ -327,24 +327,24 @@ PolygonizeGraph::findDirEdgesInRing(DirectedEdgePtr startDE) const {
 	return edges;
 }
 
-EdgeRing *
+PolygonizeGraph::EdgeRingPtr
 PolygonizeGraph::findEdgeRing(DirectedEdgePtr startDE) const {
 	auto de = startDE;
-	EdgeRing *er = new EdgeRing(*m_factory);
-	// Now, when will we delete those EdgeRings ?
-	m_newEdgeRings.push_back(er);
+
+	EdgeRingPtr er( new EdgeRing(*m_factory) );
+
 	do {
 		er->add(de);
 
 		auto e = safe_cast<PolygonizeDirectedEdge *>(de);
-		e->setRing(er);
+		e->setRing(er.get());
 
 		de = de->getNext();
 		assert(de);  // found NULL DE in ring
 		assert(de == startDE || !safe_cast<PolygonizeDirectedEdge *>(de)->isInRing());  // found DE already in ring
 	} while (de != startDE);
 
-	return er;
+	return std::move(er);
 }
 
 /* public */

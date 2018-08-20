@@ -38,7 +38,6 @@
 //#define DEBUG_ALLOC 1
 //#define GEOS_PARANOIA_LEVEL 2
 
-using namespace std;
 using namespace geos::planargraph;
 using namespace geos::algorithm;
 using namespace geos::geom;
@@ -48,11 +47,11 @@ namespace operation { // geos.operation
 namespace polygonize { // geos.operation.polygonize
 
 /*public*/
-EdgeRing *
+std::vector<EdgeRing::EdgeRingPtr>::const_iterator
 EdgeRing::findEdgeRingContaining(
-    const vector<EdgeRing*> shellList)
+    const std::vector<EdgeRingPtr> &shellList)
 {
-    if ( !getRingInternal()) return nullptr;
+    if ( !getRingInternal()) return shellList.end();
 
     const Envelope *testEnv = ring->getEnvelopeInternal();
     Coordinate testPt = ring->getCoordinateN(0);
@@ -60,8 +59,11 @@ EdgeRing::findEdgeRingContaining(
     EdgeRing *minShell = nullptr;
     const Envelope *minEnv = nullptr;
 
-    for(auto tryShell : shellList) {
-        auto tryRing = tryShell->getRingInternal();
+    auto minShellIter = shellList.end();
+
+    for (auto tryShell = shellList.begin(); tryShell != shellList.end();  ++tryShell )
+    {
+        auto tryRing = (*tryShell)->getRingInternal();
         const Envelope *tryEnv = tryRing->getEnvelopeInternal();
 
         if (minShell) minEnv = minShell->getRingInternal()->getEnvelopeInternal();
@@ -90,20 +92,24 @@ EdgeRing::findEdgeRingContaining(
         // than the current minimum ring
         if (isContained) {
             if (!minShell || minEnv->contains(tryEnv)) {
-                minShell = tryShell;
+                minShell = (*tryShell).get();
+                minShellIter = tryShell;
+                assert(minShell == (*minShellIter).get());
             }
         }
     }
-    return minShell;
+    return minShellIter;
 }
 
 
+#if 0
 /*public static deprecated*/
 EdgeRing *
 EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
     vector<EdgeRing*> *shellList) {
 	return testEr->findEdgeRingContaining(*shellList);
 }
+#endif
 
 /*public static*/
 const Coordinate

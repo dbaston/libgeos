@@ -58,6 +58,7 @@ namespace polygonize {
 // Forward declarations
 class EdgeRing;
 
+
 /** \brief
  * Represents a planar graph of edges that can be used to compute a
  * polygonization, and implements the algorithms to compute the
@@ -69,6 +70,8 @@ class EdgeRing;
  */
 class GEOS_DLL PolygonizeGraph: public planargraph::PlanarGraph {
 public:
+  using EdgeRingPtr = std::unique_ptr<EdgeRing>;
+
 	bool empty() const {return m_nodeMap.empty();}
 
 	/**
@@ -91,6 +94,7 @@ public:
 	 */
 	void addEdge(const LineString *line);
 
+#if 0
 	/**
 	 * \brief
 	 * Computes the EdgeRings formed by the edges in this graph.
@@ -105,6 +109,7 @@ public:
 	 */
 	// [[deprecated]]
 	void getEdgeRings(std::vector<EdgeRing*>& edgeRingList);
+#endif
 
 	/**
 	 * \brief
@@ -112,7 +117,7 @@ public:
 	 *
 	 * @return edgeRingList: the EdgeRings found by the polygonization process.
 	 */
-	std::vector<EdgeRing*> getEdgeRings();
+	std::vector<EdgeRingPtr> getEdgeRings();
 
 	/**
 	 * \brief
@@ -209,7 +214,7 @@ public:
 	findDirEdgesInRing(DirectedEdgePtr startDE) const;
 
 	/* has side effect of saving the Edge Ring found */
-	EdgeRing* findEdgeRing(DirectedEdgePtr startDE) const;
+	EdgeRingPtr findEdgeRing(DirectedEdgePtr startDE) const;
 
 	/*
 	 * Data members
@@ -220,7 +225,6 @@ public:
 	/*
 	 *  These are for memory management
 	 */
-	mutable std::vector<EdgeRing *> m_newEdgeRings;
 	std::vector<geom::CoordinateSequence *> m_newCoords;
 };
 
