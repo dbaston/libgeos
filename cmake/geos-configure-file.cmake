@@ -1,7 +1,7 @@
 ################################################################################
 # Part of CMake configuration for GEOS
 #
-# Copyright (C) 2018 Dan Baston, Vermont
+# Copyright (C) 2018 Daniel Baston <dbaston@gmail.com>
 #
 # This is free software; you can redistribute and/or modify it under
 # the terms of the GNU Lesser General Public Licence as published
