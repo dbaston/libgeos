@@ -21,6 +21,7 @@ function(geos_configure_file in out)
   set(VERSION_MAJOR ${GEOS_VERSION_MAJOR})
   set(VERSION_MINOR ${GEOS_VERSION_MINOR})
   set(VERSION_PATCH ${GEOS_VERSION_PATCH})
+  set(srcdir ${CMAKE_CURRENT_LIST_DIR})
 
   configure_file(${in} ${out} @ONLY)
 endfunction()

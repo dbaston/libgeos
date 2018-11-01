@@ -20,6 +20,7 @@ include(geos-configure-file)
 include(CMakeDependentOption)
 ## CMake global variables
 option(BUILD_SHARED_LIBS "Build GEOS with shared libraries" OFF)
+option(BUILD_DOCS "Build documenation" ON)
 ## GEOS custom variables
 cmake_dependent_option(GEOS_BUILD_DEVELOPER
   "Build with compilation flags useful for development" ON
@@ -142,6 +143,12 @@ if(BUILD_SHARED_LIBS)
   if(NOT WIN32)
     set_target_properties(geos_c PROPERTIES SOVERSION ${GEOS_VERSION_MAJOR})
   endif()
+endif()
+
+################################################################################
+# Documentation
+if(BUILD_DOCS)
+  add_subdirectory(doc)
 endif()
 
 ################################################################################
