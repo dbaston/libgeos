@@ -10,12 +10,6 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.5)
 
-# TODO: Follow CMake detection of git and version tagging
-#       https://gitlab.kitware.com/cmake/cmake/blob/master/Source/CMakeVersionSource.cmake
-if(EXISTS ${CMAKE_SOURCE_DIR}/.git/HEAD)
-  set(GEOS_BUILD_FROM_GIT ON)
-endif()
-
 # TODO: Remove when autotools is dropped and configured headers
 #       accept native CMake variables (eg. GEOS_MAJOR_VERSION)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -58,6 +52,22 @@ set(CAPI_INTERFACE_AGE 11)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+#########
+# Git revision hash
+if(EXISTS ${CMAKE_SOURCE_DIR}/.git/HEAD)
+  set(GEOS_BUILD_FROM_GIT ON)
+endif()
+
+if(GEOS_BUILD_FROM_GIT)
+  add_custom_target(geos_revision
+    COMMAND ${CMAKE_COMMAND}
+    -D DST=${CMAKE_BINARY_DIR}/geos_revision.h
+    -D CMAKE_MODULE_PATH="${CMAKE_MODULE_PATH}"
+    -P ${CMAKE_SOURCE_DIR}/cmake/write-geos-version-header.cmake
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
+endif()
 
 ################################################################################
 # Target geos_cxx_flags: common C++ compilation flags
