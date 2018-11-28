@@ -101,7 +101,9 @@ INVALID_OUTPUT_XMLTESTS =
 
 FAILING_XMLTESTS = \
 	$(srcdir)/tests/failure/TestOverlay.xml \
-	$(srcdir)/tests/ticket/bug488.xml
+	$(srcdir)/tests/ticket/bug488.xml \
+	$(srcdir)/tests/ticket/bug344.xml \
+	$(srcdir)/tests/TestBigNastyBuffer.xml
 
 XMLTESTS=$(SAFE_XMLTESTS) $(INVALID_OUTPUT_XMLTESTS) $(FAILING_XMLTESTS)
 
@@ -123,12 +125,8 @@ SimpleWKTTester_LDADD = $(LIBS)
 XMLTester_SOURCES = \
 	XMLTester.cpp \
 	XMLTester.h \
-	tinyxml/tinyxml.h \
-	tinyxml/tinyxml.cpp \
-	tinyxml/tinystr.h \
-	tinyxml/tinystr.cpp \
-	tinyxml/tinyxmlerror.cpp \
-	tinyxml/tinyxmlparser.cpp \
+	tinyxml2/tinyxml2.h \
+	tinyxml2/tinyxml2.cpp \
 	BufferResultMatcher.h \
 	BufferResultMatcher.cpp \
 	SingleSidedBufferResultMatcher.h \

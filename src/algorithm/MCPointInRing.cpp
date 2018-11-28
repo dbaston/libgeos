@@ -60,44 +60,23 @@ MCPointInRing::MCPointInRing(const LinearRing *newRing)
 	buildIndex();
 }
 
-MCPointInRing::~MCPointInRing()
-{
-	delete tree;
-	delete pts;
-}
+MCPointInRing::~MCPointInRing() = default;
 
 void
 MCPointInRing::buildIndex()
 {
-	//using namespace geos::index;
+	tree.reset(new bintree::Bintree());
+	pts.reset(CoordinateSequence::removeRepeatedPoints(ring->getCoordinatesRO()));
+	chains = chain::MonotoneChainBuilder::getChains(pts.get());
 
-//	Envelope *env=ring->getEnvelopeInternal();
-	tree=new bintree::Bintree();
-	pts=CoordinateSequence::removeRepeatedPoints(ring->getCoordinatesRO());
-
-	// NOTE: we take ownership of mcList and it's elements
-	vector<chain::MonotoneChain*> *mcList =
-		chain::MonotoneChainBuilder::getChains(pts);
-
-	for(size_t i=0, n=mcList->size(); i<n; ++i)
+	for(const auto& mc : *chains)
 	{
-		chain::MonotoneChain *mc=(*mcList)[i];
 		const Envelope& mcEnv = mc->getEnvelope();
 		interval.min = mcEnv.getMinY();
 		interval.max = mcEnv.getMaxY();
 
-		// TODO: is 'mc' ownership transferred here ? (see below)
-		//       by documentation SpatialIndex does NOT take
-		//       ownership of the items, so unless we query it
-		//       all later we've a leak problem here..
-		//       Need a focused testcase.
-		//
-		tree->insert(&interval, mc);
+		tree->insert(&interval, mc.get());
 	}
-
-	// TODO: mcList elements ownership went to tree or what ?
-
-	delete mcList;
 }
 
 bool
@@ -105,29 +84,21 @@ MCPointInRing::isInside(const Coordinate& pt)
 {
 	crossings=0;
 	// test all segments intersected by ray from pt in positive x direction
-	Envelope *rayEnv=new Envelope(DoubleNegInfinity,DoubleInfinity,pt.y,pt.y);
+	Envelope rayEnv(DoubleNegInfinity,DoubleInfinity,pt.y,pt.y);
 	interval.min=pt.y;
 	interval.max=pt.y;
-	vector<void*> *segs=tree->query(&interval);
-	//System.out.println("query size=" + segs.size());
-	MCSelecter *mcSelecter=new MCSelecter(pt,this);
-	for(int i=0;i<(int)segs->size();i++) {
-		chain::MonotoneChain *mc=(chain::MonotoneChain*) (*segs)[i];
-		testMonotoneChain(rayEnv,mcSelecter,mc);
+	std::unique_ptr<vector<void*>> segs{tree->query(&interval)};
+
+	MCSelecter mcSelecter(pt,this);
+	for(auto& seg : *segs) {
+		chain::MonotoneChain *mc= reinterpret_cast<chain::MonotoneChain*>(seg);
+		testMonotoneChain(&rayEnv,&mcSelecter,mc);
 	}
+
 	/*
-	*  p is inside if number of crossings is odd.
-	*/
-//	for(int i=0;i<(int)segs->size();i++) {
-//		delete (chain::MonotoneChain*) (*segs)[i];
-//	}
-	delete segs;
-	delete rayEnv;
-	delete mcSelecter;
-	if((crossings%2)==1) {
-		return true;
-	}
-	return false;
+	 *  p is inside if number of crossings is odd.
+	 */
+	return crossings % 2 == 1;
 }
 
 
