@@ -18,10 +18,8 @@ target_sources(test_xmltester
     XMLTester.cpp
     BufferResultMatcher.cpp
     SingleSidedBufferResultMatcher.cpp
-    tinyxml/tinyxml.cpp
-    tinyxml/tinystr.cpp
-    tinyxml/tinyxmlerror.cpp
-    tinyxml/tinyxmlparser.cpp)
+    tinyxml2/tinyxml2.h
+    tinyxml2/tinyxml2.cpp)
 target_link_libraries(test_xmltester PRIVATE geos)
 target_include_directories(test_xmltester
   PRIVATE
