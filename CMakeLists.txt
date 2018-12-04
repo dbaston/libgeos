@@ -54,6 +54,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+################################################################################
+# Define a coverage build
+set(CMAKE_CXX_FLAGS_COVERAGE "-fprofile-arcs -ftest-coverage")
+
 #########
 # Git revision hash
 if(EXISTS ${CMAKE_SOURCE_DIR}/.git/HEAD)
@@ -206,3 +210,4 @@ message(STATUS "  JTS port:                    ${JTS_PORT}")
 message(STATUS "  BUILD_SHARED_LIBS:           ${BUILD_SHARED_LIBS}")
 message(STATUS "  BUILD_TESTING:               ${BUILD_TESTING}")
 message(STATUS "  GEOS_BUILD_DEVELOPER:        ${GEOS_BUILD_DEVELOPER}")
+message(STATUS "  CMAKE_BUILD_TYPE:            ${CMAKE_BUILD_TYPE}")
