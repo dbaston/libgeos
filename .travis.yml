@@ -141,8 +141,8 @@ matrix:
 
 before_install:
   - eval "${E}"
-  - export CXXFLAGS=${ARCH}
-  - export CFLAGS=${ARCH}
+  - export CXXFLAGS="-Werror ${ARCH}"
+  - export CFLAGS="-Werror ${ARCH}"
   - export GEOS_BUILD_TOOL=${TOOL}
   - export CXX="ccache ${CXX}"
   - ${CXX} --version
