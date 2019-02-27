@@ -79,6 +79,10 @@ else()
       VERSION ${VERSION}
       CLEAN_DIRECT_OUTPUT 1)
 
+    target_compile_options(geos
+      PRIVATE -Werror
+    )
+
     install(TARGETS geos
       RUNTIME DESTINATION bin
       LIBRARY DESTINATION lib
@@ -94,6 +98,10 @@ else()
       OUTPUT_NAME "geos"
       PREFIX "lib"
       CLEAN_DIRECT_OUTPUT 1)
+
+    target_compile_options(geos-static
+      PRIVATE -Werror
+    )
 
     add_dependencies(geos-static geos_revision)
 

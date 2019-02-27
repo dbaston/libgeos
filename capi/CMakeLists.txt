@@ -25,6 +25,10 @@ if(NOT GEOS_ENABLE_MACOSX_FRAMEWORK AND GEOS_BUILD_SHARED)
   # if building OS X framework or only building static libs, CAPI built into C++ library
   add_library(geos_c SHARED ${geos_c_SOURCES})
 
+  target_compile_options(geos_c
+    PRIVATE -Werror
+  )
+
   target_link_libraries(geos_c geos)
 
   if (WIN32)

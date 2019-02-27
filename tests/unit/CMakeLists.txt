@@ -22,6 +22,10 @@ if(GEOS_ENABLE_TESTS)
 
   add_executable(test_geos_unit ${geos_unit_SOURCES})
 
+  target_compile_options(geos
+    PRIVATE -Werror
+  )
+
   if(APPLE AND GEOS_ENABLE_MACOSX_FRAMEWORK)
     target_link_libraries(test_geos_unit GEOS)
  	else()
