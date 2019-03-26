@@ -13,5 +13,4 @@ geos_HEADERS = \
     PolygonizeDirectedEdge.h \
     PolygonizeEdge.h \
     PolygonizeGraph.h \
-    Polygonizer.h \
-    BuildArea.h
+    Polygonizer.h
