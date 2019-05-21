@@ -16,6 +16,7 @@ if(GEOS_BUILD_FROM_GIT)
     -D CMAKE_MODULE_PATH="${PROJECT_SOURCE_DIR}/cmake"
     -P ${CMAKE_SOURCE_DIR}/cmake/GenerateRevisionHeader.cmake
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  target_include_directories(geos_revision_header INTERFACE ${CMAKE_BINARY_DIR})
 else()
   add_library(geos_revision_header INTERFACE)
 endif()
