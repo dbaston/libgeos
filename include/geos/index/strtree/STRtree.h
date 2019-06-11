@@ -78,17 +78,17 @@ private:
      * group them into runs of size M (the node capacity). For each run, creates
      * a new (parent) node.
      */
-    std::unique_ptr<BoundableList> createParentBoundables(BoundableList* childBoundables, int newLevel) override;
+    std::unique_ptr<BoundableList> createParentBoundables(BoundableList& childBoundables, int newLevel) override;
 
     std::unique_ptr<BoundableList> createParentBoundablesFromVerticalSlices(std::vector<BoundableList*>* verticalSlices,
             int newLevel);
 
     STRIntersectsOp intersectsOp;
 
-    std::unique_ptr<BoundableList> sortBoundables(const BoundableList* input) override;
+    std::unique_ptr<BoundableList> sortBoundables(const BoundableList& input) override;
 
     std::unique_ptr<BoundableList> createParentBoundablesFromVerticalSlice(
-        BoundableList* childBoundables,
+        BoundableList& childBoundables,
         int newLevel);
 
     /**

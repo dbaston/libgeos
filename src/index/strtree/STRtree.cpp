@@ -108,10 +108,10 @@ STRtree::STRIntersectsOp::intersects(const void* aBounds, const void* bBounds)
 
 /*private*/
 std::unique_ptr<BoundableList>
-STRtree::createParentBoundables(BoundableList* childBoundables, int newLevel)
+STRtree::createParentBoundables(BoundableList& childBoundables, int newLevel)
 {
-    assert(!childBoundables->empty());
-    int minLeafCount = (int) ceil((double)childBoundables->size() / (double)getNodeCapacity());
+    assert(!childBoundables.empty());
+    int minLeafCount = (int) ceil((double)childBoundables.size() / (double)getNodeCapacity());
 
     std::unique_ptr<BoundableList> sortedChildBoundables(sortBoundables(childBoundables));
 
@@ -137,10 +137,9 @@ STRtree::createParentBoundablesFromVerticalSlices(std::vector<BoundableList*>* p
     assert(!p_verticalSlices->empty());
     std::unique_ptr<BoundableList> parentBoundables(new BoundableList());
 
-    for(size_t i = 0, vssize = p_verticalSlices->size(); i < vssize; ++i) {
+    for(const auto& p_slice : *p_verticalSlices) {
         std::unique_ptr<BoundableList> toAdd(
-            createParentBoundablesFromVerticalSlice(
-                (*p_verticalSlices)[i], newLevel)
+            createParentBoundablesFromVerticalSlice(*p_slice, newLevel)
         );
         assert(!toAdd->empty());
 
@@ -154,7 +153,7 @@ STRtree::createParentBoundablesFromVerticalSlices(std::vector<BoundableList*>* p
 
 /*protected*/
 std::unique_ptr<BoundableList>
-STRtree::createParentBoundablesFromVerticalSlice(BoundableList* childBoundables, int newLevel)
+STRtree::createParentBoundablesFromVerticalSlice(BoundableList& childBoundables, int newLevel)
 {
     return AbstractSTRtree::createParentBoundables(childBoundables, newLevel);
 }
@@ -402,7 +401,7 @@ AbstractNode*
 STRtree::createNode(int level)
 {
     AbstractNode* an = new STRAbstractNode(level, nodeCapacity);
-    nodes->push_back(an);
+    nodes.push_back(an);
     return an;
 }
 
@@ -418,11 +417,10 @@ STRtree::insert(const Envelope* itemEnv, void* item)
 
 /*private*/
 std::unique_ptr<BoundableList>
-STRtree::sortBoundables(const BoundableList* input)
+STRtree::sortBoundables(const BoundableList& input)
 {
-    assert(input);
-    std::unique_ptr<BoundableList> output(new BoundableList(*input));
-    assert(output->size() == input->size());
+    std::unique_ptr<BoundableList> output(new BoundableList(input));
+    assert(output->size() == input.size());
 
     sort(output->begin(), output->end(), yComparator);
     return output;

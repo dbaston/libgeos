@@ -37,9 +37,9 @@ compareSIRBoundables(Boundable* a, Boundable* b)
 
 /*protected*/
 std::unique_ptr<BoundableList>
-SIRtree::createParentBoundables(BoundableList* childBoundables, int newLevel)
+SIRtree::createParentBoundables(BoundableList & childBoundables, int newLevel)
 {
-    assert(!childBoundables->empty());
+    assert(!childBoundables.empty());
     std::unique_ptr<BoundableList> parentBoundables(new BoundableList());
     parentBoundables->push_back(createNode(newLevel));
 
@@ -68,23 +68,14 @@ SIRtree::SIRIntersectsOp::intersects(const void* aBounds, const void* bBounds)
 
 /*public*/
 SIRtree::SIRtree():
-    AbstractSTRtree(10),
-    intersectsOp(new SIRIntersectsOp())
-{
-}
+    SIRtree(10)
+{}
 
 /*public*/
 SIRtree::SIRtree(size_t p_nodeCapacity):
-    AbstractSTRtree(p_nodeCapacity),
-    intersectsOp(new SIRIntersectsOp())
+    AbstractSTRtree(p_nodeCapacity)
 {
 }
-
-SIRtree::~SIRtree()
-{
-    delete intersectsOp;
-}
-
 
 class SIRAbstractNode: public AbstractNode {
 public:
@@ -123,7 +114,7 @@ AbstractNode*
 SIRtree::createNode(int level)
 {
     AbstractNode* an = new SIRAbstractNode(level, nodeCapacity);
-    nodes->push_back(an);
+    nodes.push_back(an);
     return an;
 }
 
@@ -139,9 +130,9 @@ SIRtree::insert(double x1, double x2, void* item)
 }
 
 std::unique_ptr<BoundableList>
-SIRtree::sortBoundables(const BoundableList* input)
+SIRtree::sortBoundables(const BoundableList& input)
 {
-    std::unique_ptr<BoundableList> output(new BoundableList(*input));
+    std::unique_ptr<BoundableList> output(new BoundableList(input));
     sort(output->begin(), output->end(), compareSIRBoundables);
     //output->sort(compareSIRBoundables);
     return output;

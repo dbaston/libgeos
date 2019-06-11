@@ -138,10 +138,9 @@ public:
  *
  */
 class GEOS_DLL AbstractSTRtree {
-
 private:
     bool built;
-    BoundableList* itemBoundables;
+    BoundableList itemBoundables;
 
     /**
      * Creates the levels higher than the given level
@@ -154,10 +153,10 @@ private:
      * @return the root, which may be a ParentNode or a LeafNode
      */
     virtual AbstractNode* createHigherLevels(
-        BoundableList* boundablesOfALevel,
+        BoundableList& boundablesOfALevel,
         int level);
 
-    virtual std::unique_ptr<BoundableList> sortBoundables(const BoundableList* input) = 0;
+    virtual std::unique_ptr<BoundableList> sortBoundables(const BoundableList& input) = 0;
 
     bool remove(const void* searchBounds, AbstractNode& node, void* item);
     bool removeItem(AbstractNode& node, void* item);
@@ -190,7 +189,7 @@ protected:
 
     AbstractNode* root;
 
-    std::vector <AbstractNode*>* nodes;
+    std::vector<AbstractNode*> nodes;
 
     // Ownership to caller (TODO: return by unique_ptr)
     virtual AbstractNode* createNode(int level) = 0;
@@ -200,7 +199,7 @@ protected:
      * M is the node capacity.
      */
     virtual std::unique_ptr<BoundableList> createParentBoundables(
-        BoundableList* childBoundables, int newLevel);
+        BoundableList& childBoundables, int newLevel);
 
     virtual AbstractNode*
     lastNode(BoundableList* nodeList)
@@ -243,7 +242,6 @@ protected:
 
     std::unique_ptr<BoundableList> boundablesAtLevel(int level);
 
-    // @@ should be size_t, probably
     std::size_t nodeCapacity;
 
     /**
@@ -264,8 +262,6 @@ public:
     AbstractSTRtree(std::size_t newNodeCapacity)
         :
         built(false),
-        itemBoundables(new BoundableList()),
-        nodes(new std::vector<AbstractNode *>()),
         nodeCapacity(newNodeCapacity)
     {
         assert(newNodeCapacity > 1);

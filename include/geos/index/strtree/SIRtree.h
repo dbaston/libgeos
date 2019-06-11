@@ -53,9 +53,9 @@ public:
      * Constructs an SIRtree with the given maximum number of child nodes
      * that a node may have
      */
-    SIRtree(std::size_t nodeCapacity);
+    explicit SIRtree(std::size_t nodeCapacity);
 
-    ~SIRtree() override;
+    ~SIRtree() override = default;
 
     void insert(double x1, double x2, void* item);
 
@@ -101,20 +101,20 @@ protected:
      * M is the node capacity.
      */
     std::unique_ptr<BoundableList> createParentBoundables(
-        BoundableList* childBoundables, int newLevel) override;
+        BoundableList& childBoundables, int newLevel) override;
 
     AbstractNode* createNode(int level) override;
 
     IntersectsOp*
     getIntersectsOp() override
     {
-        return intersectsOp;
+        return &intersectsOp;
     }
 
-    std::unique_ptr<BoundableList> sortBoundables(const BoundableList* input) override;
+    std::unique_ptr<BoundableList> sortBoundables(const BoundableList & input) override;
 
 private:
-    IntersectsOp* intersectsOp;
+    SIRIntersectsOp intersectsOp;
     std::vector<std::unique_ptr<Interval>> intervals;
 };
 

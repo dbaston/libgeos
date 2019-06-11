@@ -33,20 +33,13 @@ namespace strtree { // geos.index.strtree
 
 AbstractSTRtree::~AbstractSTRtree()
 {
-    assert(nullptr != itemBoundables);
-    BoundableList::iterator it = itemBoundables->begin();
-    BoundableList::iterator end = itemBoundables->end();
-    while(it != end) {
-        delete *it;
-        ++it;
+    for (auto& boundable : itemBoundables) {
+        delete boundable;
     }
-    delete itemBoundables;
 
-    assert(nullptr != nodes);
-    for(std::size_t i = 0, nsize = nodes->size(); i < nsize; i++) {
-        delete(*nodes)[i];
+    for(auto& node : nodes) {
+        delete node;
     }
-    delete nodes;
 }
 
 /*public*/
@@ -57,28 +50,22 @@ AbstractSTRtree::build()
         return;
     }
 
-    root = (itemBoundables->empty() ? createNode(0) : createHigherLevels(itemBoundables, -1));
+    root = (itemBoundables.empty() ? createNode(0) : createHigherLevels(itemBoundables, -1));
     built = true;
 }
 
 /*protected*/
 std::unique_ptr<BoundableList>
-AbstractSTRtree::createParentBoundables(BoundableList* childBoundables,
+AbstractSTRtree::createParentBoundables(BoundableList& childBoundables,
                                         int newLevel)
 {
-    assert(!childBoundables->empty());
+    assert(!childBoundables.empty());
     std::unique_ptr< BoundableList > parentBoundables(new BoundableList());
     parentBoundables->push_back(createNode(newLevel));
 
     std::unique_ptr< BoundableList > sortedChildBoundables(sortBoundables(childBoundables));
 
-    for(BoundableList::iterator i = sortedChildBoundables->begin(),
-            e = sortedChildBoundables->end();
-            i != e; i++)
-        //for(std::size_t i=0, scbsize=sortedChildBoundables->size(); i<scbsize; ++i)
-    {
-        Boundable* childBoundable = *i; // (*sortedChildBoundables)[i];
-
+    for(Boundable* childBoundable : *sortedChildBoundables) {
         AbstractNode* last = lastNode(parentBoundables.get());
         if(last->getChildBoundables()->size() == nodeCapacity) {
             last = createNode(newLevel);
@@ -91,9 +78,9 @@ AbstractSTRtree::createParentBoundables(BoundableList* childBoundables,
 
 /*private*/
 AbstractNode*
-AbstractSTRtree::createHigherLevels(BoundableList* boundablesOfALevel, int level)
+AbstractSTRtree::createHigherLevels(BoundableList & boundablesOfALevel, int level)
 {
-    assert(!boundablesOfALevel->empty());
+    assert(!boundablesOfALevel.empty());
     std::unique_ptr< BoundableList > parentBoundables(
         createParentBoundables(boundablesOfALevel, level + 1)
     );
@@ -103,7 +90,7 @@ AbstractSTRtree::createHigherLevels(BoundableList* boundablesOfALevel, int level
         AbstractNode* ret = static_cast<AbstractNode*>(parentBoundables->front());
         return ret;
     }
-    AbstractNode* ret = createHigherLevels(parentBoundables.get(), level + 1);
+    AbstractNode* ret = createHigherLevels(*parentBoundables, level + 1);
     return ret;
 }
 
@@ -113,7 +100,7 @@ AbstractSTRtree::insert(const void* bounds, void* item)
 {
     // Cannot insert items into an STR packed R-tree after it has been built
     assert(!built);
-    itemBoundables->push_back(new ItemBoundable(bounds, item));
+    itemBoundables.push_back(new ItemBoundable(bounds, item));
 }
 
 /*protected*/
@@ -124,7 +111,7 @@ AbstractSTRtree::query(const void* searchBounds, vector<void*>& matches)
         build();
     }
 
-    if(itemBoundables->empty()) {
+    if(itemBoundables.empty()) {
         assert(root->getBounds() == nullptr);
         return;
     }
@@ -142,7 +129,7 @@ AbstractSTRtree::query(const void* searchBounds, ItemVisitor& visitor)
         build();
     }
 
-    if(itemBoundables->empty()) {
+    if(itemBoundables.empty()) {
         assert(root->getBounds() == nullptr);
         return;
     }
@@ -186,7 +173,7 @@ AbstractSTRtree::remove(const void* searchBounds, void* item)
     if(!built) {
         build();
     }
-    if(itemBoundables->empty()) {
+    if(itemBoundables.empty()) {
         assert(root->getBounds() == nullptr);
     }
     if(getIntersectsOp()->intersects(root->getBounds(), searchBounds)) {
@@ -290,10 +277,8 @@ AbstractSTRtree::query(const void* searchBounds,
 void
 AbstractSTRtree::iterate(ItemVisitor& visitor)
 {
-    for(BoundableList::const_iterator i = itemBoundables->begin(), e = itemBoundables->end();
-            i != e; i++) {
-        const Boundable* boundable = *i;
-        if(const ItemBoundable* ib = dynamic_cast<const ItemBoundable*>(boundable)) {
+    for (auto& boundable : itemBoundables) {
+        if(const auto* ib = dynamic_cast<const ItemBoundable*>(boundable)) {
             visitor.visitItem(ib->getItem());
         }
     }
