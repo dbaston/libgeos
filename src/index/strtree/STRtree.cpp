@@ -377,18 +377,14 @@ protected:
     computeBounds() const override
     {
         Envelope* p_bounds = nullptr;
-        const BoundableList& b = *getChildBoundables();
+        const BoundableList& children = getChildBoundables();
 
-        if(b.empty()) {
+        if(children.empty()) {
             return nullptr;
         }
 
-        BoundableList::const_iterator i = b.begin();
-        BoundableList::const_iterator e = b.end();
-
-        p_bounds = new Envelope(* static_cast<const Envelope*>((*i)->getBounds()));
-        for(; i != e; ++i) {
-            const Boundable* childBoundable = *i;
+        p_bounds = new Envelope(*static_cast<const Envelope*>(children[0]->getBounds()));
+        for(const Boundable* childBoundable : getChildBoundables()) {
             p_bounds->expandToInclude((Envelope*)childBoundable->getBounds());
         }
         return p_bounds;

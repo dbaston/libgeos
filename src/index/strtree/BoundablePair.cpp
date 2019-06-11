@@ -124,9 +124,9 @@ BoundablePair::expand(const Boundable* bndComposite, const Boundable* bndOther,
                       bool isFlipped, BoundablePairQueue& priQ,
                       double minDistance)
 {
-    std::vector<Boundable*>* children = ((AbstractNode*) bndComposite)->getChildBoundables();
-    for (std::vector<Boundable*>::iterator it = children->begin(); it != children->end(); ++it) {
-        Boundable* child = *it;
+    auto&& children = ((AbstractNode*) bndComposite)->getChildBoundables();
+
+    for (Boundable* child : children) {
         std::unique_ptr<BoundablePair> bp;
         if (isFlipped) {
             bp.reset(new BoundablePair(bndOther, child, itemDistance));

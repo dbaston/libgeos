@@ -45,14 +45,9 @@ SIRtree::createParentBoundables(BoundableList & childBoundables, int newLevel)
 
     std::unique_ptr<BoundableList> sortedChildBoundables(sortBoundables(childBoundables));
 
-    //for(unsigned int i=0;i<sortedChildBoundables->size();i++)
-    for(BoundableList::iterator i = sortedChildBoundables->begin(),
-            e = sortedChildBoundables->end();
-            i != e; ++i) {
-        //Boundable *childBoundable=(AbstractNode*)(*sortedChildBoundables)[i];
-        Boundable* childBoundable = *i;
+    for(Boundable* childBoundable : *sortedChildBoundables) {
         AbstractNode* lNode = lastNode(parentBoundables.get());
-        if(lNode->getChildBoundables()->size() == nodeCapacity) {
+        if(lNode->getChildBoundables().size() == nodeCapacity) {
             parentBoundables->push_back(createNode(newLevel));
         }
         lNode->addChildBoundable(childBoundable);
@@ -95,9 +90,7 @@ protected:
     computeBounds() const override
     {
         Interval* p_bounds = nullptr;
-        const BoundableList& b = *getChildBoundables();
-        for(unsigned int i = 0; i < b.size(); ++i) {
-            const Boundable* childBoundable = b[i];
+        for(const Boundable* childBoundable : getChildBoundables()) {
             if(p_bounds == nullptr) {
                 p_bounds = new Interval(*((Interval*)childBoundable->getBounds()));
             }

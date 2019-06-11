@@ -48,20 +48,16 @@ public:
     AbstractNode(int newLevel, size_t capacity = 10);
     ~AbstractNode() override;
 
-    // TODO: change signature to return by ref,
-    // document ownership of the return
-    inline std::vector<Boundable*>*
+    inline std::vector<Boundable*>&
     getChildBoundables()
     {
-        return &childBoundables;
+        return childBoundables;
     }
 
-    // TODO: change signature to return by ref,
-    // document ownership of the return
-    inline const std::vector<Boundable*>*
+    inline const std::vector<Boundable*>&
     getChildBoundables() const
     {
-        return &childBoundables;
+        return childBoundables;
     }
 
     /**
