@@ -105,7 +105,7 @@ matrix:
 
 before_install:
   - eval "${E}"
-  - export CXXFLAGS=${ARCH}
+  - export CXXFLAGS="${ARCH} -Werror"
   - export CFLAGS=${ARCH}
   - export GEOS_BUILD_TOOL=${TOOL}
   - export BUILD_TYPE=${BUILD_TYPE}
