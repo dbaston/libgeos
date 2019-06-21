@@ -18,27 +18,31 @@
  *
  **********************************************************************/
 
+#include <geos/geom/Point.h>
 #include <geos/geom/MultiPoint.h>
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/Dimension.h>
 
 #include <vector>
 
-using namespace std;
-
-//using namespace geos::operation;
-
 namespace geos {
 namespace geom { // geos::geom
 
 /*protected*/
-MultiPoint::MultiPoint(vector<Geometry*>* newPoints, const GeometryFactory* factory)
+MultiPoint::MultiPoint(std::vector<Geometry*>* newPoints, const GeometryFactory* factory)
     :
     Geometry(factory),
     GeometryCollection(newPoints, factory)
 {
 }
 
+MultiPoint::MultiPoint(std::vector<std::unique_ptr<Point>> && newPoints, const GeometryFactory& factory)
+    :
+    Geometry(&factory),
+    GeometryCollection(std::move(newPoints), factory)
+{
+
+}
 
 MultiPoint::~MultiPoint() {}
 
@@ -54,7 +58,7 @@ MultiPoint::getBoundaryDimension() const
     return Dimension::False;
 }
 
-string
+std::string
 MultiPoint::getGeometryType() const
 {
     return "MultiPoint";

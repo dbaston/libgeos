@@ -45,6 +45,11 @@ MultiPolygon::MultiPolygon(vector<Geometry*>* newPolys, const GeometryFactory* f
       GeometryCollection(newPolys, factory)
 {}
 
+MultiPolygon::MultiPolygon(std::vector<std::unique_ptr<Polygon>> && newPolys, const GeometryFactory& factory)
+    : Geometry(&factory),
+      GeometryCollection(std::move(newPolys), factory)
+{}
+
 MultiPolygon::~MultiPolygon() {}
 
 Dimension::DimensionType

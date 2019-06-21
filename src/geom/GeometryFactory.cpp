@@ -391,6 +391,13 @@ const
     return g;
 }
 
+std::unique_ptr<MultiLineString>
+GeometryFactory::createMultiLineString(std::vector<std::unique_ptr<LineString>> && fromLines) const {
+    // TODO make_unique
+    return std::unique_ptr<MultiLineString>(new MultiLineString(std::forward<decltype(fromLines)>(fromLines), *this));
+}
+
+
 /*public*/
 GeometryCollection*
 GeometryFactory::createGeometryCollection() const
@@ -410,6 +417,12 @@ GeometryCollection*
 GeometryFactory::createGeometryCollection(vector<Geometry*>* newGeoms) const
 {
     return new GeometryCollection(newGeoms, this);
+}
+
+std::unique_ptr<GeometryCollection>
+GeometryFactory::createGeometryCollection(std::vector<std::unique_ptr<geos::geom::Geometry>> && newGeoms) const {
+    // TODO make_unique
+    return std::unique_ptr<GeometryCollection>(new GeometryCollection(std::move(newGeoms), *this));
 }
 
 /*public*/
@@ -446,6 +459,13 @@ MultiPolygon*
 GeometryFactory::createMultiPolygon(vector<Geometry*>* newPolys) const
 {
     return new MultiPolygon(newPolys, this);
+}
+
+std::unique_ptr<MultiPolygon>
+GeometryFactory::createMultiPolygon(std::vector<std::unique_ptr<Polygon>> && newPolys) const
+{
+    // TODO make unique
+    return std::unique_ptr<MultiPolygon>(new MultiPolygon(std::move(newPolys), *this));
 }
 
 /*public*/
@@ -485,10 +505,18 @@ GeometryFactory::createLinearRing(CoordinateSequence* newCoords) const
 }
 
 /*public*/
-Geometry::Ptr
-GeometryFactory::createLinearRing(CoordinateSequence::Ptr newCoords) const
+//std::unique_ptr<LinearRing>
+//GeometryFactory::createLinearRing(CoordinateSequence::Ptr newCoords) const
+//{
+//    // TODO make_unique
+//    return createLinearRing(std::move(newCoords));
+//}
+
+std::unique_ptr<LinearRing>
+GeometryFactory::createLinearRing(CoordinateSequence::Ptr && newCoords) const
 {
-    return Geometry::Ptr(new LinearRing(std::move(newCoords), this));
+    // TODO make_unique
+    return std::unique_ptr<LinearRing>(new LinearRing(std::forward<CoordinateSequence::Ptr>(newCoords), this));
 }
 
 /*public*/
@@ -507,6 +535,13 @@ MultiPoint*
 GeometryFactory::createMultiPoint(vector<Geometry*>* newPoints) const
 {
     return new MultiPoint(newPoints, this);
+}
+
+std::unique_ptr<MultiPoint>
+GeometryFactory::createMultiPoint(std::vector<std::unique_ptr<Point>> newPoints) const
+{
+    // FIXME take rvalue reference for newPoints?
+    return std::unique_ptr<MultiPoint>(new MultiPoint(std::move(newPoints), *this));
 }
 
 /*public*/
@@ -604,6 +639,14 @@ const
     return new Polygon(shell, holes, this);
 }
 
+std::unique_ptr<Polygon>
+GeometryFactory::createPolygon(std::unique_ptr<LinearRing> && shell, std::vector<std::unique_ptr<LinearRing>> && holes)
+const
+{
+    // TODO make_unique
+    return std::unique_ptr<Polygon>(new Polygon(std::move(shell), std::move(holes), *this));
+}
+
 /*public*/
 Polygon*
 GeometryFactory::createPolygon(const LinearRing& shell, const vector<LinearRing*>& holes)
@@ -653,11 +696,13 @@ const
 }
 
 /*public*/
-Geometry::Ptr
+std::unique_ptr<LineString>
 GeometryFactory::createLineString(CoordinateSequence::Ptr newCoords)
 const
 {
-    return Geometry::Ptr(new LineString(std::move(newCoords), this));
+    // FIXME why doesn't the line below work?
+    //return detail::make_unique<LineString>(std::move(newCoords), this);
+    return std::unique_ptr<LineString>(new LineString(std::move(newCoords), this));
 }
 
 /*public*/

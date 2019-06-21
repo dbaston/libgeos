@@ -47,12 +47,11 @@ LinearRing::LinearRing(CoordinateSequence* newCoords,
 }
 
 /*public*/
-LinearRing::LinearRing(CoordinateSequence::Ptr newCoords,
+LinearRing::LinearRing(CoordinateSequence::Ptr && newCoords,
                        const GeometryFactory* newFactory)
-    :
-    Geometry(newFactory),
-    LineString(std::move(newCoords), newFactory)
-{
+        :
+        Geometry(newFactory),
+        LineString(std::forward<CoordinateSequence::Ptr>(newCoords), newFactory) {
     validateConstruction();
 }
 

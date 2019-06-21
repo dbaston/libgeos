@@ -48,6 +48,14 @@ MultiLineString::MultiLineString(vector<Geometry*>* newLines,
 {
 }
 
+// FIXME in a case of A->B->C inheritance, why would C call A and B's constructors?
+// Does GeometryFactory not call Geometry's constructor?
+MultiLineString::MultiLineString(std::vector<std::unique_ptr<LineString>> && newLines,
+        const GeometryFactory& factory)
+        : Geometry(&factory),
+        GeometryCollection(std::move(newLines), factory)
+{}
+
 MultiLineString::~MultiLineString() {}
 
 Dimension::DimensionType

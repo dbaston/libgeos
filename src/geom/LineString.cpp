@@ -94,11 +94,11 @@ LineString::LineString(CoordinateSequence* newCoords,
 }
 
 /*public*/
-LineString::LineString(CoordinateSequence::Ptr newCoords,
+LineString::LineString(CoordinateSequence::Ptr && newCoords,
                        const GeometryFactory* factory)
     :
     Geometry(factory),
-    points(std::move(newCoords))
+    points(std::forward<CoordinateSequence::Ptr>(newCoords))
 {
     validateConstruction();
 }
