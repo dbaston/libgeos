@@ -3,6 +3,7 @@
 #
 SUBDIRS = \
     intervalrtree \
+    kdtree \
     sweepline \
     strtree \
     quadtree \

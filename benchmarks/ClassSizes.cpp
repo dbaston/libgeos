@@ -32,6 +32,7 @@
 #include <geos/geomgraph/EdgeEnd.h>
 #include <geos/geomgraph/PlanarGraph.h>
 #include <geos/noding/NodedSegmentString.h>
+#include <geos/index/kdtree/KdNode.h>
 #include <geos/profiler.h>
 #include <geos/constants.h>
 #include <iostream>
@@ -59,5 +60,7 @@ main()
     check(geom::MultiLineString);
     check(geom::MultiPolygon);
     check(int64);
+    check(index::kdtree::KdNode<>);
+    check(index::kdtree::KdNode<geom::Coordinate>);
 }
 
