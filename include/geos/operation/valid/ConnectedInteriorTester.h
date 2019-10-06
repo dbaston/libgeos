@@ -56,8 +56,7 @@ namespace valid { // geos::operation::valid
 
 /** \brief
  * This class tests that the interior of an area Geometry
- * (Polygon or MultiPolygon)
- * is connected.
+ * (Polygon or MultiPolygon) is connected.
  *
  * An area Geometry is invalid if the interior is disconnected.
  * This can happen if:
@@ -65,7 +64,7 @@ namespace valid { // geos::operation::valid
  * - one or more holes either form a chain touching the shell at two places
  * - one or more holes form a ring around a portion of the interior
  *
- * If an inconsistency if found the location of the problem
+ * If an inconsistency is found the location of the problem
  * is recorded.
  */
 class GEOS_DLL ConnectedInteriorTester {
