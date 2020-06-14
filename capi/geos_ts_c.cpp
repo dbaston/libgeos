@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2010-2012 Sandro Santilli <strk@kbt.io>
- * Copyright (C) 2016-2019 Daniel Baston <dbaston@gmail.com>
+ * Copyright (C) 2016-2021 Daniel Baston <dbaston@gmail.com>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
@@ -59,6 +59,10 @@
 #include <geos/operation/buffer/BufferBuilder.h>
 #include <geos/operation/buffer/BufferOp.h>
 #include <geos/operation/buffer/BufferParameters.h>
+#include <geos/operation/cluster/DBSCANClusterFinder.h>
+#include <geos/operation/cluster/GeometryDistanceClusterFinder.h>
+#include <geos/operation/cluster/EnvelopeIntersectsClusterFinder.h>
+#include <geos/operation/cluster/GeometryIntersectsClusterFinder.h>
 #include <geos/operation/distance/DistanceOp.h>
 #include <geos/operation/distance/IndexedFacetDistance.h>
 #include <geos/operation/linemerge/LineMerger.h>
@@ -864,6 +868,45 @@ extern "C" {
         });
     }
 
+    Geometry*
+    GEOSClusterDBSCAN_r(GEOSContextHandle_t extHandle, Geometry* g, double eps, unsigned minPoints)
+    {
+        return execute(extHandle, [&]() {
+            std::unique_ptr<Geometry> in(g);
+            geos::operation::cluster::DBSCANClusterFinder finder(eps, minPoints);
+            return finder.clusterToCollection(std::move(in)).release();
+        });
+    }
+
+    Geometry*
+    GEOSClusterGeometryIntersects_r(GEOSContextHandle_t extHandle, Geometry* g)
+    {
+        return execute(extHandle, [&]() {
+            std::unique_ptr<Geometry> in(g);
+            geos::operation::cluster::GeometryIntersectsClusterFinder finder;
+            return finder.clusterToCollection(std::move(in)).release();
+        });
+    }
+
+    Geometry*
+    GEOSClusterEnvelopeIntersects_r(GEOSContextHandle_t extHandle, Geometry* g)
+    {
+        return execute(extHandle, [&]() {
+            std::unique_ptr<Geometry> in(g);
+            geos::operation::cluster::EnvelopeIntersectsClusterFinder finder;
+            return finder.clusterToCollection(std::move(in)).release();
+        });
+    }
+
+    Geometry*
+    GEOSClusterGeometryDistance_r(GEOSContextHandle_t extHandle, Geometry* g, double d)
+    {
+        return execute(extHandle, [&]() {
+            std::unique_ptr<Geometry> in(g);
+            geos::operation::cluster::GeometryDistanceClusterFinder finder(d);
+            return finder.clusterToCollection(std::move(in)).release();
+        });
+    }
 
     Geometry*
     GEOSGeomFromWKT_r(GEOSContextHandle_t extHandle, const char* wkt)

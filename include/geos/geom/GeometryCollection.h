@@ -171,6 +171,10 @@ public:
      */
     std::unique_ptr<Geometry> reverse() const override;
 
+    std::vector<std::unique_ptr<Geometry>> releaseComponents() {
+        return std::move(geometries);
+    }
+
 protected:
 
     GeometryCollection(const GeometryCollection& gc);
