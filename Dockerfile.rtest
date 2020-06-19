@@ -1,0 +1,60 @@
+FROM debian:buster-slim
+
+RUN apt-get update && apt-get install -y --no-install-suggests \
+	r-base \
+	cmake \
+	g++ \
+	gcc \
+	git \
+	libsqlite3-dev \
+	libudunits2-dev \
+	sqlite3 \
+	wget
+
+# We build our own GDAL so that we don't pull in a binary GEOS package. And we want a
+# minimal GDAL build, which means we want the nice --disable-all-optional-drivers option,
+# which means we need GDAL 3, which means we need PROJ6, which means we need to build
+# our own PROJ, too.
+ENV PROJ_VER=6.2.0
+
+RUN wget -P /tmp https://download.osgeo.org/proj/proj-${PROJ_VER}.tar.gz && \
+	tar xzvf /tmp/proj-${PROJ_VER}.tar.gz && \
+	cd /proj-${PROJ_VER} && \
+	./configure && \
+	make -j4 && \
+	make install && \
+	ldconfig && \
+	cd / && \
+	rm /tmp/proj-${PROJ_VER}.tar.gz && \
+	rm -rf /proj-${PROJ_VER}
+
+ENV GDAL_VER=3.0.1
+
+RUN wget -P /tmp https://download.osgeo.org/gdal/${GDAL_VER}/gdal-${GDAL_VER}.tar.gz && \
+	tar xzvf /tmp/gdal-${GDAL_VER}.tar.gz && \
+	cd /gdal-${GDAL_VER} && \
+	./configure --with-geos=no --enable-static=no --disable-all-optional-drivers --enable-driver-shape --enable-driver-gpkg && \
+	make -j4 && \
+	make install && \
+	ldconfig && \
+	cd / && \
+	rm /tmp/gdal-${GDAL_VER}.tar.gz && \
+	rm -rf /gdal-${GDAL_VER}
+
+# install dependencies of sf
+RUN R -e 'install.packages(c("Rcpp", "classInt", "DBI", "magrittr", "units"), repos="https://cran.us.r-project.org")'
+
+COPY . /geos
+RUN mkdir /tmp/build-release && \
+    cd /tmp/build-release && \
+    cmake -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=YES -DCMAKE_BUILD_TYPE=Release /geos && \
+    make -j4 geos geos_c && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/build-release
+
+RUN git clone --depth 1 --branch master https://github.com/r-spatial/sf /sf && \
+  R CMD INSTALL /sf && \
+  rm -rf /sf
+
+CMD R

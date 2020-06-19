@@ -1,0 +1,49 @@
+FROM debian:buster-slim
+
+RUN apt-get update && apt-get install -y --no-install-suggests \
+        autoconf \
+        automake \
+        bison \
+        cmake \
+        curl \
+        flex \
+        g++ \
+        gcc \
+        git \
+        libcunit1-dev \
+        libjson-c-dev \
+        libproj-dev \
+        libtool \
+        libxml2-dev \
+        libxml2-utils \
+        pkg-config \
+        postgresql-11 \
+        postgresql-server-dev-11 \
+        xsltproc
+
+COPY . /geos
+RUN mkdir /tmp/build-release && \
+    cd /tmp/build-release && \
+    cmake -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=YES -DCMAKE_BUILD_TYPE=Release /geos && \
+    make -j4 geos geos_c && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/build-release
+
+RUN git clone --depth 1 --branch svn-trunk https://github.com/postgis/postgis /postgis && \
+    cd /postgis && \
+    ./autogen.sh && \
+    ./configure --without-raster  && \
+    make -j4 && \
+    make install
+
+RUN echo "host all all 172.17.0.1/32 trust" >> /etc/postgresql/11/main/pg_hba.conf
+RUN echo "listen_addresses = '172.17.0.2'" >> /etc/postgresql/11/main/postgresql.conf
+
+RUN chown -R postgres /postgis
+
+USER postgres
+
+RUN /etc/init.d/postgresql start && psql -c "CREATE EXTENSION postgis" && /etc/init.d/postgresql stop
+
+CMD /etc/init.d/postgresql start && psql

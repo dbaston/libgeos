@@ -1,0 +1,24 @@
+FROM debian:buster-slim
+
+RUN apt-get update && apt-get install -y --no-install-suggests \
+	cmake \
+	g++ \
+	gcc \
+	git \
+	python3-pip
+
+RUN python3 -m pip install \
+	numpy
+
+COPY . /geos
+RUN mkdir /tmp/build-release && \
+    cd /tmp/build-release && \
+    cmake -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=YES -DCMAKE_BUILD_TYPE=Release /geos && \
+    make -j4 geos geos_c && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/build-release
+
+RUN python3 -m pip install shapely --no-binary shapely
+
+CMD python3
