@@ -43,6 +43,10 @@
 using namespace std;
 using namespace geos::geom;
 
+#ifndef GEOS_INLINE
+#include <geos/io/WKBReader.inl>
+#endif
+
 namespace geos {
 namespace io { // geos.io
 
@@ -393,21 +397,6 @@ WKBReader::readCoordinateSequence(int size)
         seq->setAt(readCoordinate(), i);
     }
     return seq;
-}
-
-geom::Coordinate
-WKBReader::readCoordinate()
-{
-    const PrecisionModel& pm = *factory.getPrecisionModel();
-    Coordinate ret{dis.readDouble(), dis.readDouble()};
-
-    if (inputDimension == 3) {
-        ret.z = dis.readDouble();
-    }
-
-    pm.makePrecise(ret);
-
-    return ret;
 }
 
 } // namespace geos.io

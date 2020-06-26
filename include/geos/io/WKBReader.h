@@ -156,4 +156,8 @@ private:
 #pragma warning(pop)
 #endif
 
+#ifdef GEOS_INLINE
+# include <geos/io/WKBReader.inl>
+#endif
+
 #endif // #ifndef GEOS_IO_WKBREADER_H

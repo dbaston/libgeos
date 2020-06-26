@@ -16,6 +16,7 @@ geos_HEADERS = \
     StringTokenizer.h \
     WKBConstants.h \
     WKBReader.h \
+    WKBReader.inl \
     WKBWriter.h \
     WKTReader.h \
     WKTReader.inl \

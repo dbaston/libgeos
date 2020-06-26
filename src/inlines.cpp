@@ -41,6 +41,7 @@
 
 #include <geos/inline.h>
 
+#include <geos/io/WKBReader.inl>
 #include <geos/io/WKTReader.inl>
 #include <geos/io/ByteOrderDataInStream.inl>
 #include <geos/operation/overlay/MinimalEdgeRing.inl>
