@@ -289,13 +289,6 @@ GeometryFactory::toGeometry(const Envelope* envelope) const
 }
 
 /*public*/
-const PrecisionModel*
-GeometryFactory::getPrecisionModel() const
-{
-    return &precisionModel;
-}
-
-/*public*/
 std::unique_ptr<Point>
 GeometryFactory::createPoint() const
 {
