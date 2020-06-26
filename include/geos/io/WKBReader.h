@@ -122,8 +122,6 @@ private:
 
     ByteOrderDataInStream dis;
 
-    std::vector<double> ordValues;
-
     std::unique_ptr<geom::Geometry> readGeometry();
 
     std::unique_ptr<geom::Point> readPoint();
@@ -144,7 +142,7 @@ private:
 
     std::unique_ptr<geom::CoordinateSequence> readCoordinateSequence(int); // throws IOException
 
-    void readCoordinate(); // throws IOException
+    geom::Coordinate readCoordinate(); // throws IOException
 
     // Declare type as noncopyable
     WKBReader(const WKBReader& other) = delete;

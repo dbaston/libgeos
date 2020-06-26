@@ -231,12 +231,6 @@ WKBReader::readGeometry()
         SRID = dis.readInt();    // read SRID
     }
 
-
-    // allocate space for ordValues
-    if(ordValues.size() < inputDimension) {
-        ordValues.resize(inputDimension);
-    }
-
     std::unique_ptr<Geometry> result;
 
     switch(geometryType) {
@@ -274,13 +268,7 @@ WKBReader::readGeometry()
 std::unique_ptr<Point>
 WKBReader::readPoint()
 {
-    readCoordinate();
-    if(inputDimension == 3) {
-        return std::unique_ptr<Point>(factory.createPoint(Coordinate(ordValues[0], ordValues[1], ordValues[2])));
-    }
-    else {
-        return std::unique_ptr<Point>(factory.createPoint(Coordinate(ordValues[0], ordValues[1])));
-    }
+    return std::unique_ptr<Point>(factory.createPoint(readCoordinate()));
 }
 
 std::unique_ptr<LineString>
@@ -401,34 +389,25 @@ std::unique_ptr<CoordinateSequence>
 WKBReader::readCoordinateSequence(int size)
 {
     auto seq = factory.getCoordinateSequenceFactory()->create(size, inputDimension);
-    auto targetDim = seq->getDimension();
-    if(targetDim > inputDimension) {
-        targetDim = inputDimension;
-    }
     for(int i = 0; i < size; i++) {
-        readCoordinate();
-        for(unsigned int j = 0; j < targetDim; j++) {
-            seq->setOrdinate(i, j, ordValues[j]);
-        }
+        seq->setAt(readCoordinate(), i);
     }
     return seq;
 }
 
-void
+geom::Coordinate
 WKBReader::readCoordinate()
 {
     const PrecisionModel& pm = *factory.getPrecisionModel();
-    for(unsigned int i = 0; i < inputDimension; ++i) {
-        if(i <= 1) {
-            ordValues[i] = pm.makePrecise(dis.readDouble());
-        }
-        else {
-            ordValues[i] = dis.readDouble();
-        }
+    Coordinate ret{dis.readDouble(), dis.readDouble()};
+
+    if (inputDimension == 3) {
+        ret.z = dis.readDouble();
     }
-#if DEBUG_WKB_READER
-    cout << "WKB coordinate: " << ordValues[0] << "," << ordValues[1] << endl;
-#endif
+
+    pm.makePrecise(ret);
+
+    return ret;
 }
 
 } // namespace geos.io
