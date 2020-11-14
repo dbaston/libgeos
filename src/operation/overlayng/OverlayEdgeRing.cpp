@@ -151,7 +151,7 @@ void
 OverlayEdgeRing::computeRing(const CoordinateArraySequence& p_ringPts, const GeometryFactory* geometryFactory)
 {
     if (ring != nullptr) return;   // don't compute more than once
-    ring.reset(geometryFactory->createLinearRing(p_ringPts));
+    ring = geometryFactory->createLinearRing(p_ringPts.clone());
     m_isHole = algorithm::Orientation::isCCW(ring->getCoordinatesRO());
 }
 

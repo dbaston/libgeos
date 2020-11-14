@@ -126,7 +126,7 @@ GeometryEditor::editPolygon(const Polygon* polygon, GeometryEditorOperation* ope
         return std::unique_ptr<Polygon>(factory->createPolygon(nullptr, nullptr));
     }
 
-    auto holes = detail::make_unique<std::vector<LinearRing*>>();
+    std::vector<std::unique_ptr<LinearRing>> holes;
     for(size_t i = 0, n = newPolygon->getNumInteriorRing(); i < n; ++i) {
 
         std::unique_ptr<LinearRing> hole(dynamic_cast<LinearRing*>(
@@ -137,10 +137,10 @@ GeometryEditor::editPolygon(const Polygon* polygon, GeometryEditorOperation* ope
         if(hole->isEmpty()) {
             continue;
         }
-        holes->push_back(hole.release());
+        holes.push_back(std::move(hole));
     }
 
-    return std::unique_ptr<Polygon>(factory->createPolygon(shell.release(), holes.release()));
+    return factory->createPolygon(std::move(shell), std::move(holes));
 }
 
 std::unique_ptr<GeometryCollection>

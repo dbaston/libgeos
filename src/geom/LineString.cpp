@@ -69,7 +69,7 @@ LineString::reverse() const
     auto seq = points->clone();
     CoordinateSequence::reverse(seq.get());
     assert(getFactory());
-    return std::unique_ptr<Geometry>(getFactory()->createLineString(seq.release()));
+    return std::move(getFactory()->createLineString(std::move(seq)));
 }
 
 

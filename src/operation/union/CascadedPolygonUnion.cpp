@@ -283,17 +283,15 @@ CascadedPolygonUnion::restrictToPolygons(std::unique_ptr<geom::Geometry> g)
     geom::util::PolygonExtracter::getPolygons(*g, polygons);
 
     if(polygons.size() == 1) {
-        return std::unique_ptr<Geometry>(polygons[0]->clone());
+        return polygons[0]->clone();
     }
-
-    typedef vector<Geometry*> GeomVect;
 
     Polygon::ConstVect::size_type n = polygons.size();
-    GeomVect* newpolys = new GeomVect(n);
+    std::vector<std::unique_ptr<Geometry>> newpolys(n);
     for(Polygon::ConstVect::size_type i = 0; i < n; ++i) {
-        (*newpolys)[i] = polygons[i]->clone().release();
+        newpolys[i] = polygons[i]->clone();
     }
-    return unique_ptr<Geometry>(g->getFactory()->createMultiPolygon(newpolys));
+    return g->getFactory()->createMultiPolygon(std::move(newpolys));
 }
 
 /************************************************************************/

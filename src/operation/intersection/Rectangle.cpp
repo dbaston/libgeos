@@ -39,14 +39,14 @@ Rectangle::Rectangle(double x1, double y1, double x2, double y2)
     }
 }
 
-geom::Polygon*
+std::unique_ptr<geom::Polygon>
 Rectangle::toPolygon(const geom::GeometryFactory& f) const
 {
-    geom::LinearRing* ls = toLinearRing(f);
-    return f.createPolygon(ls, nullptr);
+    std::unique_ptr<geom::LinearRing> ls(toLinearRing(f));
+    return f.createPolygon(std::move(ls));
 }
 
-geom::LinearRing*
+std::unique_ptr<geom::LinearRing>
 Rectangle::toLinearRing(const geom::GeometryFactory& f) const
 {
     const geom::CoordinateSequenceFactory* csf = f.getCoordinateSequenceFactory();
@@ -56,7 +56,7 @@ Rectangle::toLinearRing(const geom::GeometryFactory& f) const
     seq->setAt(geom::Coordinate(xMax, yMax), 2);
     seq->setAt(geom::Coordinate(xMax, yMin), 3);
     seq->setAt(seq->getAt(0), 4); // close
-    return f.createLinearRing(seq.release());
+    return f.createLinearRing(std::move(seq));
 }
 
 } // namespace geos::operation::intersection

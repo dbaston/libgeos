@@ -414,7 +414,7 @@ RectangleIntersectionBuilder::reconnectPolygons(const Rectangle& rect)
     // inside the exterior ring.
 
     if(lines.empty()) {
-        geom::LinearRing* ring = rect.toLinearRing(_gf);
+        geom::LinearRing* ring = rect.toLinearRing(_gf).release();
         exterior.push_back(make_pair(ring, new LinearRingVect()));
     }
     else {
@@ -452,7 +452,7 @@ RectangleIntersectionBuilder::reconnectPolygons(const Rectangle& rect)
                 close_ring(rect, ring);
                 normalize_ring(*ring);
                 auto shell_cs = _csf.create(ring);
-                geom::LinearRing* shell = _gf.createLinearRing(shell_cs.release());
+                geom::LinearRing* shell = _gf.createLinearRing(std::move(shell_cs)).release();
                 exterior.push_back(make_pair(shell, new LinearRingVect()));
                 ring = nullptr;
             }

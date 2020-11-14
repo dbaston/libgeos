@@ -453,7 +453,7 @@ QuadEdgeSubdivision::getEdges(const geom::GeometryFactory& geomFact)
         coordSeq->setAt(qe->orig().getCoordinate(), 0);
         coordSeq->setAt(qe->dest().getCoordinate(), 1);
 
-        edges.emplace_back(geomFact.createLineString(coordSeq.release()));
+        edges.emplace_back(geomFact.createLineString(std::move(coordSeq)));
     }
 
     return geomFact.createMultiLineString(std::move(edges));
@@ -581,8 +581,8 @@ QuadEdgeSubdivision::getVoronoiCellEdge(const QuadEdge* qe, const geom::Geometry
         cellPts.push_back(cellPts.front());
     }
 
-    std::unique_ptr<geom::Geometry> cellEdge(
-        geomFact.createLineString(new geom::CoordinateArraySequence(std::move(cellPts))));
+    const CoordinateSequenceFactory* coordSeqFact = geomFact.getCoordinateSequenceFactory();
+    std::unique_ptr<geom::Geometry> cellEdge = geomFact.createLineString(coordSeqFact->create(std::move(cellPts)));
 
     // FIXME why is this returning a pointer to a local variable?
     Vertex v = startQE->orig();

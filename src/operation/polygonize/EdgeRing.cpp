@@ -241,7 +241,7 @@ EdgeRing::getRingInternal()
 
     getCoordinates();
     try {
-        ring.reset(factory->createLinearRing(*ringPts));
+        ring = factory->createLinearRing(ringPts->clone());
     }
     catch(const geos::util::IllegalArgumentException& e) {
 #if GEOS_DEBUG
