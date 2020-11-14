@@ -114,8 +114,8 @@ public:
 void
 LineSegmentIndex::add(const TaggedLineString& line)
 {
-    for(const LineSegment* seg : line.getSegments()) {
-        add(seg);
+    for(const auto& seg : line.getSegments()) {
+        add(seg.get());
     }
 }
 

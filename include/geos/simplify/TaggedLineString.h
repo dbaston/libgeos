@@ -26,6 +26,7 @@
 #define GEOS_SIMPLIFY_TAGGEDLINESTRING_H
 
 #include <geos/export.h>
+#include <geos/simplify/TaggedLineSegment.h>
 #include <vector>
 #include <memory>
 
@@ -42,9 +43,6 @@ class CoordinateSequence;
 class Geometry;
 class LineString;
 class LinearRing;
-}
-namespace simplify {
-class TaggedLineSegment;
 }
 }
 
@@ -70,8 +68,6 @@ public:
     TaggedLineString(const geom::LineString* nParentLine,
                      std::size_t minimumSize = 2);
 
-    ~TaggedLineString();
-
     std::size_t getMinimumSize() const;
 
     const geom::LineString* getParent() const;
@@ -86,9 +82,7 @@ public:
 
     const TaggedLineSegment* getSegment(std::size_t i) const;
 
-    std::vector<TaggedLineSegment*>& getSegments();
-
-    const std::vector<TaggedLineSegment*>& getSegments() const;
+    const std::vector<std::unique_ptr<TaggedLineSegment>>& getSegments() const;
 
     void addToResult(std::unique_ptr<TaggedLineSegment> seg);
 
@@ -101,17 +95,17 @@ private:
     const geom::LineString* parentLine;
 
     // TaggedLineSegments owned by this object
-    std::vector<TaggedLineSegment*> segs;
+    std::vector<std::unique_ptr<TaggedLineSegment>> segs;
 
     // TaggedLineSegments owned by this object
-    std::vector<TaggedLineSegment*> resultSegs;
+    std::vector<std::unique_ptr<TaggedLineSegment>> resultSegs;
 
     std::size_t minimumSize;
 
     void init();
 
-    static CoordVectPtr extractCoordinates(
-        const std::vector<TaggedLineSegment*>& segs);
+    static std::vector<geom::Coordinate> extractCoordinates(
+        const std::vector<std::unique_ptr<TaggedLineSegment>>& segs);
 
     // Copying is turned off
     TaggedLineString(const TaggedLineString&);
