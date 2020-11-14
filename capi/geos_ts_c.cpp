@@ -1934,7 +1934,6 @@ extern "C" {
         return execute(extHandle, [&]() {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
             const GeometryFactory* gf = handle->geomFactory;
-            Geometry* out;
 
             // Polygonize
             Polygonizer plgnzr;
@@ -1952,20 +1951,19 @@ extern "C" {
             // (it's just a waste of processor and memory, btw)
             // XXX mloskot: See comment for GEOSPolygonize_r
 
-            // TODO avoid "new" here
-            std::vector<Geometry*>* linevec = new std::vector<Geometry*>(lines.size());
+            std::vector<std::unique_ptr<Geometry>> linevec(lines.size());
 
             for(std::size_t i = 0, n = lines.size(); i < n; ++i) {
-                (*linevec)[i] = lines[i]->clone().release();
+                linevec[i] = lines[i]->clone();
             }
 
             // The below takes ownership of the passed vector,
             // so we must *not* delete it
 
-            out = gf->createGeometryCollection(linevec);
+            auto out = gf->createGeometryCollection(std::move(linevec));
             out->setSRID(srid);
 
-            return out;
+            return out.release();
         });
     }
 
@@ -2408,22 +2406,22 @@ extern "C" {
         //assert(0 != holes);
 
         return execute(extHandle, [&]() {
-            auto vholes = geos::detail::make_unique<std::vector<LinearRing*>>(nholes);
+            std::vector<std::unique_ptr<LinearRing>> vholes(nholes);
 
             for (size_t i = 0; i < nholes; i++) {
-                (*vholes)[i] = dynamic_cast<LinearRing*>(holes[i]);
-                if ((*vholes)[i] == nullptr) {
+                vholes[i].reset(dynamic_cast<LinearRing*>(holes[i]));
+                if (vholes[i] == nullptr) {
                     throw IllegalArgumentException("Hole is not a LinearRing");
                 }
             }
 
-            LinearRing* nshell = dynamic_cast<LinearRing*>(shell);
+            std::unique_ptr<LinearRing> nshell(dynamic_cast<LinearRing*>(shell));
             if(! nshell) {
                 throw IllegalArgumentException("Shell is not a LinearRing");
             }
             const GeometryFactory* gf = shell->getFactory();
 
-            return gf->createPolygon(nshell, vholes.release());
+            return gf->createPolygon(std::move(nshell), std::move(vholes)).release();
         });
     }
 
@@ -3147,21 +3145,18 @@ extern "C" {
             g->apply_ro(&filter);
 
             /* 2: for each point, create a geometry and put into a vector */
-            std::vector<Geometry*>* points = new std::vector<Geometry*>();
-            points->reserve(coords.size());
+            std::vector<std::unique_ptr<Point>> points;
+            points.reserve(coords.size());
             const GeometryFactory* factory = g->getFactory();
-            for(std::vector<const Coordinate*>::iterator it = coords.begin(),
-                    itE = coords.end();
-                    it != itE; ++it) {
-                Geometry* point = factory->createPoint(*(*it));
-                points->push_back(point);
+            for(const auto& coord : coords) {
+                std::unique_ptr<Point> point(factory->createPoint(*coord));
+                points.push_back(std::move(point));
             }
 
             /* 3: create a multipoint */
-            Geometry* out = factory->createMultiPoint(points);
+            auto out = factory->createMultiPoint(std::move(points));
             out->setSRID(g->getSRID());
-            return out;
-
+            return out.release();
         });
     }
 
