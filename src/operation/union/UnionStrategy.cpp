@@ -3,8 +3,7 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2006 Refractions Research Inc.
- * Copyright (C) 2001-2002 Vivid Solutions Inc.
+ * Copyright (C) 2021 Daniel Baston
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
@@ -13,20 +12,18 @@
  *
  **********************************************************************/
 
-#include <geos/index/strtree/Interval.h>
-//#include <geos/util.h>
-
-#include <algorithm>
-#include <typeinfo>
-#include <cassert>
-
-
+#include <geos/operation/union/UnionStrategy.h>
+#include <geos/geom/Geometry.h>
 
 namespace geos {
-namespace index { // geos.index
-namespace strtree { // geos.index.strtree
+namespace operation {
+namespace geounion {
 
-} // namespace geos.index.strtree
-} // namespace geos.index
-} // namespace geos
+std::unique_ptr<geom::Geometry> UnionStrategy::Union(std::unique_ptr<geom::Geometry> && g0, std::unique_ptr<geom::Geometry> && g1) {
+    // Default implementation just copies the inputs.
+    return Union(g0.get(), g1.get());
+}
 
+}
+}
+}
