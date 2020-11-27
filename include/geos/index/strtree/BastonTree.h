@@ -7,11 +7,22 @@
 #include <geos/geom/Envelope.h>
 #include <geos/geom/Geometry.h>
 #include <geos/index/SpatialIndex.h> // for inheritance
+#include <geos/index/chain/MonotoneChain.h>
+#include <geos/index/ItemVisitor.h>
 #include <geos/util.h>
 
 namespace geos {
 namespace index {
 namespace strtree {
+
+    static const geom::Envelope& getEnvelope(const geom::Geometry* g) {
+        return *(g->getEnvelopeInternal());
+    }
+
+    static const geom::Envelope& getEnvelope(const index::chain::MonotoneChain* mc) {
+        // TODO make MonotoneChain getEnvelope const (using mutable envelope member)
+        return const_cast<index::chain::MonotoneChain*>(mc)->getEnvelope();
+    }
 
     template<typename ItemType>
     class BastonNode {
@@ -43,7 +54,7 @@ namespace strtree {
 
         const geom::Envelope& getEnvelope() const {
             if (isLeaf()) {
-                return getEnvelope(item);
+                return geos::index::strtree::getEnvelope(item);
             } else {
                 if (childBounds == nullptr) {
                     childBounds = detail::make_unique<geom::Envelope>();
@@ -56,9 +67,6 @@ namespace strtree {
             }
         }
 
-        static const geom::Envelope& getEnvelope(const geom::Geometry* g) {
-            return *(g->getEnvelopeInternal());
-        }
 
         const ItemType* getItem() const {
             return item;
@@ -72,16 +80,11 @@ namespace strtree {
             return childNodes.size();
         }
 
-#if 0
-        static const geom::Envelope& getEnvelope(const index::chain::MonotoneChain* mc) {
-            return mc->getEnvelope();
-        }
-#endif
 
     };
 
     template<typename ItemType>
-    class BastonTree {
+    class BastonTree : public SpatialIndex {
     public:
         BastonTree() : root(nullptr), nodeCapacity(10) {}
 
@@ -102,6 +105,26 @@ namespace strtree {
             if (root->envelopeIntersects(queryEnv)) {
                 query(queryEnv, *root, visitor);
             }
+        }
+
+        void insert(const geom::Envelope* itemEnv, void* item) override {
+            insert(static_cast<ItemType*>(item));
+        }
+
+        void query(const geom::Envelope* queryEnv, std::vector<void*> & results) override {
+            query(*queryEnv, [&results](const ItemType* x) {
+                results.push_back((void*) x);
+            });
+        }
+
+        void query(const geom::Envelope* queryEnv, ItemVisitor& visitor) override {
+            query(*queryEnv, [&visitor](const ItemType* x) {
+                visitor.visitItem((void*) x);
+            });
+        }
+
+        bool remove(const geom::Envelope* itemEnv, void* item) override {
+            throw std::runtime_error("Not implemented.");
         }
 
     private:
