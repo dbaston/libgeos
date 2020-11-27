@@ -30,11 +30,20 @@ namespace strtree {
         const ItemType* item;
         std::vector<const BastonNode*> childNodes; // TODO replace with C array
         mutable std::unique_ptr<geom::Envelope> childBounds;
+        mutable double sortVal = std::numeric_limits<double>::quiet_NaN();
 
     public:
         BastonNode() : item(nullptr), childBounds(nullptr) {}
 
         explicit BastonNode(const ItemType* p_item) : item(p_item) {}
+
+        void setSortVal(double d) {
+            sortVal = d;
+        }
+
+        double getSortVal() const {
+            return sortVal;
+        }
 
         decltype(childNodes.cbegin()) beginChildren() const {
             return childNodes.cbegin();
@@ -130,7 +139,9 @@ namespace strtree {
     private:
         using Node = BastonNode<ItemType>;
         using NodeList = std::vector<Node>;
+        using NodePtrList = std::vector<Node*>;
         using NodeListIterator = typename NodeList::iterator;
+        using NodePtrListIterator = typename NodePtrList::iterator;
 
         NodeList nodes;
         BastonNode<ItemType>* root;
@@ -198,11 +209,16 @@ namespace strtree {
             auto numSlices = sliceCount(numChildren);
             auto nodesPerSlice = sliceCapacity(numChildren, numSlices);
 
-            sortNodesX(begin, end);
+            std::vector<Node*> buf(numChildren);
+            std::transform(begin, end, buf.begin(), [](Node& n) {
+                return &n;
+            });
 
-            auto startOfSlice = begin;
+            sortNodesX(buf.begin(), buf.end());
+
+            auto startOfSlice = buf.begin();
             for (size_t j = 0; j < numSlices; j++) {
-                auto nodesRemaining = static_cast<size_t>(std::distance(startOfSlice, end));
+                auto nodesRemaining = static_cast<size_t>(std::distance(startOfSlice, buf.end()));
                 auto nodesInSlice = std::min(nodesRemaining, nodesPerSlice);
 
                 auto endOfSlice = std::next(startOfSlice, nodesInSlice);
@@ -212,7 +228,7 @@ namespace strtree {
             }
         }
 
-        void addParentNodesFromVerticalSlice(NodeListIterator& begin, NodeListIterator& end) {
+        void addParentNodesFromVerticalSlice(NodePtrListIterator& begin, NodePtrListIterator& end) {
             sortNodesY(begin, end);
 
             Node* parent = nullptr;
@@ -221,7 +237,7 @@ namespace strtree {
                     parent = createBranchNode();
                 }
 
-                parent->addChildNode(&*it);
+                parent->addChildNode(*it);
 
                 if (parent->numChildren() == nodeCapacity) {
                     parent = nullptr;
@@ -230,24 +246,46 @@ namespace strtree {
         }
 
         void sortNodesX(NodeListIterator& begin, NodeListIterator& end) {
-            std::sort(begin, end, [](const Node& a, const Node& b) {
-                const geom::Envelope& ea = a.getEnvelope();
-                const geom::Envelope& eb = b.getEnvelope();
+            std::for_each(begin, end, [](Node& n) {
+                const geom::Envelope& e = n.getEnvelope();
+                n.setSortVal(e.getMinX() + e.getMaxX());
+            });
 
-                double xa = ea.getMinX() + ea.getMaxX();
-                double xb = eb.getMinX() + eb.getMaxX();
-                return xa < xb;
+            std::sort(begin, end, [](const Node& a, const Node& b) {
+                return a.getSortVal() < b.getSortVal();
             });
         }
 
         void sortNodesY(NodeListIterator& begin, NodeListIterator& end) {
-            std::sort(begin, end, [](const Node& a, const Node& b) {
-                const geom::Envelope& ea = a.getEnvelope();
-                const geom::Envelope& eb = b.getEnvelope();
+            std::for_each(begin, end, [](Node& n) {
+                const geom::Envelope& e = n.getEnvelope();
+                n.setSortVal(e.getMinY() + e.getMaxY());
+            });
 
-                double ya = ea.getMinY() + ea.getMaxY();
-                double yb = eb.getMinY() + eb.getMaxY();
-                return ya < yb;
+            std::sort(begin, end, [](const Node& a, const Node& b) {
+                return a.getSortVal() < b.getSortVal();
+            });
+        }
+
+        void sortNodesX(NodePtrListIterator begin, NodePtrListIterator end) {
+            std::for_each(begin, end, [](Node* n) {
+                const geom::Envelope& e = n->getEnvelope();
+                n->setSortVal(e.getMinX() + e.getMaxX());
+            });
+
+            std::sort(begin, end, [](const Node* a, const Node* b) {
+                return a->getSortVal() < b->getSortVal();
+            });
+        }
+
+        void sortNodesY(NodePtrListIterator& begin, NodePtrListIterator& end) {
+            std::for_each(begin, end, [](Node* n) {
+                const geom::Envelope& e = n->getEnvelope();
+                n->setSortVal(e.getMinY() + e.getMaxY());
+            });
+
+            std::sort(begin, end, [](const Node* a, const Node* b) {
+                return a->getSortVal() < b->getSortVal();
             });
         }
 
