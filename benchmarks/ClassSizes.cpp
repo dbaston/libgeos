@@ -43,6 +43,7 @@
 #include <geos/triangulate/quadedge/QuadEdge.h>
 #include <geos/triangulate/quadedge/QuadEdgeQuartet.h>
 #include <geos/triangulate/quadedge/Vertex.h>
+#include <geos/index/chain/MonotoneChain.h>
 
 using namespace std;
 using namespace geos;
@@ -62,6 +63,7 @@ main()
     check(geomgraph::TopologyLocation);
     check(geomgraph::index::SweepLineEvent);
     check(noding::NodedSegmentString);
+    check(index::chain::MonotoneChain);
     check(geom::Geometry);
     check(geom::Point);
     check(geom::LineString);
