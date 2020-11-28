@@ -27,15 +27,36 @@ namespace strtree {
     template<typename ItemType>
     class BastonNode {
     private:
-        const ItemType* item;
-        std::vector<const BastonNode*> childNodes; // TODO replace with C array
-        mutable std::unique_ptr<geom::Envelope> childBounds;
-        mutable double sortVal = std::numeric_limits<double>::quiet_NaN();
+        union {
+            const ItemType* item;
+            const BastonNode<ItemType>* childrenEnd;
+        } data;
+        const BastonNode<ItemType>* children;
+
+        geom::Envelope bounds;
+
+        double sortVal = std::numeric_limits<double>::quiet_NaN();
 
     public:
-        BastonNode() : item(nullptr), childBounds(nullptr) {}
+        BastonNode() = delete;
 
-        explicit BastonNode(const ItemType* p_item) : item(p_item) {}
+        explicit BastonNode(const ItemType* p_item) {
+            data.item = p_item;
+            children = nullptr;
+            computeEnvelope();
+        }
+
+        BastonNode(const ItemType* p_item, const geom::Envelope& env) {
+            data.item = p_item;
+            children = nullptr;
+            bounds = env;
+        }
+
+        BastonNode(const BastonNode<ItemType>* begin, const BastonNode<ItemType>* end) {
+            children = begin;
+            data.childrenEnd = end;
+            computeEnvelope();
+        }
 
         void setSortVal(double d) {
             sortVal = d;
@@ -45,57 +66,56 @@ namespace strtree {
             return sortVal;
         }
 
-        decltype(childNodes.cbegin()) beginChildren() const {
-            return childNodes.cbegin();
+        const BastonNode<ItemType>* beginChildren() const {
+            return children;
         }
 
-        decltype(childNodes.cend()) endChildren() const {
-            return childNodes.cend();
+        const BastonNode<ItemType>* endChildren() const {
+            return data.childrenEnd;
         }
 
         bool isLeaf() const {
-            return item != nullptr;
+            return children == nullptr;
         }
 
         bool envelopeIntersects(const geom::Envelope& queryEnv) const {
             return getEnvelope().intersects(queryEnv);
         }
 
-        const geom::Envelope& getEnvelope() const {
+        void computeEnvelope() {
             if (isLeaf()) {
-                return geos::index::strtree::getEnvelope(item);
+                bounds = geos::index::strtree::getEnvelope(data.item);
             } else {
-                if (childBounds == nullptr) {
-                    childBounds = detail::make_unique<geom::Envelope>();
-                    for (const auto& child : childNodes) {
-                        childBounds->expandToInclude(child->getEnvelope());
-                    }
+                bounds.setToNull();
+                for (auto* child = children; child < data.childrenEnd; ++child) {
+                    bounds.expandToInclude(child->getEnvelope());
                 }
-
-                return *childBounds;
             }
         }
 
+        const geom::Envelope& getEnvelope() const {
+            return bounds;
+        }
 
         const ItemType* getItem() const {
-            return item;
+            return data.item;
         }
 
-        void addChildNode(const BastonNode<ItemType>* child) {
-            childNodes.push_back(child);
+        void removeItem() {
+            data.item = nullptr;
         }
-
-        size_t numChildren() const {
-            return childNodes.size();
-        }
-
 
     };
 
     template<typename ItemType>
     class BastonTree : public SpatialIndex {
     public:
-        BastonTree() : root(nullptr), nodeCapacity(10) {}
+        explicit BastonTree(size_t p_nodeCapacity = 10) : root(nullptr), nodeCapacity(p_nodeCapacity) {}
+
+        BastonTree(size_t p_nodeCapacity, size_t itemCapacity) : root(nullptr), nodeCapacity(p_nodeCapacity) {
+            auto finalSize = treeSize(itemCapacity);
+            nodes.reserve(finalSize);
+        }
 
         bool built() const {
             return root != nullptr;
@@ -105,6 +125,10 @@ namespace strtree {
             createLeafNode(x);
         }
 
+        void insert(const geom::Envelope* itemEnv, void* item) override {
+            createLeafNode(static_cast<ItemType*>(item), *itemEnv);
+        }
+
         template<typename Visitor>
         void query(const geom::Envelope& queryEnv, Visitor&& visitor) {
             if (!built()) {
@@ -112,12 +136,12 @@ namespace strtree {
             }
 
             if (root->envelopeIntersects(queryEnv)) {
-                query(queryEnv, *root, visitor);
+                if (root->isLeaf()) {
+                    visitor(root->getItem());
+                } else {
+                    query(queryEnv, *root, visitor);
+                }
             }
-        }
-
-        void insert(const geom::Envelope* itemEnv, void* item) override {
-            insert(static_cast<ItemType*>(item));
         }
 
         void query(const geom::Envelope* queryEnv, std::vector<void*> & results) override {
@@ -133,38 +157,46 @@ namespace strtree {
         }
 
         bool remove(const geom::Envelope* itemEnv, void* item) override {
-            throw std::runtime_error("Not implemented.");
+            if (root == nullptr) {
+                return false;
+            }
+
+            if (root->isLeaf()) {
+                if (root->getItem() == item) {
+                    root->removeItem();
+                    return true;
+                }
+                return false;
+            }
+
+            return remove(*itemEnv, *root, static_cast<ItemType*>(item));
         }
 
     private:
         using Node = BastonNode<ItemType>;
         using NodeList = std::vector<Node>;
-        using NodePtrList = std::vector<Node*>;
         using NodeListIterator = typename NodeList::iterator;
-        using NodePtrListIterator = typename NodePtrList::iterator;
 
         NodeList nodes;
         BastonNode<ItemType>* root;
         size_t nodeCapacity;
 
-
         void createLeafNode(const ItemType* item) {
             nodes.emplace_back(item);
         }
 
-        Node* createBranchNode() {
-            assert(nodes.size() < nodes.capacity());
-
-            nodes.emplace_back();
-            return &nodes.back();
+        void createLeafNode(const ItemType* item, const geom::Envelope& env) {
+            nodes.emplace_back(item, env);
         }
 
+        void createBranchNode(const Node* begin, const Node* end) {
+            assert(nodes.size() < nodes.capacity());
+            nodes.emplace_back(begin, end);
+        }
 
         void build() {
             auto finalSize = treeSize(nodes.size());
-
             nodes.reserve(finalSize);
-
 
             auto begin = nodes.begin();
             auto end = nodes.end();
@@ -203,89 +235,73 @@ namespace strtree {
             return nodesInTree;
         }
 
-        void createParentNodes(NodeListIterator& begin, NodeListIterator& end) {
+        void createParentNodes(const NodeListIterator& begin, const NodeListIterator& end) {
             auto numChildren = std::distance(begin, end);
 
             auto numSlices = sliceCount(numChildren);
             auto nodesPerSlice = sliceCapacity(numChildren, numSlices);
 
-            std::vector<Node*> buf(numChildren);
-            std::transform(begin, end, buf.begin(), [](Node& n) {
-                return &n;
-            });
+            setSortValuesX(begin, end);
+            //sortNodesX(begin, end);
 
-            sortNodesX(buf.begin(), buf.end());
-
-            auto startOfSlice = buf.begin();
+            auto startOfSlice = begin;
             for (size_t j = 0; j < numSlices; j++) {
-                auto nodesRemaining = static_cast<size_t>(std::distance(startOfSlice, buf.end()));
+                auto nodesRemaining = static_cast<size_t>(std::distance(startOfSlice, end));
                 auto nodesInSlice = std::min(nodesRemaining, nodesPerSlice);
-
                 auto endOfSlice = std::next(startOfSlice, nodesInSlice);
+
+                partialSortNodes(startOfSlice, endOfSlice, end);
+
                 addParentNodesFromVerticalSlice(startOfSlice, endOfSlice);
 
                 startOfSlice = endOfSlice;
             }
         }
 
-        void addParentNodesFromVerticalSlice(NodePtrListIterator& begin, NodePtrListIterator& end) {
-            sortNodesY(begin, end);
+        void addParentNodesFromVerticalSlice(const NodeListIterator & begin, const NodeListIterator & end) {
+            setSortValuesY(begin, end);
+            //sortNodesY(begin, end);
 
-            Node* parent = nullptr;
-            for(auto it = begin; it != end; ++it) {
-                if (!parent) {
-                    parent = createBranchNode();
-                }
+            auto firstChild = begin;
+            while (firstChild != end) {
+                auto childrenRemaining = static_cast<size_t>(std::distance(firstChild, end));
+                auto childrenForNode = std::min(nodeCapacity, childrenRemaining);
+                auto lastChild = std::next(firstChild, childrenForNode);
 
-                parent->addChildNode(*it);
+                partialSortNodes(firstChild, lastChild, end);
 
-                if (parent->numChildren() == nodeCapacity) {
-                    parent = nullptr;
-                }
+                const Node* ptr_first = &*firstChild;
+                const Node* ptr_end = ptr_first + childrenForNode;
+
+                createBranchNode(ptr_first, ptr_end);
+                firstChild = lastChild;
             }
         }
 
-        void sortNodesX(NodeListIterator& begin, NodeListIterator& end) {
+        void setSortValuesX(const NodeListIterator& begin, const NodeListIterator& end) {
             std::for_each(begin, end, [](Node& n) {
                 const geom::Envelope& e = n.getEnvelope();
                 n.setSortVal(e.getMinX() + e.getMaxX());
             });
-
-            std::sort(begin, end, [](const Node& a, const Node& b) {
-                return a.getSortVal() < b.getSortVal();
-            });
         }
 
-        void sortNodesY(NodeListIterator& begin, NodeListIterator& end) {
+        void setSortValuesY(const NodeListIterator& begin, const NodeListIterator& end) {
             std::for_each(begin, end, [](Node& n) {
                 const geom::Envelope& e = n.getEnvelope();
                 n.setSortVal(e.getMinY() + e.getMaxY());
             });
+        }
 
-            std::sort(begin, end, [](const Node& a, const Node& b) {
+        void sortNodes(NodeListIterator& begin, NodeListIterator& end) {
+            std::sort(begin, end, [](const Node &a, const Node &b) {
                 return a.getSortVal() < b.getSortVal();
             });
         }
 
-        void sortNodesX(NodePtrListIterator begin, NodePtrListIterator end) {
-            std::for_each(begin, end, [](Node* n) {
-                const geom::Envelope& e = n->getEnvelope();
-                n->setSortVal(e.getMinX() + e.getMaxX());
-            });
-
-            std::sort(begin, end, [](const Node* a, const Node* b) {
-                return a->getSortVal() < b->getSortVal();
-            });
-        }
-
-        void sortNodesY(NodePtrListIterator& begin, NodePtrListIterator& end) {
-            std::for_each(begin, end, [](Node* n) {
-                const geom::Envelope& e = n->getEnvelope();
-                n->setSortVal(e.getMinY() + e.getMaxY());
-            });
-
-            std::sort(begin, end, [](const Node* a, const Node* b) {
-                return a->getSortVal() < b->getSortVal();
+        // Partially sort nodes between `begin` and `end` such that all nodes less than `mid` are placed before `mid`.
+        void partialSortNodes(const NodeListIterator& begin, const NodeListIterator& mid, const NodeListIterator& end) {
+            std::nth_element(begin, mid, end, [](const Node& a, const Node& b) {
+                return a.getSortVal() < b.getSortVal();
             });
         }
 
@@ -294,21 +310,44 @@ namespace strtree {
                    const Node& node,
                    Visitor&& visitor) {
 
-            for (auto it = node.beginChildren(); it < node.endChildren(); ++it) {
-                const Node* child = *it;
+            assert(!node.isLeaf());
 
-                if(!child->envelopeIntersects(queryEnv)) {
-                    continue;
-                }
-
-                if (child->isLeaf()) {
-                    visitor(child->getItem());
-                } else {
-                    query(queryEnv, *child, visitor);
+            for (auto* child = node.beginChildren(); child < node.endChildren(); ++child) {
+                if(child->envelopeIntersects(queryEnv)) {
+                    if (child->isLeaf() && child->getItem() != nullptr) {
+                        visitor(child->getItem());
+                    } else {
+                        query(queryEnv, *child, visitor);
+                    }
                 }
             }
         }
 
+        bool remove(const geom::Envelope& queryEnv,
+                    const Node& node,
+                    const ItemType* item) {
+
+            assert(!node.isLeaf());
+
+            for (auto* child = node.beginChildren(); child < node.endChildren(); ++child) {
+                if(child->envelopeIntersects(queryEnv)) {
+                    if (child->isLeaf() && child->getItem() == item) {
+                        // const cast is ugly, but alternative seems to be to remove all
+                        // const qualifiers in Node and open up mutability everywhere?
+                        auto mutableChild = const_cast<Node*>(child);
+                        mutableChild->removeItem();
+                        return true;
+                    } else {
+                        bool removed = remove(queryEnv, *child, item);
+                        if (removed) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
 
         size_t sliceCount(size_t numNodes) const {
             double minLeafCount = std::ceil(static_cast<double>(numNodes) / static_cast<double>(nodeCapacity));
@@ -320,12 +359,7 @@ namespace strtree {
             return static_cast<size_t>(std::ceil(static_cast<double>(numNodes) / static_cast<double>(numSlices)));
         }
 
-
-
     };
-
-
-
 }
 }
 }
