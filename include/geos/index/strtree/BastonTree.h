@@ -15,15 +15,6 @@ namespace geos {
 namespace index {
 namespace strtree {
 
-    static const geom::Envelope& getEnvelope(const geom::Geometry* g) {
-        return *(g->getEnvelopeInternal());
-    }
-
-    static const geom::Envelope& getEnvelope(const index::chain::MonotoneChain* mc) {
-        // TODO make MonotoneChain getEnvelope const (using mutable envelope member)
-        return const_cast<index::chain::MonotoneChain*>(mc)->getEnvelope();
-    }
-
     template<typename ItemType>
     class BastonNode {
     private:
@@ -40,12 +31,6 @@ namespace strtree {
     public:
         BastonNode() = delete;
 
-        explicit BastonNode(const ItemType* p_item) {
-            data.item = p_item;
-            children = nullptr;
-            computeEnvelope();
-        }
-
         BastonNode(const ItemType* p_item, const geom::Envelope& env) {
             data.item = p_item;
             children = nullptr;
@@ -55,7 +40,7 @@ namespace strtree {
         BastonNode(const BastonNode<ItemType>* begin, const BastonNode<ItemType>* end) {
             children = begin;
             data.childrenEnd = end;
-            computeEnvelope();
+            computeEnvelopeFromChildren();
         }
 
         void setSortVal(double d) {
@@ -82,14 +67,10 @@ namespace strtree {
             return getEnvelope().intersects(queryEnv);
         }
 
-        void computeEnvelope() {
-            if (isLeaf()) {
-                bounds = geos::index::strtree::getEnvelope(data.item);
-            } else {
-                bounds.setToNull();
-                for (auto* child = children; child < data.childrenEnd; ++child) {
-                    bounds.expandToInclude(child->getEnvelope());
-                }
+        void computeEnvelopeFromChildren() {
+            bounds.setToNull();
+            for (auto* child = children; child < data.childrenEnd; ++child) {
+                bounds.expandToInclude(child->getEnvelope());
             }
         }
 
@@ -121,12 +102,12 @@ namespace strtree {
             return root != nullptr;
         }
 
-        void insert(const ItemType* x) {
-            createLeafNode(x);
+        void insert(const geom::Envelope& itemEnv, const ItemType* item) {
+            createLeafNode(item, itemEnv);
         }
 
         void insert(const geom::Envelope* itemEnv, void* item) override {
-            createLeafNode(static_cast<ItemType*>(item), *itemEnv);
+            insert(*itemEnv, static_cast<ItemType*>(item));
         }
 
         template<typename Visitor>
@@ -180,10 +161,6 @@ namespace strtree {
         NodeList nodes;
         BastonNode<ItemType>* root;
         size_t nodeCapacity;
-
-        void createLeafNode(const ItemType* item) {
-            nodes.emplace_back(item);
-        }
 
         void createLeafNode(const ItemType* item, const geom::Envelope& env) {
             nodes.emplace_back(item, env);
