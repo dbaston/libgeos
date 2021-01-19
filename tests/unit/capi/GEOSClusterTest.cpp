@@ -44,19 +44,24 @@ template<> void object::test<1>
                                              "POINT (0 1),"
                                              "LINESTRING (0 0, 0 0.1),"
                                              "LINESTRING (0 0, 1.0 1.0),"
-                                             "POINT (0.9 1.0))");
+                                             "POINT (0.9 1.0),"
+                                             "POINT (0 7))");
 
     GEOSGeometry* result;
     result = GEOSClusterEnvelopeIntersects(GEOSGeom_clone(input));
-    ensure_equals("single cluster by envelope", GEOSGetNumGeometries(result), 1);
+    ensure_equals("two clusters by envelope intersection", GEOSGetNumGeometries(result), 2);
+    GEOSGeom_destroy(result);
+
+    result = GEOSClusterEnvelopeDistance(GEOSGeom_clone(input), 6);
+    ensure_equals("one cluster by envelope distance", GEOSGetNumGeometries(result), 1);
     GEOSGeom_destroy(result);
 
     result = GEOSClusterGeometryIntersects(GEOSGeom_clone(input));
-    ensure_equals("two clusters by geometry intersection", GEOSGetNumGeometries(result), 3);
+    ensure_equals("four clusters by geometry intersection", GEOSGetNumGeometries(result), 4);
     GEOSGeom_destroy(result);
 
     result = GEOSClusterGeometryDistance(GEOSGeom_clone(input), 0.2);
-    ensure_equals("single cluster by distance", GEOSGetNumGeometries(result), 2);
+    ensure_equals("three clusters by distance", GEOSGetNumGeometries(result), 3);
     GEOSGeom_destroy(result);
 
     GEOSGeom_destroy(input);

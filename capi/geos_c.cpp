@@ -331,6 +331,11 @@ extern "C" {
     }
 
     GEOSGeometry*
+    GEOSClusterEnvelopeDistance(GEOSGeometry* g, double d) {
+        return GEOSClusterEnvelopeDistance_r(handle, g, d);
+    }
+
+    GEOSGeometry*
     GEOSClusterEnvelopeIntersects(GEOSGeometry* g) {
         return GEOSClusterEnvelopeIntersects_r(handle, g);
     }

@@ -1245,6 +1245,7 @@ extern GEOSCoordSequence GEOS_DLL *GEOSNearestPoints_r(
 extern GEOSGeometry GEOS_DLL *GEOSClusterDBSCAN_r(GEOSContextHandle_t handle, GEOSGeometry* g, double eps, unsigned minPoints);
 extern GEOSGeometry GEOS_DLL *GEOSClusterGeometryDistance_r(GEOSContextHandle_t handle, GEOSGeometry* g, double d);
 extern GEOSGeometry GEOS_DLL *GEOSClusterGeometryIntersects_r(GEOSContextHandle_t handle, GEOSGeometry* g);
+extern GEOSGeometry GEOS_DLL *GEOSClusterEnvelopeDistance_r(GEOSContextHandle_t handle, GEOSGeometry* g, double d);
 extern GEOSGeometry GEOS_DLL *GEOSClusterEnvelopeIntersects_r(GEOSContextHandle_t handle, GEOSGeometry* g);
 
 /************************************************************************
@@ -2205,6 +2206,7 @@ extern GEOSCoordSequence GEOS_DLL *GEOSNearestPoints(
 extern GEOSGeometry GEOS_DLL *GEOSClusterDBSCAN(GEOSGeometry* g, double eps, unsigned minPoints);
 extern GEOSGeometry GEOS_DLL *GEOSClusterGeometryDistance(GEOSGeometry* g, double d);
 extern GEOSGeometry GEOS_DLL *GEOSClusterGeometryIntersects(GEOSGeometry* g);
+extern GEOSGeometry GEOS_DLL *GEOSClusterEnvelopeDistance(GEOSGeometry* g, double d);
 extern GEOSGeometry GEOS_DLL *GEOSClusterEnvelopeIntersects(GEOSGeometry* g);
 
 
