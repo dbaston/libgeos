@@ -62,7 +62,7 @@ std::vector<std::unique_ptr<geom::Geometry>> AbstractClusterFinder::cluster(std:
             return std::move(components[x]);
         });
 
-        clusterGeoms.push_back(gfact.createGeometryCollection(std::move(pieces)));
+        clusterGeoms.push_back(gfact.buildGeometry(std::move(pieces)));
     }
 
     return clusterGeoms;

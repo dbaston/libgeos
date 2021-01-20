@@ -73,37 +73,55 @@ void object::test<2>() {
     {
         auto t1 = GeometryIntersectsClusterFinder().clusterToCollection(g->clone());
         ensure_equals("t1: three clusters generated", t1->getNumGeometries(), 3u);
+        ensure_equals(t1->getGeometryTypeId(), geos::geom::GEOS_GEOMETRYCOLLECTION);
 
         ensure_geometry_equals(t1->getGeometryN(0),
                                reader.read(
                                        "GEOMETRYCOLLECTION(LINESTRING(0 0,1 1),LINESTRING(5 5,4 4),LINESTRING(0 0,-1 -1),POLYGON((0 0,4 0,4 4,0 4,0 0)))"));
+        ensure_equals(t1->getGeometryN(0)->getGeometryTypeId(), geos::geom::GEOS_GEOMETRYCOLLECTION);
+
         ensure_geometry_equals(t1->getGeometryN(1),
                                reader.read("GEOMETRYCOLLECTION(LINESTRING(6 6,7 7))"));
+        ensure_equals(t1->getGeometryN(1)->getGeometryTypeId(), geos::geom::GEOS_LINESTRING);
+
+
         ensure_geometry_equals(t1->getGeometryN(2),
                                reader.read("POLYGON EMPTY"));
+        ensure_equals(t1->getGeometryN(2)->getGeometryTypeId(), geos::geom::GEOS_POLYGON);
     }
 
     {
         auto t3 = GeometryDistanceClusterFinder(1.4).clusterToCollection(g->clone());
         ensure_equals("t3: three clusters generated", t3->getNumGeometries(), 3u);
+        ensure_equals(t3->getGeometryTypeId(), geos::geom::GEOS_GEOMETRYCOLLECTION);
+
         ensure_geometry_equals(t3->getGeometryN(0),
                                reader.read(
                                        "GEOMETRYCOLLECTION(LINESTRING(0 0,1 1),LINESTRING(5 5,4 4),LINESTRING(0 0,-1 -1),POLYGON((0 0,4 0,4 4,0 4,0 0)))"));
+        ensure_equals(t3->getGeometryN(0)->getGeometryTypeId(), geos::geom::GEOS_GEOMETRYCOLLECTION);
+
         ensure_geometry_equals(t3->getGeometryN(1),
-                               reader.read("GEOMETRYCOLLECTION(LINESTRING(6 6,7 7))"));
+                               reader.read("LINESTRING(6 6,7 7)"));
+        ensure_equals(t3->getGeometryN(1)->getGeometryTypeId(), geos::geom::GEOS_LINESTRING);
+
         ensure_geometry_equals(t3->getGeometryN(2),
                                reader.read("POLYGON EMPTY"));
+        ensure_equals(t3->getGeometryN(2)->getGeometryTypeId(), geos::geom::GEOS_POLYGON);
     }
 
     {
         auto t4 = GeometryDistanceClusterFinder(1.5).clusterToCollection(g->clone());
         ensure_equals("t4: two clusters generated", t4->getNumGeometries(), 2u);
+        ensure_equals(t4->getGeometryTypeId(), geos::geom::GEOS_GEOMETRYCOLLECTION);
 
         ensure_geometry_equals(t4->getGeometryN(0),
                                reader.read(
                                        "GEOMETRYCOLLECTION(LINESTRING(0 0,1 1),LINESTRING(5 5,4 4),LINESTRING(0 0,-1 -1),LINESTRING(6 6,7 7),POLYGON((0 0,4 0,4 4,0 4,0 0)))"));
+        ensure_equals(t4->getGeometryN(0)->getGeometryTypeId(), geos::geom::GEOS_GEOMETRYCOLLECTION);
+
         ensure_geometry_equals(t4->getGeometryN(1),
                                reader.read("POLYGON EMPTY"));
+        ensure_equals(t4->getGeometryN(1)->getGeometryTypeId(), geos::geom::GEOS_POLYGON);
     }
 }
 
