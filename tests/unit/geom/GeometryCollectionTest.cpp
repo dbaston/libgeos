@@ -4,6 +4,8 @@
 #include <tut/tut.hpp>
 #include <utility.h>
 
+#include <geos/geom/GeometryCollection.h>
+
 #include <memory>
 
 
@@ -142,5 +144,20 @@ void object::test<6>
     ensure(!gc->isDimensionStrict(geos::geom::Dimension::L));
     ensure(!gc->isDimensionStrict(geos::geom::Dimension::A));
 }
+
+template<>
+template<>
+void object::test<7>
+()
+{
+    auto gt = readWKT("GEOMETRYCOLLECTION (POINT (4 7), LINESTRING (2 2, 8 8))");
+
+    auto components = dynamic_cast<geos::geom::GeometryCollection&>(*gt).releaseComponents();
+
+    ensure_equals(components.size(), 2u);
+    ensure_equals(gt->getNumGeometries(), 0u);
+    ensure(gt->getEnvelopeInternal()->isNull());
+}
+
 
 } // namespace tut
