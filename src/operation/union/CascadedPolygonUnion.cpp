@@ -44,6 +44,7 @@
 #include <geos/util/TopologyException.h>
 #include <string>
 #include <iomanip>
+#include <geos/shape/fractal/HilbertEncoder.h>
 
 //#define GEOS_DEBUG_CASCADED_UNION 1
 //#define GEOS_DEBUG_CASCADED_UNION_PRINT_INVALID 1
@@ -149,6 +150,10 @@ CascadedPolygonUnion::Union()
 
     geomFactory = inputPolys->front()->getFactory();
 
+    shape::fractal::HilbertEncoder::sort(inputPolys->begin(), inputPolys->end());
+
+#if 0
+
     /*
      * A spatial index to organize the collection
      * into groups of close geometries.
@@ -163,6 +168,8 @@ CascadedPolygonUnion::Union()
 
     // TODO avoid creating this vector and run binaryUnion off the iterators directly
     std::vector<const geom::Geometry*> geoms(index.items().begin(), index.items().end());
+#endif
+    std::vector<const geom::Geometry*> geoms(inputPolys->begin(), inputPolys->end());
 
     return binaryUnion(geoms, 0, geoms.size());
 }

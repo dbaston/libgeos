@@ -18,13 +18,13 @@
 #include <geos/export.h>
 #include <string>
 #include <vector>
+#include <geos/geom/Geometry.h>
+#include <geos/geom/Envelope.h>
 
 // Forward declarations
 namespace geos {
 namespace geom {
 class Coordinate;
-class Geometry;
-class Envelope;
 }
 }
 
@@ -39,7 +39,40 @@ public:
 
     HilbertEncoder(uint32_t p_level, geom::Envelope& extent);
     uint32_t encode(const geom::Envelope* env);
-    static void sort(std::vector<geom::Geometry*>& geoms);
+
+    template<typename T>
+    static void sort(const T& begin, const T& end) {
+        struct HilbertComparator {
+
+            HilbertEncoder& enc;
+
+            HilbertComparator(HilbertEncoder& e)
+                    : enc(e) {};
+
+            bool
+            operator()(const geom::Geometry* a, const geom::Geometry* b)
+            {
+                return enc.encode(a->getEnvelopeInternal()) > enc.encode(b->getEnvelopeInternal());
+            }
+        };
+
+        geom::Envelope extent;
+        for (auto it = begin; it != end; ++it)
+        {
+            if (extent.isNull())
+                extent = *((*it)->getEnvelopeInternal());
+            else
+                extent.expandToInclude(*((*it)->getEnvelopeInternal()));
+        }
+        if (extent.isNull()) return;
+
+        HilbertEncoder encoder(12, extent);
+        HilbertComparator hilbertCompare(encoder);
+        std::sort(begin, end, hilbertCompare);
+
+
+    }
+
 
 private:
 
