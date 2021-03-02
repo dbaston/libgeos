@@ -76,7 +76,7 @@ jobs:
         set -e
         uname -a
         sudo -E apt-get update
-        sudo -E apt-get -yq --no-install-suggests --no-install-recommends install make doxygen python3-pip ${{ matrix.ci.packages }}
+        sudo -E apt-get -yq --no-install-suggests --no-install-recommends install ninja-build doxygen python3-pip ${{ matrix.ci.packages }}
         python3 -m pip install --disable-pip-version-check --user cmake==${{ matrix.ci.cmake }}
 
     - name: 'Check Out'
@@ -92,7 +92,7 @@ jobs:
         cd build.cmake
         cmake --version
         cmake -DCMAKE_CXX_COMPILER=${{ matrix.ci.compiler }} -DCMAKE_CXX_STANDARD=${{ matrix.ci.cxxstd }} -DBUILD_DOCUMENTATION=YES -DCMAKE_BUILD_TYPE=${{ matrix.ci.build_type }} ..
-        cmake --build . -j 2
+        cmake --build .
         cmake --build . --target docs
         ctest --output-on-failure .
 
