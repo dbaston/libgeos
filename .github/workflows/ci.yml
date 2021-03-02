@@ -84,8 +84,8 @@ jobs:
 
     - name: 'Build'
       env:
-        CFLAGS: "-m${{ matrix.ci.arch }}"
-        CXXFLAGS: "-m${{ matrix.ci.arch }}"
+        CFLAGS: "-Werror -m${{ matrix.ci.arch }}"
+        CXXFLAGS: "-Werror -m${{ matrix.ci.arch }}"
       run: |
         set -e
         mkdir build.cmake
