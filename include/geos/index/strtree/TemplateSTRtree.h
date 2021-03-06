@@ -684,7 +684,7 @@ public:
 // the SpatialIndex interface which requires queries via an envelope
 // and items to be representable as void*.
 template<typename ItemType>
-class TemplateSTRtree<ItemType*, EnvelopeTraits> : public TemplateSTRtreeImpl<ItemType*, EnvelopeTraits>, public SpatialIndex {
+class TemplateSTRtree<ItemType*, EnvelopeTraits> : public TemplateSTRtreeImpl<ItemType*, EnvelopeTraits>, public RemovableItemSpatialIndex {
 public:
     using TemplateSTRtreeImpl<ItemType*, EnvelopeTraits>::TemplateSTRtreeImpl;
     using TemplateSTRtreeImpl<ItemType*, EnvelopeTraits>::insert;

@@ -88,6 +88,9 @@ public:
      */
     virtual void query(const geom::Envelope* searchEnv, ItemVisitor& visitor) = 0;
 
+};
+
+class RemovableItemSpatialIndex : public SpatialIndex {
     /** \brief
      * Removes a single item from the tree.
      *
@@ -96,7 +99,6 @@ public:
      * @return <code>true</code> if the item was found
      */
     virtual bool remove(const geom::Envelope* itemEnv, void* item) = 0;
-
 };
 
 

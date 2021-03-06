@@ -110,6 +110,39 @@ template<typename To, typename From> inline To down_cast(From* f)
 #define RETURN_UNIQUE_PTR(x) (x)
 #endif
 
+// Rounding type conversion templates
+// Allow expanding double->float conversion in generic code
+template<typename To, typename From>
+typename std::enable_if<!std::is_same<To, From>::value, To>::type
+nearest_up(From x) {
+    To ret = static_cast<To>(x);
+    if (static_cast<From>(ret) < x) {
+        ret = std::nextafter(ret, std::numeric_limits<To>::infinity());
+    }
+    return ret;
+}
+
+template<typename To, typename From>
+typename std::enable_if<!std::is_same<To, From>::value, To>::type
+nearest_down(From x) {
+    To ret = static_cast<To>(x);
+    if (static_cast<From>(ret) > x) {
+        ret = std::nextafter(ret, -std::numeric_limits<To>::infinity());
+    }
+    return ret;
+}
+
+template<typename To>
+To nearest_up(To x) {
+    return x;
+}
+
+template<typename To>
+To nearest_down(To x) {
+    return x;
+}
+
+
 } // namespace detail
 } // namespace geos
 

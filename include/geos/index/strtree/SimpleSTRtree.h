@@ -62,7 +62,7 @@ namespace strtree { // geos::index::strtree
  * Databases With Application To GIS. Morgan Kaufmann, San Francisco, 2002.
  *
  */
-class GEOS_DLL SimpleSTRtree: public SpatialIndex {
+class GEOS_DLL SimpleSTRtree: public RemovableItemSpatialIndex {
 
 
 private:

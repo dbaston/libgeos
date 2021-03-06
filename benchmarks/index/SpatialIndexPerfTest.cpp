@@ -17,6 +17,8 @@
 #include <benchmark/benchmark.h>
 
 #include <geos/index/strtree/STRtree.h>
+#include <geos/index/strtree/RangeSTRtree.h>
+#include <geos/index/strtree/RangeSTRtree1D.h>
 #include <geos/index/strtree/SimpleSTRtree.h>
 #include <geos/index/strtree/TemplateSTRtree.h>
 #include <geos/index/quadtree/Quadtree.h>
@@ -26,6 +28,8 @@ using geos::geom::Coordinate;
 using geos::geom::Envelope;
 using geos::index::intervalrtree::SortedPackedIntervalRTree;
 using geos::index::quadtree::Quadtree;
+using geos::index::strtree::RangeSTRtree;
+using geos::index::strtree::RangeSTRtree1D;
 using geos::index::strtree::STRtree;
 using geos::index::strtree::SimpleSTRtree;
 using geos::index::strtree::TemplateSTRtree;
@@ -112,11 +116,17 @@ static inline void insert(TemplateIntervalTree & tree, const Interval& i) {
     tree.insert(i, &i);
 }
 
+template<typename T>
+static inline void insert(RangeSTRtree1D<const Interval*, T> & tree, const Interval& i) {
+    tree.insert(&i, &i);
+}
+
 static inline void insert(SortedPackedIntervalRTree & tree, const Interval& i) {
     tree.insert(i.getMin(), i.getMax(), (void*) &i);
 }
 
-static inline void query(TemplateIntervalTree & tree, const Interval& i) {
+template<typename T>
+static inline void query(T & tree, const Interval& i) {
     size_t hits = 0;
     tree.query(i, [&hits](const Interval* item) {
         hits += (item != nullptr);
@@ -167,7 +177,7 @@ static void BM_STRtree1DConstruct(benchmark::State& state) {
     Interval outside_extent(extent.getMaxY() + 100, extent.getMaxY() + 101);
 
     for (auto _ : state) {
-        Tree tree(10);
+        Tree tree;
 
         for (const auto& interval : intervals) {
             insert(tree, interval);
@@ -188,8 +198,7 @@ static void BM_STRtree1DQuery(benchmark::State& state) {
         intervals.emplace_back(e.getMinY(), e.getMaxY());
     }
 
-    Tree tree(10);
-
+    Tree tree;
     for (const auto& interval : intervals) {
         insert(tree, interval);
     }
@@ -281,13 +290,19 @@ static void BM_STRtree2DNearest(benchmark::State& state) {
 
 BENCHMARK_TEMPLATE(BM_STRtree1DConstruct, SortedPackedIntervalRTree);
 BENCHMARK_TEMPLATE(BM_STRtree1DConstruct, TemplateIntervalTree);
+BENCHMARK_TEMPLATE(BM_STRtree1DConstruct, RangeSTRtree1D<const Interval*, float>);
+BENCHMARK_TEMPLATE(BM_STRtree1DConstruct, RangeSTRtree1D<const Interval*, double>);
 BENCHMARK_TEMPLATE(BM_STRtree1DQuery, SortedPackedIntervalRTree);
 BENCHMARK_TEMPLATE(BM_STRtree1DQuery, TemplateIntervalTree);
+BENCHMARK_TEMPLATE(BM_STRtree1DQuery, RangeSTRtree1D<const Interval*, float>);
+BENCHMARK_TEMPLATE(BM_STRtree1DQuery, RangeSTRtree1D<const Interval*, double>);
 
 BENCHMARK_TEMPLATE(BM_STRtree2DConstruct, Quadtree);
 BENCHMARK_TEMPLATE(BM_STRtree2DConstruct, STRtree);
 BENCHMARK_TEMPLATE(BM_STRtree2DConstruct, SimpleSTRtree);
 BENCHMARK_TEMPLATE(BM_STRtree2DConstruct, TemplateSTRtree<const Envelope*>);
+BENCHMARK_TEMPLATE(BM_STRtree2DConstruct, RangeSTRtree<const Envelope*, float>);
+BENCHMARK_TEMPLATE(BM_STRtree2DConstruct, RangeSTRtree<const Envelope*, double>);
 
 BENCHMARK_TEMPLATE(BM_STRtree2DNearest, STRtree);
 BENCHMARK_TEMPLATE(BM_STRtree2DNearest, SimpleSTRtree);
@@ -297,6 +312,8 @@ BENCHMARK_TEMPLATE(BM_STRtree2DQuery, Quadtree);
 BENCHMARK_TEMPLATE(BM_STRtree2DQuery, STRtree);
 BENCHMARK_TEMPLATE(BM_STRtree2DQuery, SimpleSTRtree);
 BENCHMARK_TEMPLATE(BM_STRtree2DQuery, TemplateSTRtree<const Envelope*>);
+BENCHMARK_TEMPLATE(BM_STRtree2DQuery, RangeSTRtree<const Envelope*, float>);
+BENCHMARK_TEMPLATE(BM_STRtree2DQuery, RangeSTRtree<const Envelope*, double>);
 
 BENCHMARK_MAIN();
 
