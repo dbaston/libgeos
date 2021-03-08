@@ -353,6 +353,13 @@ extern GEOSCoordSequence GEOS_DLL *GEOSCoordSeq_create_r(
     unsigned int size,
     unsigned int dims);
 
+/** \see GEOSCoordSeq_copyFromBuffer */
+extern GEOSCoordSequence GEOS_DLL *GEOSCoordSeq_copyFromBuffer_r(
+        GEOSContextHandle_t handle,
+        const double* buf,
+        unsigned int size,
+        unsigned int dims);
+
 /** \see GEOSCoordSeq_clone */
 extern GEOSCoordSequence GEOS_DLL *GEOSCoordSeq_clone_r(
     GEOSContextHandle_t handle,
@@ -1692,6 +1699,15 @@ extern const char GEOS_DLL *GEOSversion(void);
 * \return the sequence or NULL on exception
 */
 extern GEOSCoordSequence GEOS_DLL *GEOSCoordSeq_create(unsigned int size, unsigned int dims);
+
+/**
+* Create a coordinate sequence by copying from a buffer of doubles (XYXY or XYZXYZ)
+* \param buf pointer to buffer
+* \param size number of coordinates in the sequence
+* \param dims dimensionality of the coordinates (2 or 3)
+* \return the sequence or NULL on exception
+*/
+extern GEOSCoordSequence GEOS_DLL *GEOSCoordSeq_copyFromBuffer(const double* buf, unsigned int size, unsigned int dims);
 
 /**
 * Clone a coordinate sequence.

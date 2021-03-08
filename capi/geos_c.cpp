@@ -861,11 +861,16 @@ extern "C" {
         return GEOS_setWKBByteOrder_r(handle, byteOrder);
     }
 
-
     CoordinateSequence*
     GEOSCoordSeq_create(unsigned int size, unsigned int dims)
     {
         return GEOSCoordSeq_create_r(handle, size, dims);
+    }
+
+    CoordinateSequence*
+    GEOSCoordSeq_copyFromBuffer(const double* buf, unsigned int size, unsigned int dims)
+    {
+        return GEOSCoordSeq_copyFromBuffer_r(handle, buf, size, dims);
     }
 
     int

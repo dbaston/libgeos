@@ -377,5 +377,64 @@ void object::test<11>
     ensure_equals(zcheck, z);
 }
 
+// test 2D from buffer
+template<>
+template<>
+void object::test<12>()
+{
+    unsigned int N = 10;
+    unsigned int dim = 2;
+    std::vector<double> values(N * dim);
+    for (size_t i = 0; i < values.size(); i++) {
+        values[i] = static_cast<double>(i);
+    }
+
+    cs_ = GEOSCoordSeq_copyFromBuffer(values.data(), N, dim);
+
+    double x, y;
+    ensure(GEOSCoordSeq_getXY(cs_, 0, &x, &y));
+    ensure_equals(x, 0.0);
+    ensure_equals(y, 1.0);
+
+    ensure(GEOSCoordSeq_getXY(cs_, N - 1, &x, &y));
+    ensure_equals(x, static_cast<double>(N-1)*2);
+    ensure_equals(y, static_cast<double>(N-1)*2 + 1);
+
+    unsigned int dim_out;
+    ensure(GEOSCoordSeq_getDimensions(cs_, &dim_out));
+    ensure_equals(dim_out, dim);
+}
+
+// test 3D from buffer
+template<>
+template<>
+void object::test<13>()
+{
+    unsigned int N = 10;
+    unsigned int dim = 3;
+    std::vector<double> values(N * dim);
+    for (size_t i = 0; i < values.size(); i++) {
+        values[i] = static_cast<double>(i);
+    }
+
+    cs_ = GEOSCoordSeq_copyFromBuffer(values.data(), N, dim);
+
+    double x, y, z;
+    ensure(GEOSCoordSeq_getXYZ(cs_, 0, &x, &y, &z));
+    ensure_equals(x, 0.0);
+    ensure_equals(y, 1.0);
+    ensure_equals(z, 2.0);
+
+    ensure(GEOSCoordSeq_getXYZ(cs_, N - 1, &x, &y, &z));
+    ensure_equals(x, static_cast<double>(N-1)*3);
+    ensure_equals(y, static_cast<double>(N-1)*3 + 1);
+    ensure_equals(z, static_cast<double>(N-1)*3 + 2);
+
+    unsigned int dim_out;
+    ensure(GEOSCoordSeq_getDimensions(cs_, &dim_out));
+    ensure_equals(dim_out, dim);
+}
+
+
 } // namespace tut
 
