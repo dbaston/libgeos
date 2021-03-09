@@ -14,11 +14,11 @@ jobs:
       with:
         install: gcc cmake make
     - run: |
-      mkdir build
-      cd build
-      cmake ..
-      cmake --build . -j 2
-      ctest
+       mkdir build
+       cd build
+       cmake ..
+       cmake --build . -j 2
+       ctest
 
 
 
