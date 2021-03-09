@@ -10,7 +10,7 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: actions/checkout@v2
-    - uses: msys/setup-mys2@v2
+    - uses: msys2/setup-mys2@v2
       with:
         install: gcc cmake make
     - run: mkdir build
