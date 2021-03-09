@@ -13,8 +13,12 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         install: gcc cmake make
-    - run: mkdir build
-    - run: cd build && cmake .. && cmake --build . && ctest
+    - run: |
+      mkdir build
+      cd build
+      cmake ..
+      cmake --build . -j 2
+      ctest
 
 
 
