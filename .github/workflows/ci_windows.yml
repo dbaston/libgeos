@@ -1,7 +1,10 @@
-name: windows_gcc
+name: Windows CI
+on: [push, pull_request]
+
 jobs:
   windows_gcc:
-    runs-on-: windows-2019
+    name: 'Windows msys2'
+    runs-on: windows-2019
     defaults:
       run:
         shell: msys2 {0}
@@ -10,8 +13,8 @@ jobs:
     - uses: actions/setup-mys2@v2
       with:
         install: gcc cmake make
-      run: mkdir build
-      run: cd build && cmake .. && cmake --build . && ctest
+    - run: mkdir build
+    - run: cd build && cmake .. && cmake --build . && ctest
 
 
 
