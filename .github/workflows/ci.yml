@@ -121,7 +121,7 @@ jobs:
         install: mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake make
 
     - name: 'Build'
-    - run: |
+      run: |
        mkdir build
        cd build
        cmake --version
