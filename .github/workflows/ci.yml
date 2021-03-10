@@ -106,20 +106,26 @@ jobs:
 
 
   windows:
-    name: 'Windows mingw-w64'
+    name: 'Windows (mingw-w64, x86_64)'
     runs-on: windows-2019
     defaults:
       run:
         shell: msys2 {0}
     steps:
-    - uses: actions/checkout@v2
+    - name: 'Check Out'
+      uses: actions/checkout@v2
+
+    - name: 'Setup'
     - uses: msys2/setup-msys2@v2
       with:
         install: mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake make
+
+    - name: 'Build'
     - run: |
        mkdir build
        cd build
+       cmake --version
        cmake -G"MSYS Makefiles" ..
        cmake --build . -j 2
-       ctest
+       ctest --output-on-failure .
 
