@@ -106,7 +106,7 @@ jobs:
 
 
   windows:
-    name: 'Windows (mingw-w64, x86_64)'
+    name: 'Windows (mingw-w64, Debug, 11, x86_64, windows-2019)'
     runs-on: windows-2019
     defaults:
       run:
@@ -125,7 +125,7 @@ jobs:
        mkdir build
        cd build
        cmake --version
-       cmake -G"MSYS Makefiles" ..
+       cmake -DCMAKE_BUILD_TYPE=Debug -G"MSYS Makefiles" ..
        cmake --build . -j 2
        ctest --output-on-failure .
 
