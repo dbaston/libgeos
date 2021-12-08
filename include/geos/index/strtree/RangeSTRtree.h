@@ -99,52 +99,131 @@ struct Branch {
     BoundsType midy;
 };
 
-template<typename T>
-class EnvelopeAdapter {};
+template<typename ItemType>
+class Leaf {};
 
 template<>
-struct EnvelopeAdapter<const geom::Envelope*> {
+class Leaf<const geom::Envelope*> {
+public:
+    using ItemType = const geom::Envelope*;
+
     using InternalBoundsType = double;
 
-    static InternalBoundsType getXMin(const geom::Envelope* item) {
-        return item->getMinX();
+    explicit Leaf(const geom::Envelope* item) : m_item(item) {}
+
+    InternalBoundsType getXMin() const {
+        return m_item->getMinX();
     }
 
-    static InternalBoundsType getXMax(const geom::Envelope* item) {
-        return item->getMaxX();
+    InternalBoundsType getXMax() const {
+        return m_item->getMaxX();
     }
 
-    static InternalBoundsType getYMin(const geom::Envelope* item) {
-        return item->getMinY();
+    InternalBoundsType getYMin() const {
+        return m_item->getMinY();
     }
 
-    static InternalBoundsType getYMax(const geom::Envelope* item) {
-        return item->getMaxY();
+    InternalBoundsType getYMax() const {
+        return m_item->getMaxY();
     }
+
+    InternalBoundsType getX() const {
+        return getXMin() + getXMax();
+    }
+
+    InternalBoundsType getY() const {
+        return getYMin() + getYMax();
+    }
+
+private:
+    const geom::Envelope* m_item;
 };
 
 
+    template<>
+    class Leaf<const index::chain::MonotoneChain*> {
+    public:
+        using InternalBoundsType = double;
+
+        explicit Leaf(const index::chain::MonotoneChain* item) : m_item(item) {
+            m_env = &m_item->getEnvelope();
+        }
+
+        InternalBoundsType getXMin() const {
+            return m_env->getMinX();
+        }
+
+        InternalBoundsType getXMax() const {
+            return m_env->getMaxX();
+        }
+
+        InternalBoundsType getYMin() const {
+            return m_env->getMinY();
+        }
+
+        InternalBoundsType getYMax() const {
+            return m_env->getMaxY();
+        }
+
+        InternalBoundsType getX() const {
+            return getXMin() + getXMax();
+        }
+
+        InternalBoundsType getY() const {
+            return getYMin() + getYMax();
+        }
+
+    private:
+        const index::chain::MonotoneChain* m_item;
+        const geom::Envelope* m_env;
+    };
+
+#if 0
 template<>
-struct EnvelopeAdapter<const index::chain::MonotoneChain*> {
-    using InternalBoundsType = double;
+class Leaf<const index::chain::MonotoneChain*> {
+public:
+    using InternalBoundsType = float;
 
-    static InternalBoundsType getXMin(const index::chain::MonotoneChain* item) {
-        return item->getEnvelope().getMinX();
+    explicit Leaf(const index::chain::MonotoneChain* item) : m_item(item) {
+        const geom::Envelope& e = m_item->getEnvelope();
+        m_minx = detail::nearest_down<float>(e.getMinX());
+        m_maxx = detail::nearest_up<float>(e.getMaxX());
+        m_miny = detail::nearest_down<float>(e.getMinY());
+        m_maxy = detail::nearest_up<float>(e.getMaxY());
     }
 
-    static InternalBoundsType getXMax(const index::chain::MonotoneChain* item) {
-        return item->getEnvelope().getMaxX();
+    InternalBoundsType getXMin() const {
+        return m_minx;
     }
 
-    static InternalBoundsType getYMin(const index::chain::MonotoneChain* item) {
-        return item->getEnvelope().getMinY();
+    InternalBoundsType getXMax() const {
+        return m_maxx;
     }
 
-    static InternalBoundsType getYMax(const index::chain::MonotoneChain* item) {
-        return item->getEnvelope().getMaxY();
+    InternalBoundsType getYMin() const {
+        return m_miny;
     }
+
+    InternalBoundsType getYMax() const {
+        return m_maxy;
+    }
+
+    InternalBoundsType getX() const {
+        return getXMin() + getXMax();
+    }
+
+    InternalBoundsType getY() const {
+        return getYMin() + getYMax();
+    }
+
+private:
+    const index::chain::MonotoneChain* m_item;
+    float m_minx;
+    float m_maxx;
+    float m_miny;
+    float m_maxy;
 };
-
+#endif
 
 template<typename ItemType, typename BoundsType>
 class RangeSTRtree : public SpatialIndex {
@@ -224,42 +303,11 @@ public:
 private:
     static const size_t BranchSize = 32u / sizeof(BoundsType);
 
-    struct Leaf {
-        ItemType item;
-
-        explicit Leaf (const ItemType& i) : item(i) {}
-
-        using InternalBoundsType = typename EnvelopeAdapter<ItemType>::InternalBoundsType;
-
-        InternalBoundsType getXMin() const {
-            return EnvelopeAdapter<ItemType>::getXMin(item);
-        }
-
-        InternalBoundsType getXMax() const {
-            return EnvelopeAdapter<ItemType>::getXMax(item);
-        }
-
-        InternalBoundsType getYMin() const {
-            return EnvelopeAdapter<ItemType>::getYMin(item);
-        }
-
-        InternalBoundsType getYMax() const {
-            return EnvelopeAdapter<ItemType>::getYMax(item);
-        }
-
-        InternalBoundsType getX() const {
-            return getXMin() + getXMax();
-        }
-
-        InternalBoundsType getY() const {
-            return getYMin() + getYMax();
-        }
-    };
-
+    using LeafT = Leaf<ItemType>;
     using BranchT = Branch<BoundsType, BranchSize>;
 
     std::vector<BranchT> branches;
-    std::vector<Leaf> leaves;
+    std::vector<LeafT> leaves;
 
     using LeafIterator = typename decltype(leaves)::iterator;
     using BranchIterator = typename decltype(branches)::iterator;
@@ -270,13 +318,13 @@ private:
     }
 
     void sortNodesX(const LeafIterator& begin, const LeafIterator& end) {
-        std::sort(begin, end, [](const Leaf& a, const Leaf& b) {
+        std::sort(begin, end, [](const LeafT& a, const LeafT& b) {
             return a.getX() < b.getX();
         });
     }
 
     void sortNodesY(const LeafIterator& begin, const LeafIterator& end) {
-        std::sort(begin, end, [](const Leaf& a, const Leaf& b) {
+        std::sort(begin, end, [](const LeafT& a, const LeafT& b) {
             return a.getY() < b.getY();
         });
     }
