@@ -188,24 +188,6 @@ Point::computeEnvelopeInternal() const
 }
 
 void
-Point::apply_ro(CoordinateFilter* filter) const
-{
-    if(isEmpty()) {
-        return;
-    }
-    filter->filter_ro(getCoordinate());
-}
-
-void
-Point::apply_rw(const CoordinateFilter* filter)
-{
-    if (isEmpty()) {
-        return;
-    }
-    coordinates.apply_rw(filter);
-}
-
-void
 Point::apply_rw(GeometryFilter* filter)
 {
     filter->filter_rw(this);

@@ -135,8 +135,21 @@ public:
     std::string getGeometryType() const override;
     GeometryTypeId getGeometryTypeId() const override;
     bool equalsExact(const Geometry* other, double tolerance = 0) const override;
-    void apply_rw(const CoordinateFilter* filter) override;
-    void apply_ro(CoordinateFilter* filter) const override;
+
+    void apply_rw(const CoordinateFilter* filter) override {
+        shell->apply_rw(filter);
+        for(auto& lr : holes) {
+            lr->apply_rw(filter);
+        }
+    }
+
+    void apply_ro(CoordinateFilter* filter) const override {
+        shell->apply_ro(filter);
+        for(const auto& lr : holes) {
+            lr->apply_ro(filter);
+        }
+    }
+
     void apply_rw(GeometryFilter* filter) override;
     void apply_ro(GeometryFilter* filter) const override;
     void apply_rw(CoordinateSequenceFilter& filter) override;

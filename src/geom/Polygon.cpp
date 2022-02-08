@@ -295,24 +295,6 @@ Polygon::equalsExact(const Geometry* other, double tolerance) const
 }
 
 void
-Polygon::apply_ro(CoordinateFilter* filter) const
-{
-    shell->apply_ro(filter);
-    for(const auto& lr : holes) {
-        lr->apply_ro(filter);
-    }
-}
-
-void
-Polygon::apply_rw(const CoordinateFilter* filter)
-{
-    shell->apply_rw(filter);
-    for(auto& lr : holes) {
-        lr->apply_rw(filter);
-    }
-}
-
-void
 Polygon::apply_rw(GeometryFilter* filter)
 {
     filter->filter_rw(this);

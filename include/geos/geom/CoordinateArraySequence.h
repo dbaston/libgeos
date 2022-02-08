@@ -125,7 +125,12 @@ public:
 
     std::size_t getDimension() const override;
 
-    void apply_rw(const CoordinateFilter* filter) override;
+    void apply_rw(const CoordinateFilter* filter) override {
+        for(auto& coord : vect) {
+            filter->filter_rw(&coord);
+        }
+        dimension = 0; // re-check (see http://trac.osgeo.org/geos/ticket/435)
+    }
 
     void apply_ro(CoordinateFilter* filter) const override {
         for(const auto& coord : vect) {

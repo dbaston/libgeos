@@ -297,13 +297,6 @@ LineString::equalsExact(const Geometry* other, double tolerance) const
 }
 
 void
-LineString::apply_rw(const CoordinateFilter* filter)
-{
-    assert(points.get());
-    points->apply_rw(filter);
-}
-
-void
 LineString::apply_ro(CoordinateFilter* filter) const
 {
     assert(points.get());

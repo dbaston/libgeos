@@ -22,6 +22,8 @@
 
 #include <geos/export.h>
 #include <geos/geom/Geometry.h> // for inheritance
+#include <geos/geom/CoordinateArraySequence.h> // for speculative inlining
+#include <geos/geom/CoordinateFilter.h> // for speculative inlining
 #include <geos/geom/CoordinateSequence.h> // for proper use of unique_ptr<>
 #include <geos/geom/Envelope.h> // for proper use of unique_ptr<>
 #include <geos/geom/Dimension.h> // for Dimension::DimensionType
@@ -39,7 +41,6 @@
 namespace geos {
 namespace geom {
 class Coordinate;
-class CoordinateArraySequence;
 class CoordinateSequenceFilter;
 }
 }
@@ -153,7 +154,14 @@ public:
     bool equalsExact(const Geometry* other, double tolerance = 0)
     const override;
 
-    void apply_rw(const CoordinateFilter* filter) override;
+    void apply_rw(const CoordinateFilter* filter) override {
+        assert(points.get());
+        if (auto cas = dynamic_cast<geos::geom::CoordinateArraySequence*>(points.get())) {
+            cas->apply_rw(filter);
+        } else {
+            points->apply_rw(filter);
+        }
+    }
 
     void apply_ro(CoordinateFilter* filter) const override;
 

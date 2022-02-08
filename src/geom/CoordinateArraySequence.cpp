@@ -243,14 +243,5 @@ CoordinateArraySequence::closeRing()
     }
 }
 
-void
-CoordinateArraySequence::apply_rw(const CoordinateFilter* filter)
-{
-    for(auto& coord : vect) {
-        filter->filter_rw(&coord);
-    }
-    dimension = 0; // re-check (see http://trac.osgeo.org/geos/ticket/435)
-}
-
 } // namespace geos::geom
 } //namespace geos

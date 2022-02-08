@@ -1518,7 +1518,16 @@ extern "C" {
         return execute(handle, [&]() {
             TransformFilter filter(callback, userdata);
             auto ret = g->clone();
-            ret->apply_rw(&filter);
+
+            // For simple geometry types, manually casting to the derived type
+            // allows the compiler to inline the apply_rw and filter_rw calls.
+            switch(ret->getGeometryTypeId()) {
+                case geos::geom::GEOS_POINT: static_cast<geos::geom::Point*>(ret.get())->apply_rw(&filter); break;
+                case geos::geom::GEOS_LINESTRING: static_cast<geos::geom::LineString*>(ret.get())->apply_rw(&filter); break;
+                case geos::geom::GEOS_POLYGON: static_cast<geos::geom::Polygon*>(ret.get())->apply_rw(&filter); break;
+                default: ret->apply_rw(&filter);
+            }
+
             ret->geometryChanged();
             return ret.release();
         });

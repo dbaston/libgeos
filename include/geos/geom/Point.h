@@ -115,8 +115,21 @@ public:
     const Coordinate* getCoordinate() const override;
     std::string getGeometryType() const override;
     GeometryTypeId getGeometryTypeId() const override;
-    void apply_ro(CoordinateFilter* filter) const override;
-    void apply_rw(const CoordinateFilter* filter) override;
+
+    void apply_ro(CoordinateFilter* filter) const override {
+        if(isEmpty()) {
+            return;
+        }
+        filter->filter_ro(getCoordinate());
+    }
+
+    void apply_rw(const CoordinateFilter* filter) override {
+        if (isEmpty()) {
+            return;
+        }
+        coordinates.apply_rw(filter);
+    }
+
     void apply_ro(GeometryFilter* filter) const override;
     void apply_rw(GeometryFilter* filter) override;
     void apply_rw(GeometryComponentFilter* filter) override;
