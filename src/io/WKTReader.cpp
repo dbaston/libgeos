@@ -32,7 +32,6 @@
 #include <geos/geom/MultiPolygon.h>
 #include <geos/geom/CoordinateSequenceFactory.h>
 #include <geos/geom/CoordinateSequence.h>
-#include <geos/geom/CoordinateArraySequence.h>
 #include <geos/geom/PrecisionModel.h>
 #include <geos/util.h>
 
@@ -65,7 +64,7 @@ WKTReader::getCoordinates(StringTokenizer* tokenizer) const
 
     Coordinate coord;
     getPreciseCoordinate(tokenizer, coord, dim);
-    auto coordinates = detail::make_unique<CoordinateArraySequence>(0u, dim);
+    auto coordinates = detail::make_unique<CoordinateSequence>(0u, dim);
     coordinates->add(coord);
 
     nextToken = getNextCloserOrComma(tokenizer);
@@ -75,7 +74,7 @@ WKTReader::getCoordinates(StringTokenizer* tokenizer) const
         nextToken = getNextCloserOrComma(tokenizer);
     }
 
-    return RETURN_UNIQUE_PTR(coordinates);
+    return coordinates;
 }
 
 
@@ -265,9 +264,7 @@ WKTReader::readLinearRingText(StringTokenizer* tokenizer) const
 {
     auto&& coords = getCoordinates(tokenizer);
     if (fixStructure && !coords->isRing()) {
-        std::unique_ptr<CoordinateArraySequence> cas(new CoordinateArraySequence(*coords));
-        cas->closeRing();
-        coords.reset(cas.release());
+        coords->closeRing();
     }
     return geometryFactory->createLinearRing(std::move(coords));
 }
@@ -286,7 +283,7 @@ WKTReader::readMultiPointText(StringTokenizer* tokenizer) const
     if(tok == StringTokenizer::TT_NUMBER) {
 
         // Try to parse deprecated form "MULTIPOINT(0 0, 1 1)"
-        auto coords = detail::make_unique<CoordinateArraySequence>();
+        auto coords = detail::make_unique<CoordinateSequence>();
 
         do {
             Coordinate coord;
