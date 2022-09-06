@@ -388,6 +388,26 @@ CoordinateSequence::toVector(std::vector<Coordinate>& out) const
     out.insert(out.end(), vect.begin(), vect.end());
 }
 
+CoordinateSequence::iterator
+CoordinateSequence::begin() {
+    return {vect.data()};
+}
+
+CoordinateSequence::iterator
+CoordinateSequence::end() {
+    return {vect.data() + vect.size()};
+}
+
+CoordinateSequence::const_iterator
+CoordinateSequence::cbegin() const {
+    return {vect.data()};
+}
+
+CoordinateSequence::const_iterator
+CoordinateSequence::cend() const {
+    return {vect.data() + vect.size()};
+}
+
 std::ostream&
 operator<< (std::ostream& os, const CoordinateSequence& cs)
 {

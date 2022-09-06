@@ -17,6 +17,7 @@
 #include <geos/export.h>
 
 #include <geos/geom/Coordinate.h> // for applyCoordinateFilter
+#include <geos/geom/CoordinateSequenceIterator.h>
 
 #include <vector>
 #include <iosfwd> // ostream
@@ -43,6 +44,9 @@ namespace geom { // geos::geom
 class GEOS_DLL CoordinateSequence {
 
 public:
+
+    using iterator = CoordinateSequenceIterator<Coordinate>;
+    using const_iterator = CoordinateSequenceIterator<const Coordinate>;
 
     typedef std::unique_ptr<CoordinateSequence> Ptr;
 
@@ -86,6 +90,11 @@ public:
     const Coordinate& operator[](std::size_t i) const
     {
         return getAt(i);
+    }
+
+    Coordinate& operator[](std::size_t i)
+    {
+        return vect[i];
     }
 
     Envelope getEnvelope() const;
@@ -321,6 +330,14 @@ public:
             setAt(c, i);
         }
     }
+
+    iterator begin();
+
+    iterator end();
+
+    const_iterator cbegin() const;
+
+    const_iterator cend() const;
 
 private:
     std::vector<Coordinate> vect;
