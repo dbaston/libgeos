@@ -344,5 +344,19 @@ void object::test<15>
     ensure_equals(geom->getCoordinateDimension(), 3);
 }
 
+// https://trac.osgeo.org/geos/ticket/1095
+template<>
+template<>
+void object::test<16>
+() {
+    try {
+        auto geom = wktreader.read("GEOMETRYCOLLECTION(POINT (0 1)), POINT (1 1)");
+        fail();
+    } catch (geos::io::ParseException &e) {
+        std::string msg(e.what());
+        ensure_equals(msg, "ParseException: Unexpected text after end of geometry");
+    }
+}
+
 
 } // namespace tut

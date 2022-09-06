@@ -52,7 +52,14 @@ WKTReader::read(const std::string& wellKnownText) const
 {
     CLocalizer clocale;
     StringTokenizer tokenizer(wellKnownText);
-    return readGeometryTaggedText(&tokenizer);
+    auto ret = readGeometryTaggedText(&tokenizer);
+
+    if (tokenizer.peekNextToken() != StringTokenizer::TT_EOF) {
+        tokenizer.nextToken();
+        throw ParseException("Unexpected text after end of geometry");
+    }
+
+    return ret;
 }
 
 std::unique_ptr<CoordinateSequence>
