@@ -255,6 +255,8 @@ public:
 
     std::unique_ptr<MultiPoint> createMultiPoint(std::vector<Coordinate> && newPoints) const;
 
+    std::unique_ptr<MultiPoint> createMultiPoint(std::vector<CoordinateXY> && newPoints) const;
+
     std::unique_ptr<MultiPoint> createMultiPoint(std::vector<std::unique_ptr<Point>> && newPoints) const;
 
     std::unique_ptr<MultiPoint> createMultiPoint(std::vector<std::unique_ptr<Geometry>> && newPoints) const;

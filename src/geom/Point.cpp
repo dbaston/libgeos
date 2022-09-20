@@ -271,8 +271,8 @@ Point::equalsExact(const Geometry* other, double tolerance) const
         return false;
     }
 
-    const Coordinate* this_coord = getCoordinate();
-    const Coordinate* other_coord = other->getCoordinate();
+    const CoordinateXY* this_coord = getCoordinate();
+    const CoordinateXY* other_coord = other->getCoordinate();
 
     // assume the isEmpty checks above worked :)
     assert(this_coord && other_coord);

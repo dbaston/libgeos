@@ -152,6 +152,9 @@ public:
             return h;
         };
     };
+
+    ///  Returns a string of the form <I>(x,y,z)</I> .
+    std::string toString() const;
 };
 
 /**

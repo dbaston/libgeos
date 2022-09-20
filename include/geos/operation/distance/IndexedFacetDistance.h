@@ -76,7 +76,7 @@ public:
     /// \param g1 a geometry
     /// \param g2 a geometry
     /// \return the nearest points on the facets of the geometries
-    static std::vector<geom::Coordinate> nearestPoints(const geom::Geometry* g1, const geom::Geometry* g2);
+    static std::vector<geom::CoordinateXY> nearestPoints(const geom::Geometry* g1, const geom::Geometry* g2);
 
     /// \brief Computes the distance from the base geometry to the given geometry.
     ///
@@ -95,7 +95,7 @@ public:
     ///
     /// \param g the geometry to compute the nearest point to
     /// \return the nearest points
-    std::vector<geom::Coordinate> nearestPoints(const geom::Geometry* g) const;
+    std::vector<geom::CoordinateXY> nearestPoints(const geom::Geometry* g) const;
 
 private:
     std::unique_ptr<geos::index::strtree::TemplateSTRtree<const FacetSequence*>> cachedTree;

@@ -40,6 +40,14 @@ Coordinate::toString() const
     return s.str();
 }
 
+std::string
+CoordinateXY::toString() const
+{
+    std::ostringstream s;
+    s << std::setprecision(17) << *this;
+    return s.str();
+}
+
 std::ostream&
 operator<< (std::ostream& os, const CoordinateXY& c)
 {
