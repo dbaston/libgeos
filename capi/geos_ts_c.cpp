@@ -222,7 +222,7 @@ typedef struct GEOSContextHandle_HS {
     {
         memset(msgBuffer, 0, sizeof(msgBuffer));
         geomFactory = GeometryFactory::getDefaultInstance();
-        point2d.reset(geomFactory->createPoint({0, 0}));
+        point2d = geomFactory->createPoint(geos::geom::CoordinateXY{0, 0});
         WKBOutputDims = 2;
         WKBByteOrder = getMachineByteOrder();
         setNoticeHandler(nullptr);
@@ -1934,7 +1934,7 @@ extern "C" {
                 if (radius) *radius = 0.0;
                 return gf->createPolygon().release();
             }
-            if (center) *center = static_cast<Geometry*>(gf->createPoint(mc.getCentre()));
+            if (center) *center = gf->createPoint(mc.getCentre()).release();
             if (radius) *radius = mc.getRadius();
             ret->setSRID(g->getSRID());
             return ret.release();

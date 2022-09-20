@@ -60,7 +60,7 @@ struct test_minimumboundingcircle_data {
         std::vector<Coordinate> exPts = mbc.getExtremalPoints();
         std::unique_ptr<Geometry> actual(geomFact->createMultiPoint(exPts));
         double actualRadius = mbc.getRadius();
-        geos::geom::Coordinate actualCentre = mbc.getCentre();
+        geos::geom::CoordinateXY actualCentre = mbc.getCentre();
 
         geomOut = reader.read(wktOut);
         bool isEqual = actual->equals(geomOut.get());

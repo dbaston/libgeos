@@ -35,6 +35,11 @@ struct CoordinateLessThen;
 class GEOS_DLL CoordinateXY {
 
 public:
+    CoordinateXY()
+        : x(0.0)
+        , y(0.0)
+    {}
+
     CoordinateXY(double xNew, double yNew)
         : x(xNew)
         , y(yNew)
@@ -126,6 +131,17 @@ public:
         return dx * dx + dy * dy;
     };
 
+    bool isNull() const
+    {
+        return (std::isnan(x) && std::isnan(y));
+    };
+
+    void setNull()
+    {
+        x = DoubleNotANumber;
+        y = DoubleNotANumber;
+    };
+
     struct GEOS_DLL HashCode
     {
         std::size_t operator()(const CoordinateXY& c) const
@@ -196,15 +212,14 @@ public:
         , z(zNew)
         {};
 
-    Coordinate(const CoordinateXY& other)
+    explicit Coordinate(const CoordinateXY& other)
         : CoordinateXY(other)
         , z(DoubleNotANumber)
         {};
 
     void setNull()
     {
-        x = DoubleNotANumber;
-        y = DoubleNotANumber;
+        CoordinateXY::setNull();
         z = DoubleNotANumber;
     };
 

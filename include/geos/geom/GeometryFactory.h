@@ -169,6 +169,7 @@ public:
 
     /// Creates a Point using the given Coordinate
     Point* createPoint(const Coordinate& coordinate) const;
+    std::unique_ptr<Point> createPoint(const CoordinateXY& coordinate) const;
 
     /// Creates a Point taking ownership of the given CoordinateSequence
     Point* createPoint(CoordinateSequence* coordinates) const;

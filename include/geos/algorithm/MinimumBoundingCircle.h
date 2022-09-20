@@ -45,7 +45,7 @@ private:
     // member variables
     const geom::Geometry* input;
     std::vector<geom::Coordinate> extremalPts;
-    geom::Coordinate centre;
+    geom::CoordinateXY centre;
     double radius;
 
     void computeCentre();
@@ -121,7 +121,7 @@ public:
     * @return the centre point of the Minimum Bounding Circle
     * @return null if the input is empty
     */
-    geom::Coordinate getCentre();
+    geom::CoordinateXY getCentre();
 
     /**
     * Gets the radius of the computed Minimum Bounding Circle.

@@ -142,7 +142,7 @@ MinimumBoundingCircle::getExtremalPoints()
 }
 
 /*public*/
-Coordinate
+CoordinateXY
 MinimumBoundingCircle::getCentre()
 {
     compute();

@@ -294,6 +294,17 @@ GeometryFactory::createPoint(std::size_t coordinateDimension) const
     return std::unique_ptr<Point>(new Point(nullptr, this));
 }
 
+std::unique_ptr<Point>
+GeometryFactory::createPoint(const CoordinateXY& coordinate) const
+{
+    if(coordinate.isNull()) {
+        return createPoint();
+    }
+    else {
+        return std::unique_ptr<Point>(new Point(coordinate, this));
+    }
+}
+
 /*public*/
 Point*
 GeometryFactory::createPoint(const Coordinate& coordinate) const
