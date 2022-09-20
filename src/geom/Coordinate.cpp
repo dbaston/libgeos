@@ -41,6 +41,13 @@ Coordinate::toString() const
 }
 
 std::ostream&
+operator<< (std::ostream& os, const CoordinateXY& c)
+{
+    os << c.x << " " << c.y;
+    return os;
+}
+
+std::ostream&
 operator<< (std::ostream& os, const Coordinate& c)
 {
     if(std::isnan(c.z)) {
