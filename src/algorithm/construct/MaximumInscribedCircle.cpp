@@ -220,8 +220,8 @@ MaximumInscribedCircle::compute()
 
     // compute radius point
     std::unique_ptr<Point> centerPoint(factory->createPoint(centerPt));
-    std::vector<geom::Coordinate> nearestPts = indexedDistance.nearestPoints(centerPoint.get());
-    radiusPt = nearestPts[0];
+    const auto& nearestPts = indexedDistance.nearestPoints(centerPoint.get());
+    radiusPt = nearestPts->getAt(0);
 
     // flag computation
     done = true;

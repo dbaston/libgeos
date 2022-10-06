@@ -272,48 +272,47 @@ SegmentNodeList::createSplitEdgePts(const SegmentNode* ei0, const SegmentNode* e
     */
     bool useIntPt1 = ei1->isInterior() || ! ei1->coord.equals2D(lastSegStartPt);
 
-    std::vector<Coordinate> pts;
-    pts.reserve(1 + (ei1->segmentIndex - ei0->segmentIndex) + useIntPt1);
+    auto pts = detail::make_unique<CoordinateSequence>();
+    pts->reserve(1 + (ei1->segmentIndex - ei0->segmentIndex) + useIntPt1);
 
-    pts.emplace_back(ei0->coord);
+    pts->add(ei0->coord);
     for (std::size_t i = ei0->segmentIndex + 1; i <= ei1->segmentIndex; i++) {
-        pts.emplace_back(edge.getCoordinate(i));
+        pts->add(edge.getCoordinate(i));
     }
     if (useIntPt1) {
-        pts.emplace_back(ei1->coord);
+        pts->add(ei1->coord);
     }
 
-    return detail::make_unique<CoordinateSequence>(std::move(pts));
+    return pts;
 }
 
 
 /*public*/
-std::vector<Coordinate>
+std::unique_ptr<CoordinateSequence>
 SegmentNodeList::getSplitCoordinates()
 {
     // ensure that the list has entries for the first and last point of the edge
     addEndpoints();
-    std::vector<Coordinate> coordList;
+    auto coordList = detail::make_unique<CoordinateSequence>();
     // there should always be at least two entries in the list, since the endpoints are nodes
     auto it = begin();
     const SegmentNode* eiPrev = &(*it);
     for(auto itEnd = end(); it != itEnd; ++it) {
         const SegmentNode* ei = &(*it);
-        addEdgeCoordinates(eiPrev, ei, coordList);
+        addEdgeCoordinates(eiPrev, ei, *coordList);
         eiPrev = ei;
     }
-    // Remove duplicate Coordinates from coordList
-    coordList.erase(std::unique(coordList.begin(), coordList.end()), coordList.end());
+    assert(!coordList->hasRepeatedPoints());
     return coordList;
 }
 
 
 /*private*/
 void
-SegmentNodeList::addEdgeCoordinates(const SegmentNode* ei0, const SegmentNode* ei1, std::vector<Coordinate>& coordList) const {
+SegmentNodeList::addEdgeCoordinates(const SegmentNode* ei0, const SegmentNode* ei1, CoordinateSequence& coordList) const {
     auto pts = createSplitEdgePts(ei0, ei1);
     // Append pts to coordList
-    pts->toVector(coordList);
+    coordList.add(pts->cbegin(), pts->cend(), false);
 }
 
 

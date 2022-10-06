@@ -469,6 +469,7 @@ GeometryFactory::createLinearRing(CoordinateSequence::Ptr && newCoords) const
     return std::unique_ptr<LinearRing>(new LinearRing(std::move(newCoords), *this));
 }
 
+#if 0
 /*public*/
 std::unique_ptr<LinearRing>
 GeometryFactory::createLinearRing(std::vector<Coordinate> && newCoords)
@@ -477,6 +478,7 @@ const
     // Can't use make_unique with protected constructor
     return std::unique_ptr<LinearRing>(new LinearRing(std::move(newCoords), *this));
 }
+#endif
 
 /*public*/
 LinearRing*
@@ -496,6 +498,7 @@ GeometryFactory::createMultiPoint(std::vector<Geometry*>* newPoints) const
     return new MultiPoint(newPoints, this);
 }
 
+#if 0
 std::unique_ptr<MultiPoint>
 GeometryFactory::createMultiPoint(std::vector<Coordinate> && newPoints) const {
     std::vector<std::unique_ptr<Geometry>> pts(newPoints.size());
@@ -506,6 +509,7 @@ GeometryFactory::createMultiPoint(std::vector<Coordinate> && newPoints) const {
 
     return std::unique_ptr<MultiPoint>(new MultiPoint(std::move(pts), *this));
 }
+#endif
 
 std::unique_ptr<MultiPoint>
 GeometryFactory::createMultiPoint(std::vector<std::unique_ptr<Point>> && newPoints) const
@@ -553,6 +557,7 @@ GeometryFactory::createMultiPoint(const CoordinateSequence& fromCoords) const
 }
 
 /*public*/
+#if 0
 MultiPoint*
 GeometryFactory::createMultiPoint(const std::vector<Coordinate>& fromCoords) const
 {
@@ -565,6 +570,7 @@ GeometryFactory::createMultiPoint(const std::vector<Coordinate>& fromCoords) con
 
     return new MultiPoint(std::move(pts), *this);
 }
+#endif
 
 /*public*/
 std::unique_ptr<Polygon>
@@ -593,7 +599,7 @@ const
 
 /*public*/
 std::unique_ptr<Polygon>
-GeometryFactory::createPolygon(std::vector<Coordinate> && coords)
+GeometryFactory::createPolygon(CoordinateSequence && coords)
 const
 {
     const geom::CoordinateSequenceFactory* csf = getCoordinateSequenceFactory();
@@ -664,6 +670,7 @@ const
 }
 
 /*public*/
+#if 0
 std::unique_ptr<LineString>
 GeometryFactory::createLineString(std::vector<Coordinate> && newCoords)
 const
@@ -671,6 +678,7 @@ const
     // Can't use make_unique with protected constructor
     return std::unique_ptr<LineString>(new LineString(std::move(newCoords), *this));
 }
+#endif
 
 /*public*/
 LineString*

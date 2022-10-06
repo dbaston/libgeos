@@ -36,31 +36,49 @@ static Profiler* profiler = Profiler::instance();
 #endif
 
 CoordinateSequence::CoordinateSequence(std::size_t size, std::size_t dim) :
-    vect(size),
+    m_vect(size*stride),
     dimension(dim)
-{}
+{
+    assert(dimension == 0 || dimension == 2 || dimension == 3);
 
+    Coordinate defaultCoord;
+
+    for (std::size_t i = 0; i < size; i++) {
+        setAt(defaultCoord, i);
+    }
+}
+
+CoordinateSequence::CoordinateSequence(const std::initializer_list<Coordinate>& list)
+{
+    reserve(list.size());
+    add(list.begin(), list.end());
+}
+
+#if 0
 CoordinateSequence::CoordinateSequence(std::vector<Coordinate> && coords, std::size_t dim) :
     vect(std::move(coords)),
     dimension(dim)
-{}
+{
+    assert(dimension == 2 || dimension == 3);
+}
 
 CoordinateSequence::CoordinateSequence(std::unique_ptr<std::vector<Coordinate>> && coords, std::size_t dim) :
     vect(std::move(*coords)),
     dimension(dim)
 {
 }
+#endif
 
 void
 CoordinateSequence::add(const Coordinate& c, bool allowRepeated)
 {
-    if(!allowRepeated && ! vect.empty()) {
-        const Coordinate& last = vect.back();
+    if(!allowRepeated && !isEmpty()) {
+        const Coordinate& last = back();
         if(last.equals2D(c)) {
             return;
         }
     }
-    vect.push_back(c);
+    add(c);
 }
 
 void
@@ -104,14 +122,17 @@ CoordinateSequence::add(std::size_t i, const Coordinate& coord, bool allowRepeat
         }
     }
 
-    vect.insert(std::next(vect.begin(), static_cast<std::ptrdiff_t>(i)), coord);
+    m_vect.insert(
+                std::next(m_vect.begin(), static_cast<std::ptrdiff_t>(i * stride)),
+                &coord.x,
+                &coord.x + stride);
 }
 
 void
 CoordinateSequence::apply_rw(const CoordinateFilter* filter)
 {
-    for(auto& coord : vect) {
-        filter->filter_rw(&coord);
+    for(auto it = begin(); it != end(); ++it) {
+        filter->filter_rw(&*it);
     }
     dimension = 0; // re-check (see http://trac.osgeo.org/geos/ticket/435)
 }
@@ -119,15 +140,9 @@ CoordinateSequence::apply_rw(const CoordinateFilter* filter)
 void
 CoordinateSequence::apply_ro(CoordinateFilter* filter) const
 {
-    for(const auto& coord : vect) {
-        filter->filter_ro(&coord);
+    for(auto it = cbegin(); it != cend(); ++it) {
+        filter->filter_ro(&*it);
     }
-}
-
-void
-CoordinateSequence::clear()
-{
-    vect.clear();
 }
 
 std::unique_ptr<CoordinateSequence>
@@ -151,11 +166,11 @@ CoordinateSequence::getDimension() const
         return dimension;
     }
 
-    if(vect.empty()) {
+    if(m_vect.empty()) {
         return 3;
     }
 
-    if(std::isnan(vect[0].z)) {
+    if(std::isnan(getAt(0).z)) {
         dimension = 2;
     }
     else {
@@ -359,8 +374,18 @@ CoordinateSequence::begin() {
     return {this};
 }
 
+CoordinateSequence::const_iterator
+CoordinateSequence::begin() const {
+    return {this};
+}
+
 CoordinateSequence::iterator
 CoordinateSequence::end() {
+    return {this, getSize()};
+}
+
+CoordinateSequence::const_iterator
+CoordinateSequence::end() const {
     return {this, getSize()};
 }
 
@@ -379,13 +404,13 @@ CoordinateSequence::setOrdinate(std::size_t index, std::size_t ordinateIndex, do
 {
     switch(ordinateIndex) {
         case CoordinateSequence::X:
-        vect[index].x = value;
+        getAt(index).x = value;
         break;
         case CoordinateSequence::Y:
-        vect[index].y = value;
+        getAt(index).y = value;
         break;
         case CoordinateSequence::Z:
-        vect[index].z = value;
+        getAt(index).z = value;
         break;
         default: {
             std::stringstream ss;
@@ -399,14 +424,32 @@ CoordinateSequence::setOrdinate(std::size_t index, std::size_t ordinateIndex, do
 void
 CoordinateSequence::setPoints(const std::vector<Coordinate>& v)
 {
-    vect.assign(v.begin(), v.end());
+    assert(stride == 3);
+    const double* cbuf = reinterpret_cast<const double*>(v.data());
+    m_vect.assign(cbuf, cbuf + v.size()*sizeof(Coordinate)/sizeof(double));
 }
 
 void
 CoordinateSequence::toVector(std::vector<Coordinate>& out) const
 {
-    out.insert(out.end(), vect.begin(), vect.end());
+    const Coordinate* cbuf = reinterpret_cast<const Coordinate*>(m_vect.data());
+    out.insert(out.end(), cbuf, cbuf + size());
 }
+
+void
+CoordinateSequence::pop_back()
+{
+    switch (stride) {
+    case 4: m_vect.pop_back(); // fall through
+    case 3: m_vect.pop_back(); // fall through
+    case 2: m_vect.pop_back();
+            m_vect.pop_back();
+        break;
+    default:
+        assert(0);
+    }
+}
+
 
 std::ostream&
 operator<< (std::ostream& os, const CoordinateSequence& cs)

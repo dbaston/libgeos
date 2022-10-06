@@ -110,8 +110,8 @@ protected:
      *
      * [final]
      */
-    CoordinateSequence::Ptr createCoordinateSequence(
-        std::unique_ptr< std::vector<Coordinate> > coords);
+    //CoordinateSequence::Ptr createCoordinateSequence(
+    //    std::unique_ptr< std::vector<Coordinate> > coords);
 
     virtual CoordinateSequence::Ptr transformCoordinates(
         const CoordinateSequence* coords,

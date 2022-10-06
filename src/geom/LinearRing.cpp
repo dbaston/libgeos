@@ -51,6 +51,7 @@ LinearRing::LinearRing(CoordinateSequence::Ptr && newCoords,
     validateConstruction();
 }
 
+#if 0
 LinearRing::LinearRing(std::vector<Coordinate> && newCoords,
                        const GeometryFactory& factory)
     :
@@ -58,6 +59,7 @@ LinearRing::LinearRing(std::vector<Coordinate> && newCoords,
 {
     validateConstruction();
 }
+#endif
 
 
 void

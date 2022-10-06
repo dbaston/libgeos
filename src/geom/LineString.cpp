@@ -107,6 +107,7 @@ LineString::LineString(CoordinateSequence::Ptr && newCoords,
     validateConstruction();
 }
 
+#if 0
 /*public*/
 LineString::LineString(std::vector<Coordinate> && newCoords,
                        const GeometryFactory& factory)
@@ -116,6 +117,7 @@ LineString::LineString(std::vector<Coordinate> && newCoords,
 {
     validateConstruction();
 }
+#endif
 
 std::unique_ptr<CoordinateSequence>
 LineString::getCoordinates() const
@@ -318,22 +320,28 @@ LineString::apply_ro(GeometryFilter* filter) const
 void
 LineString::normalizeClosed()
 {
-    auto coords = detail::make_unique<std::vector<Coordinate>>();
-    getCoordinatesRO()->toVector(*coords);
-
-    coords->erase(coords->end() - 1); // remove last point (repeated)
-
-    auto uniqueCoordinates = detail::make_unique<CoordinateSequence>(std::move(coords));
-
-    const Coordinate* minCoordinate = uniqueCoordinates->minCoordinate();
-
-    CoordinateSequence::scroll(uniqueCoordinates.get(), minCoordinate);
-    uniqueCoordinates->add(uniqueCoordinates->getAt(0));
-
-    if(uniqueCoordinates->size() >= 4 && algorithm::Orientation::isCCW(uniqueCoordinates.get())) {
-        CoordinateSequence::reverse(uniqueCoordinates.get());
+    if(isEmpty()) {
+        return;
     }
-    points = uniqueCoordinates.get()->clone();
+
+    const auto& ringCoords = getCoordinatesRO();
+
+    auto coords = detail::make_unique<CoordinateSequence>(ringCoords->getSize() - 1);
+    // exclude last point (repeated)
+    for (std::size_t i = 0; i < coords->getSize(); i++) {
+        coords->setAt(ringCoords->getAt(i), i);
+    }
+
+    const Coordinate* minCoordinate = coords->minCoordinate();
+
+    CoordinateSequence::scroll(coords.get(), minCoordinate);
+    coords->closeRing();
+
+    if(coords->size() >= 4 && algorithm::Orientation::isCCW(coords.get())) {
+        CoordinateSequence::reverse(coords.get());
+    }
+
+    points = std::move(coords);
 }
 
 /*public*/

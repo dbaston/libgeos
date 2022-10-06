@@ -154,8 +154,10 @@ void object::test<7>()
 {
     std::vector<Coordinate> coords{ Coordinate(8, 7), Coordinate(1, 1), Coordinate(1, 7) };
 
-    auto coords2 = coords; // copy
-    CoordinateSequence seq(std::move(coords2));
+    CoordinateSequence seq(coords.size());
+    for (size_t i = 0; i < coords.size(); i++) {
+        seq[i] = coords[i];
+    }
 
     std::sort(coords.begin(), coords.end());
     std::sort(seq.begin(), seq.end());

@@ -15,6 +15,9 @@
 #include <iostream>
 #include <cmath>
 
+using geos::geom::Coordinate;
+using geos::geom::CoordinateSequence;
+
 namespace tut {
 //
 // Test Group
@@ -87,10 +90,11 @@ void object::test<2>
 
     ensure("Every coodinate in the default sequence should be same.", sequence.hasRepeatedPoints());
 
-    const std::size_t dim = 2; // default/empty coordinates now 2D.
-    ensure_equals(sequence.getDimension(), dim);
+    const std::size_t dim = 2;
+    ensure_equals("default/empty coordinates now 2D", sequence.getDimension(), dim);
 }
 
+#if 0
 // Test of overriden constructor taking vector of coordiantes
 template<>
 template<>
@@ -120,6 +124,7 @@ void object::test<3>
 
     ensure("Coordinate sequence should contain unique coordinates.", !sequence.hasRepeatedPoints());
 }
+#endif
 
 // Test of copy constructor
 template<>
@@ -146,13 +151,12 @@ void object::test<4>
 
     // Create non-empty sequence
     const std::size_t sizeNonEmpty = 2;
-    std::vector<Coordinate> col;
-    col.push_back(Coordinate(1, 2, 3));
-    col.push_back(Coordinate(5, 10, 15));
-    geos::geom::CoordinateSequence non_empty_original(std::move(col));
+    geos::geom::CoordinateSequence non_empty_original;
+    non_empty_original.add(Coordinate(1, 2, 3));
+    non_empty_original.add(Coordinate(5, 10, 15));
 
     ensure(!non_empty_original.isEmpty());
-    ensure_equals(non_empty_original.size(), sizeNonEmpty);
+    ensure_equals("sequence has expected size", non_empty_original.size(), sizeNonEmpty);
 
     // Create copy of non-empty sequence
     geos::geom::CoordinateSequence non_empty_copy(non_empty_original);
@@ -175,12 +179,11 @@ void object::test<5>
     using geos::geom::Coordinate;
 
     // Create non-empty sequence
-    std::vector<Coordinate> col;
-    col.push_back(Coordinate(1, 2));
-    col.push_back(Coordinate(5, 10));
+    geos::geom::CoordinateSequence sequence;
+    sequence.add(Coordinate(1, 2));
+    sequence.add(Coordinate(5, 10));
 
     const std::size_t size = 2;
-    geos::geom::CoordinateSequence sequence(std::move(col));
 
     ensure(!sequence.isEmpty());
     ensure_equals(sequence.size(), size);
@@ -200,12 +203,11 @@ void object::test<6>
     using geos::geom::Coordinate;
 
     // Create non-empty sequence
-    std::vector<Coordinate> col;
-    col.push_back(Coordinate(1, 2, 3));
-    col.push_back(Coordinate(5, 10, 15));
+    geos::geom::CoordinateSequence sequence;
+    sequence.add(Coordinate(1, 2, 3));
+    sequence.add(Coordinate(5, 10, 15));
 
     const std::size_t size = 2;
-    geos::geom::CoordinateSequence sequence(std::move(col));
 
     ensure(!sequence.isEmpty());
     ensure_equals(sequence.size(), size);
@@ -346,7 +348,7 @@ void object::test<10>
     sequence.setPoints(col);
 
     ensure(!sequence.isEmpty());
-    ensure_equals(sequence.size(), col.size());
+    ensure_equals("sequence has expected size", sequence.size(), col.size());
     ensure(!sequence.hasRepeatedPoints());
 
     // Check inserted points
@@ -530,9 +532,6 @@ template<>
 void object::test<16>
 ()
 {
-    using geos::geom::Coordinate;
-    using geos::geom::CoordinateSequence;
-
     // Create empty sequence to fill with coordinates
     CoordinateSequence sequence;
 
@@ -591,5 +590,61 @@ void object::test<17>
     seq.apply_rw(&f);
     ensure_equals(seq.getDimension(), 2u);
 }
+
+// Test add from iterator
+template<>
+template<>
+void object::test<18>
+()
+{
+    std::vector<Coordinate> coords{{1, 2}, {3, 4}, {5, 6}};
+
+    CoordinateSequence seq;
+    seq.add(coords.begin(), coords.end());
+
+    ensure_equals("seq has expected size", seq.size(), 3u);
+    ensure(seq[0] == Coordinate(1, 2));
+    ensure(seq[1] == Coordinate(3, 4));
+    ensure(seq[2] == Coordinate(5, 6));
+}
+
+// Test add from iterator (no repeat)
+template<>
+template<>
+void object::test<19>
+()
+{
+    std::vector<Coordinate> coords{{1, 2}, {3, 4}, {3, 4}};
+
+    CoordinateSequence seq;
+    seq.add(coords.begin(), coords.end(), false);
+
+    ensure_equals("seq has expected size", seq.size(), 2u);
+    ensure(seq[0] == Coordinate(1, 2));
+    ensure(seq[1] == Coordinate(3, 4));
+}
+
+// Test add from iterator in middle
+template<>
+template<>
+void object::test<20>
+()
+{
+    std::vector<Coordinate> coords{{1, 2}, {3, 4}, {5, 6}};
+
+    CoordinateSequence seq;
+    seq.add(coords.begin(), coords.end());
+    seq.add(2, coords.begin(), coords.end());
+
+    ensure_equals("seq has expected size", seq.size(), 6u);
+    ensure(seq[0] == Coordinate(1, 2));
+    ensure(seq[1] == Coordinate(3, 4));
+    ensure(seq[2] == Coordinate(1, 2));
+    ensure(seq[3] == Coordinate(3, 4));
+    ensure(seq[4] == Coordinate(5, 6));
+    ensure(seq[5] == Coordinate(5, 6));
+}
+
+
 
 } // namespace tut

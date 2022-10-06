@@ -52,23 +52,21 @@ PointwisePrecisionReducerTransformer::transformCoordinates(const CoordinateSeque
         return detail::make_unique<CoordinateSequence>(0u, coords->getDimension());
     }
 
-    std::vector<Coordinate> coordsReduce = reducePointwise(coords);
-    return detail::make_unique<CoordinateSequence>(std::move(coordsReduce));
+    return reducePointwise(coords);
 }
 
 
 /* private */
-std::vector<Coordinate>
+std::unique_ptr<CoordinateSequence>
 PointwisePrecisionReducerTransformer::reducePointwise(const CoordinateSequence* coordinates)
 {
-    std::vector<Coordinate> coordReduce;
-    coordReduce.reserve(coordinates->size());
+    auto coordReduce = detail::make_unique<CoordinateSequence>();
+    coordReduce->reserve(coordinates->size());
 
     // copy coordinates and reduce
-    for (std::size_t i = 0; i < coordinates->size(); i++) {
-        Coordinate coord = coordinates->getAt(i);
+    for (Coordinate coord : *coordinates) {
         targetPM.makePrecise(coord);
-        coordReduce.emplace_back(coord);
+        coordReduce->add(coord);
     }
     return coordReduce;
 }

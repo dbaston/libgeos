@@ -52,11 +52,7 @@ public:
 
     CoordinateSequence() : dimension(0) {}
 
-    //CoordinateSequence(const std::vector<Coordinate>& coords, std::size_t dim);
-
-    CoordinateSequence(std::vector<Coordinate>&& coords, std::size_t dim = 0);
-
-    CoordinateSequence(std::unique_ptr<std::vector<Coordinate>>&& coords, std::size_t dim = 0);
+    CoordinateSequence(const std::initializer_list<Coordinate>&);
 
     CoordinateSequence(std::size_t size, std::size_t dim = 0);
 
@@ -71,17 +67,27 @@ public:
      * Returns a read-only reference to Coordinate at position i.
      */
     const Coordinate& getAt(std::size_t i) const {
-        return vect[i];
+        const Coordinate* orig = reinterpret_cast<const Coordinate*>(&m_vect[i*stride]);
+        return *orig;
     }
 
     Coordinate& getAt(std::size_t i) {
-        return vect[i];
+        Coordinate* orig = reinterpret_cast<Coordinate*>(&m_vect[i*stride]);
+        return *orig;
     }
 
     /// Return last Coordinate in the sequence
     const Coordinate& back() const
     {
         return getAt(size() - 1);
+    }
+
+    void clear() {
+        m_vect.clear();
+    }
+
+    void reserve(std::size_t capacity) {
+        m_vect.reserve(capacity * stride);
     }
 
     /// Return first Coordinate in the sequence
@@ -120,7 +126,7 @@ public:
 
     size_t size() const
     {
-        return vect.size();
+        return m_vect.size() / stride;
     }
 
     /// Pushes all Coordinates of this sequence into the provided vector.
@@ -131,13 +137,40 @@ public:
 
     /// Returns <code>true</code> if list contains no coordinates.
     bool isEmpty() const {
-        return vect.empty();
+        return m_vect.empty();
     }
 
     /// Add a Coordinate to the list
     void add(const Coordinate& c) {
-        vect.push_back(c);
+        const double* from = &c.x;
+        const double* to = from + stride;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+        // Ignore false warning for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
+        m_vect.insert(m_vect.end(), from, to);
+#pragma GCC diagnostic pop
     }
+
+    void add(double x, double y) {
+        Coordinate c(x, y);
+        add(c);
+    }
+
+    template<typename T, typename... Args>
+    void add(T begin, T end, Args... args) {
+        for (auto it = begin; it != end; ++it) {
+            add(*it, args...);
+        }
+    }
+
+    template<typename... Args>
+    void add(const CoordinateSequence& cs, Args... args) {
+        for (const auto& c : cs) {
+            add(c, args...);
+        }
+    }
+
+    void pop_back();
 
     /**
      * \brief Add a coordinate
@@ -160,11 +193,27 @@ public:
      */
     void add(std::size_t i, const Coordinate& coord, bool allowRepeated);
 
+    template<typename T>
+    void add(std::size_t i, T from, T to) {
+        auto npts = static_cast<std::size_t>(std::distance(from, to));
+
+        // Clear some space
+        m_vect.insert(std::next(m_vect.begin(), static_cast<decltype(m_vect)::iterator::difference_type>(i * stride)),
+                      npts * stride,
+                      0.0);
+
+        for (auto it = from; it != to; ++it) {
+            setAt(*it, i);
+            i++;
+        }
+    }
+
     void add(const CoordinateSequence* cl, bool allowRepeated, bool direction);
 
     /// Copy Coordinate c to position pos
     void setAt(const Coordinate& c, std::size_t pos) {
-        vect[pos]= c;
+        Coordinate& orig = getAt(pos);
+        orig = c;
     }
 
     /// Get a string representation of CoordinateSequence
@@ -311,8 +360,6 @@ public:
     void apply_rw(const CoordinateFilter* filter);
     void apply_ro(CoordinateFilter* filter) const;
 
-    void clear();
-
     void closeRing();
 
     /** \brief
@@ -339,12 +386,21 @@ public:
 
     iterator end();
 
+    const_iterator begin() const;
+
+    const_iterator end() const;
+
     const_iterator cbegin() const;
 
     const_iterator cend() const;
+
+    double* data() {
+        return m_vect.data();
+    }
 private:
-    std::vector<Coordinate> vect;
+    std::vector<double> m_vect;
     mutable std::size_t dimension;
+    static constexpr uint8_t stride = 3;
 };
 
 GEOS_DLL std::ostream& operator<< (std::ostream& os, const CoordinateSequence& cs);
