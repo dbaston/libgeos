@@ -646,5 +646,109 @@ void object::test<20>
 }
 
 
+// Test create from Coordinate
+template<>
+template<>
+void object::test<21>
+()
+{
+    Coordinate c(1, 2);
+
+    CoordinateSequence seq(c);
+
+    ensure_equals("seq has expected size", seq.size(), 1u);
+    ensure_equals("seq has expected dimension", seq.getDimension(), 2u);
+    ensure("seq is not empty", !seq.isEmpty());
+
+    c.y = 3;
+
+    ensure_equals("seq holds no reference to original Coordinate", seq.getAt(0).y, 2.0);
+
+    // Modification changes to vector type
+    seq.add({3, 4});
+
+    ensure_equals("modified seq has expected size", seq.size(), 2u);
+    ensure_equals("modified seq has expected dimension", seq.getDimension(), 2u);
+}
+
+// Test create 3D seq from 3D buffer
+template<>
+template<>
+void object::test<22>
+()
+{
+    std::vector<double> values{1, 2, 3,
+                               4, 5, 6,
+                               7, 8, 9};
+
+    CoordinateSequence seq(values.data(), values.size(), 3);
+
+    ensure_equals("seq has expected size", seq.size(), 3u);
+    ensure_equals("seq has expected dimension", seq.getDimension(), 3u);
+
+    ensure(seq[0].equals3D({1, 2, 3}));
+    ensure(seq[1].equals3D({4, 5, 6}));
+    ensure(seq[2].equals3D({7, 8, 9}));
+
+    // Modification detaches from buffer
+    seq.add({10, 11, 12});
+
+    ensure_equals("modified seq has expected size", seq.size(), 4u);
+    ensure_equals("modified seq has expected dimension", seq.getDimension(), 3u);
+}
+
+// Test create 2D seq from 4D buffer
+template<>
+template<>
+void object::test<23>
+()
+{
+    auto nan = std::numeric_limits<double>::quiet_NaN();
+
+    std::vector<double> values{1, 2, nan, 3,
+                               4, 5, nan, 6,
+                               7, 8, nan, 9};
+
+    CoordinateSequence seq(values.data(), values.size(), 4, 2);
+
+    ensure_equals("seq has expected size", seq.size(), 3u);
+    ensure_equals("seq has expected dimension", seq.getDimension(), 2u);
+
+    ensure(seq[0].equals2D({1, 2}));
+    ensure(seq[1].equals2D({4, 5}));
+    ensure(seq[2].equals2D({7, 8}));
+
+    // Modification detaches from buffer
+    seq.add({10, 11});
+
+    ensure_equals("modified seq has expected size", seq.size(), 4u);
+    ensure_equals("modified seq has expected dimension", seq.getDimension(), 2u);
+}
+
+// Test toVector with Coordinate-backed seq
+template<>
+template<>
+void object::test<24>
+()
+{
+    Coordinate c(1, 2);
+    CoordinateSequence seq(c);
+
+    std::vector<Coordinate> coords;
+    seq.toVector(coords);
+
+    ensure_equals("coords has correct size", coords.size(), 1u);
+    ensure_equals(coords[0], c);
+}
+
+// Test toVector with buffer-backed seq
+template<>
+template<>
+void object::test<25>
+()
+{
+
+}
+
 
 } // namespace tut

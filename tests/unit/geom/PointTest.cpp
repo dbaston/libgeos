@@ -567,17 +567,17 @@ void object::test<45>
 ()
 {
     auto empty2d = factory_->createPoint();
-    ensure_equals(empty2d->getCoordinateDimension(), 2);
+    ensure_equals("empty point is 2d", empty2d->getCoordinateDimension(), 2);
 
     auto seq2 = geos::detail::make_unique<geos::geom::CoordinateSequence>(0u, 2u);
-    ensure_equals(seq2->getDimension(), 2u);
+    ensure_equals("seq2 is 2d", seq2->getDimension(), 2u);
     auto pt2 = factory_->createPoint(std::move(seq2));
-    ensure_equals(pt2->getCoordinateDimension(), 2);
+    ensure_equals("empty point from 2d seq is 2d", pt2->getCoordinateDimension(), 2);
 
     auto seq3 = geos::detail::make_unique<geos::geom::CoordinateSequence>(0u, 3u);
-    ensure_equals(seq3->getDimension(), 3u);
+    ensure_equals("seq3 is 3d", seq3->getDimension(), 3u);
     auto pt3 = factory_->createPoint(std::move(seq3));
-    ensure_equals(pt3->getCoordinateDimension(), 3);
+    ensure_equals("empty point from 3d seq is 3d", pt3->getCoordinateDimension(), 3);
 }
 
 

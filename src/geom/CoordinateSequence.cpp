@@ -36,8 +36,10 @@ static Profiler* profiler = Profiler::instance();
 #endif
 
 CoordinateSequence::CoordinateSequence(std::size_t size, std::size_t dim) :
-    m_vect(size*stride),
-    dimension(dim)
+    m_vect(size*3),
+    m_type(DataType::VECTOR),
+    dimension(dim),
+    m_stride(3)
 {
     assert(dimension == 0 || dimension == 2 || dimension == 3);
 
@@ -48,10 +50,90 @@ CoordinateSequence::CoordinateSequence(std::size_t size, std::size_t dim) :
     }
 }
 
-CoordinateSequence::CoordinateSequence(const std::initializer_list<Coordinate>& list)
+CoordinateSequence::CoordinateSequence(const std::initializer_list<Coordinate>& list) :
+    m_vect(),
+    m_type(DataType::VECTOR),
+    dimension(0),
+    m_stride(3)
 {
     reserve(list.size());
     add(list.begin(), list.end());
+}
+
+CoordinateSequence::CoordinateSequence(const Coordinate& c) :
+    m_coord(c),
+    m_type(DataType::SINGLE),
+    dimension(std::isnan(c.z) ? 2 : 3),
+    m_stride(3)
+{
+}
+
+CoordinateSequence::CoordinateSequence(double* buf, std::size_t size, std::uint8_t stride, std::size_t dim) :
+    m_buf{buf, size},
+    m_type(DataType::BUFFER),
+    dimension(dim),
+    m_stride(stride)
+{
+}
+
+CoordinateSequence::CoordinateSequence(const CoordinateSequence& other) :
+    m_vect(),
+    m_type(DataType::VECTOR),
+    dimension(other.dimension),
+    m_stride(3)
+{
+    // TODO set this type to single-point if possible
+
+    add(other.cbegin(), other.cend());
+}
+
+CoordinateSequence&
+CoordinateSequence::operator=(const CoordinateSequence& other) {
+    // TODO set this type to single-point if possible
+
+    dimension = other.dimension;
+    m_stride = other.m_stride;
+
+    clear();
+    add(other.cbegin(), other.cend());
+    return *this;
+}
+
+CoordinateSequence::CoordinateSequence(CoordinateSequence&& other) :
+    m_vect(),
+    m_type(DataType::VECTOR),
+    dimension(other.dimension),
+    m_stride(other.m_stride)
+{
+    // TODO set this type to single-point if possible
+
+    if (other.m_type == DataType::VECTOR) {
+        m_vect = std::move(other.m_vect);
+    } else {
+        add(other.cbegin(), other.cend());
+    }
+}
+
+CoordinateSequence&
+CoordinateSequence::operator=(CoordinateSequence&& other) {
+    // TODO set this type to single-point if possible
+
+    clear();
+
+    if (other.m_type == DataType::VECTOR) {
+        m_vect = std::move(other.m_vect);
+    } else {
+        add(other.cbegin(), other.cend());
+    }
+
+    return *this;
+}
+
+CoordinateSequence::~CoordinateSequence()
+{
+    if (m_type == DataType::VECTOR) {
+        m_vect.~vector();
+    }
 }
 
 #if 0
@@ -72,6 +154,8 @@ CoordinateSequence::CoordinateSequence(std::unique_ptr<std::vector<Coordinate>> 
 void
 CoordinateSequence::add(const Coordinate& c, bool allowRepeated)
 {
+    convertToVector();
+
     if(!allowRepeated && !isEmpty()) {
         const Coordinate& last = back();
         if(last.equals2D(c)) {
@@ -84,6 +168,7 @@ CoordinateSequence::add(const Coordinate& c, bool allowRepeated)
 void
 CoordinateSequence::add(const CoordinateSequence* cl, bool allowRepeated, bool direction)
 {
+    convertToVector();
     // FIXME:  don't rely on negative values for 'j' (the reverse case)
 
     const auto npts = cl->size();
@@ -103,6 +188,8 @@ CoordinateSequence::add(const CoordinateSequence* cl, bool allowRepeated, bool d
 void
 CoordinateSequence::add(std::size_t i, const Coordinate& coord, bool allowRepeated)
 {
+    convertToVector();
+
     // don't add duplicate coordinates
     if(! allowRepeated) {
         std::size_t sz = size();
@@ -123,9 +210,9 @@ CoordinateSequence::add(std::size_t i, const Coordinate& coord, bool allowRepeat
     }
 
     m_vect.insert(
-                std::next(m_vect.begin(), static_cast<std::ptrdiff_t>(i * stride)),
+                std::next(m_vect.begin(), static_cast<std::ptrdiff_t>(i * m_stride)),
                 &coord.x,
-                &coord.x + stride);
+                &coord.x + m_stride);
 }
 
 void
@@ -166,7 +253,7 @@ CoordinateSequence::getDimension() const
         return dimension;
     }
 
-    if(m_vect.empty()) {
+    if(isEmpty()) {
         return 3;
     }
 
@@ -424,7 +511,7 @@ CoordinateSequence::setOrdinate(std::size_t index, std::size_t ordinateIndex, do
 void
 CoordinateSequence::setPoints(const std::vector<Coordinate>& v)
 {
-    assert(stride == 3);
+    assert(m_stride == 3);
     const double* cbuf = reinterpret_cast<const double*>(v.data());
     m_vect.assign(cbuf, cbuf + v.size()*sizeof(Coordinate)/sizeof(double));
 }
@@ -432,14 +519,21 @@ CoordinateSequence::setPoints(const std::vector<Coordinate>& v)
 void
 CoordinateSequence::toVector(std::vector<Coordinate>& out) const
 {
-    const Coordinate* cbuf = reinterpret_cast<const Coordinate*>(m_vect.data());
-    out.insert(out.end(), cbuf, cbuf + size());
+    if (m_stride == 3) {
+        out.insert(out.end(),
+                   reinterpret_cast<const Coordinate*>(data()),
+                   reinterpret_cast<const Coordinate*>(data() + m_stride * size()));
+    } else {
+        out.insert(out.end(), cbegin(), cend());
+    }
 }
 
 void
 CoordinateSequence::pop_back()
 {
-    switch (stride) {
+    convertToVector();
+
+    switch (m_stride) {
     case 4: m_vect.pop_back(); // fall through
     case 3: m_vect.pop_back(); // fall through
     case 2: m_vect.pop_back();
@@ -485,6 +579,28 @@ bool
 operator!= (const CoordinateSequence& s1, const CoordinateSequence& s2)
 {
     return ! CoordinateSequence::equals(&s1, &s2);
+}
+
+void
+CoordinateSequence::convertToVector() {
+    switch (m_type) {
+        case DataType::SINGLE: {
+            const double* from = &m_coord.x;
+            std::vector<double> vect(m_stride);
+            vect.assign(from, from + m_stride);
+            new(&m_vect) std::vector<double>(std::move(vect));
+            m_type = DataType::VECTOR;
+            return;
+        }
+        case DataType::BUFFER: {
+            std::vector<double> vect(m_buf.m_buf_size);
+            vect.assign(m_buf.m_buf, m_buf.m_buf + m_buf.m_buf_size);
+            new(&m_vect) std::vector<double>(std::move(vect));
+            m_type = DataType::VECTOR;
+            return;
+        }
+        case DataType::VECTOR: return;
+    }
 }
 
 } // namespace geos::geom

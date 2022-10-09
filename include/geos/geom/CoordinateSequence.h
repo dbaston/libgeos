@@ -19,6 +19,7 @@
 #include <geos/geom/Coordinate.h> // for applyCoordinateFilter
 #include <geos/geom/CoordinateSequenceIterator.h>
 
+#include <cassert>
 #include <vector>
 #include <iosfwd> // ostream
 #include <memory> // for unique_ptr typedef
@@ -50,13 +51,23 @@ public:
 
     typedef std::unique_ptr<CoordinateSequence> Ptr;
 
-    CoordinateSequence() : dimension(0) {}
+    CoordinateSequence(const Coordinate&);
+
+    CoordinateSequence(double* buf, std::size_t size, std::uint8_t stride, std::size_t dimension = 0);
 
     CoordinateSequence(const std::initializer_list<Coordinate>&);
 
-    CoordinateSequence(std::size_t size, std::size_t dim = 0);
+    CoordinateSequence(std::size_t size = 0, std::size_t dim = 0);
 
-    ~CoordinateSequence() = default;
+    ~CoordinateSequence();
+
+    CoordinateSequence(const CoordinateSequence& other);
+
+    CoordinateSequence(CoordinateSequence&& other);
+
+    CoordinateSequence& operator=(const CoordinateSequence& other);
+
+    CoordinateSequence& operator=(CoordinateSequence&& other);
 
     /** \brief
      * Returns a deep copy of this collection.
@@ -67,12 +78,12 @@ public:
      * Returns a read-only reference to Coordinate at position i.
      */
     const Coordinate& getAt(std::size_t i) const {
-        const Coordinate* orig = reinterpret_cast<const Coordinate*>(&m_vect[i*stride]);
+        const Coordinate* orig = reinterpret_cast<const Coordinate*>(data() + i*m_stride);
         return *orig;
     }
 
     Coordinate& getAt(std::size_t i) {
-        Coordinate* orig = reinterpret_cast<Coordinate*>(&m_vect[i*stride]);
+        Coordinate* orig = reinterpret_cast<Coordinate*>(data() + i*m_stride);
         return *orig;
     }
 
@@ -83,11 +94,13 @@ public:
     }
 
     void clear() {
+        convertToVector();
         m_vect.clear();
     }
 
     void reserve(std::size_t capacity) {
-        m_vect.reserve(capacity * stride);
+        convertToVector();
+        m_vect.reserve(capacity * m_stride);
     }
 
     /// Return first Coordinate in the sequence
@@ -126,7 +139,13 @@ public:
 
     size_t size() const
     {
-        return m_vect.size() / stride;
+        switch (m_type) {
+            case DataType::VECTOR: return m_vect.size() / m_stride;
+            case DataType::BUFFER: return m_buf.m_buf_size / m_stride;
+            case DataType::SINGLE: return 1u;
+        }
+        assert(0);
+        return 0;
     }
 
     /// Pushes all Coordinates of this sequence into the provided vector.
@@ -137,13 +156,14 @@ public:
 
     /// Returns <code>true</code> if list contains no coordinates.
     bool isEmpty() const {
-        return m_vect.empty();
+        return size() == 0;
     }
 
     /// Add a Coordinate to the list
     void add(const Coordinate& c) {
+        convertToVector();
         const double* from = &c.x;
-        const double* to = from + stride;
+        const double* to = from + m_stride;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
         // Ignore false warning for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
@@ -195,11 +215,12 @@ public:
 
     template<typename T>
     void add(std::size_t i, T from, T to) {
+        convertToVector();
         auto npts = static_cast<std::size_t>(std::distance(from, to));
 
         // Clear some space
-        m_vect.insert(std::next(m_vect.begin(), static_cast<decltype(m_vect)::iterator::difference_type>(i * stride)),
-                      npts * stride,
+        m_vect.insert(std::next(m_vect.begin(), static_cast<decltype(m_vect)::iterator::difference_type>(i * m_stride)),
+                      npts * m_stride,
                       0.0);
 
         for (auto it = from; it != to; ++it) {
@@ -395,12 +416,49 @@ public:
     const_iterator cend() const;
 
     double* data() {
-        return m_vect.data();
+        switch (m_type) {
+            case DataType::VECTOR: return m_vect.data();
+            case DataType::BUFFER: return m_buf.m_buf;
+            case DataType::SINGLE: return &m_coord.x;
+        }
+        assert(0);
+        return nullptr;
     }
+
+    const double* data() const {
+        switch (m_type) {
+            case DataType::VECTOR: return m_vect.data();
+            case DataType::BUFFER: return m_buf.m_buf;
+            case DataType::SINGLE: return &m_coord.x;
+        }
+        assert(0);
+        return nullptr;
+    }
+
 private:
-    std::vector<double> m_vect;
+    struct CoordinateBuffer {
+        double* m_buf;
+        std::size_t m_buf_size;
+    };
+
+    union {
+        std::vector<double> m_vect;
+        CoordinateBuffer m_buf;
+        Coordinate m_coord;
+    };
+
+    enum class DataType : char {
+        VECTOR,
+        BUFFER,
+        SINGLE
+    };
+
+    DataType m_type;
+
+    void convertToVector();
+
     mutable std::size_t dimension;
-    static constexpr uint8_t stride = 3;
+    uint8_t m_stride;
 };
 
 GEOS_DLL std::ostream& operator<< (std::ostream& os, const CoordinateSequence& cs);
