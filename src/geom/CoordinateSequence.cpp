@@ -84,15 +84,24 @@ CoordinateSequence::CoordinateSequence(double* buf, std::size_t size, std::uint8
 }
 
 CoordinateSequence::CoordinateSequence(const CoordinateSequence& other) :
-    m_vect(),
+    m_coord(),
     m_ptr(nullptr),
-    m_type(DataType::VECTOR),
+    m_type(DataType::SINGLE),
     dimension(other.dimension),
-    m_stride(3)
+    m_stride(other.m_stride)
 {
-    // TODO set this type to single-point if possible
-
-    add(other.cbegin(), other.cend());
+    if (other.m_type == DataType::VECTOR) {
+        new(&m_vect) std::vector<double>(other.m_vect);
+        m_type = DataType::VECTOR;
+        m_ptr = m_vect.data();
+    } else if (other.m_type == DataType::SINGLE) {
+        m_coord = other.m_coord;
+        m_ptr = &m_coord.x;
+    } else {
+        new(&m_vect) std::vector<double>(other.m_vect);
+        m_type = DataType::VECTOR;
+        add(other.cbegin(), other.cend());
+    }
 }
 
 CoordinateSequence&
@@ -109,6 +118,7 @@ CoordinateSequence::operator=(const CoordinateSequence& other) {
 
 CoordinateSequence::CoordinateSequence(CoordinateSequence&& other) :
     m_vect(),
+    m_ptr(nullptr),
     m_type(DataType::VECTOR),
     dimension(other.dimension),
     m_stride(other.m_stride)
@@ -591,38 +601,6 @@ operator!= (const CoordinateSequence& s1, const CoordinateSequence& s2)
     return ! CoordinateSequence::equals(&s1, &s2);
 }
 
-void
-CoordinateSequence::convertToVector() {
-    switch (m_type) {
-        case DataType::SINGLE: {
-            const double* from = &m_coord.x;
-            std::vector<double> vect(m_stride);
-            vect.assign(from, from + m_stride);
-            new(&m_vect) std::vector<double>(std::move(vect));
-            m_type = DataType::VECTOR;
-            updateData();
-            return;
-        }
-        case DataType::BUFFER: {
-            std::vector<double> vect(m_buf.m_buf_size);
-            vect.assign(m_buf.m_buf, m_buf.m_buf + m_buf.m_buf_size);
-            new(&m_vect) std::vector<double>(std::move(vect));
-            m_type = DataType::VECTOR;
-            updateData();
-            return;
-        }
-        case DataType::VECTOR: return;
-    }
-}
-
-void
-CoordinateSequence::updateData() {
-    switch (m_type) {
-        case DataType::VECTOR: m_ptr = m_vect.data(); break;
-        case DataType::BUFFER: m_ptr = m_buf.m_buf; break;
-        case DataType::SINGLE: m_ptr = &m_coord.x; break;
-    }
-}
 
 } // namespace geos::geom
 } // namespace geos

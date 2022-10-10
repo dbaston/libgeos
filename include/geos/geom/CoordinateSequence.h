@@ -169,7 +169,7 @@ public:
         // Ignore false warning for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
         m_vect.insert(m_vect.end(), from, to);
 #pragma GCC diagnostic pop
-        updateData();
+        m_ptr = m_vect.data();
     }
 
     void add(double x, double y) {
@@ -449,8 +449,28 @@ private:
 
     DataType m_type;
 
-    void convertToVector();
-    void updateData();
+    void convertToVector() {
+        switch (m_type) {
+            case DataType::SINGLE: {
+                const double* from = &m_coord.x;
+                std::vector<double> vect(m_stride);
+                vect.assign(from, from + m_stride);
+                new(&m_vect) std::vector<double>(std::move(vect));
+                m_type = DataType::VECTOR;
+                m_ptr = m_vect.data();
+                return;
+            }
+            case DataType::BUFFER: {
+                std::vector<double> vect(m_buf.m_buf_size);
+                vect.assign(m_buf.m_buf, m_buf.m_buf + m_buf.m_buf_size);
+                new(&m_vect) std::vector<double>(std::move(vect));
+                m_type = DataType::VECTOR;
+                m_ptr = m_vect.data();
+                return;
+            }
+            case DataType::VECTOR: return;
+        }
+    }
 
     mutable std::size_t dimension;
     uint8_t m_stride;

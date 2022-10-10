@@ -57,9 +57,8 @@ Point::Point(CoordinateSequence* newCoords, const GeometryFactory* factory)
 
 Point::Point(const Coordinate & c, const GeometryFactory* factory)
     : Geometry(factory),
-    coordinates(1)
+    coordinates(c)
 {
-    coordinates.setAt(c, 0);
 }
 
 /*protected*/
