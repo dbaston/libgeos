@@ -37,21 +37,26 @@ static Profiler* profiler = Profiler::instance();
 
 CoordinateSequence::CoordinateSequence(std::size_t size, std::size_t dim) :
     m_vect(size*3),
+    m_ptr(nullptr),
     m_type(DataType::VECTOR),
     dimension(dim),
     m_stride(3)
 {
     assert(dimension == 0 || dimension == 2 || dimension == 3);
 
+    m_ptr = m_vect.data();
+
     Coordinate defaultCoord;
 
     for (std::size_t i = 0; i < size; i++) {
         setAt(defaultCoord, i);
     }
+
 }
 
 CoordinateSequence::CoordinateSequence(const std::initializer_list<Coordinate>& list) :
     m_vect(),
+    m_ptr(nullptr),
     m_type(DataType::VECTOR),
     dimension(0),
     m_stride(3)
@@ -62,6 +67,7 @@ CoordinateSequence::CoordinateSequence(const std::initializer_list<Coordinate>& 
 
 CoordinateSequence::CoordinateSequence(const Coordinate& c) :
     m_coord(c),
+    m_ptr(&m_coord.x),
     m_type(DataType::SINGLE),
     dimension(std::isnan(c.z) ? 2 : 3),
     m_stride(3)
@@ -70,6 +76,7 @@ CoordinateSequence::CoordinateSequence(const Coordinate& c) :
 
 CoordinateSequence::CoordinateSequence(double* buf, std::size_t size, std::uint8_t stride, std::size_t dim) :
     m_buf{buf, size},
+    m_ptr(m_buf.m_buf),
     m_type(DataType::BUFFER),
     dimension(dim),
     m_stride(stride)
@@ -78,6 +85,7 @@ CoordinateSequence::CoordinateSequence(double* buf, std::size_t size, std::uint8
 
 CoordinateSequence::CoordinateSequence(const CoordinateSequence& other) :
     m_vect(),
+    m_ptr(nullptr),
     m_type(DataType::VECTOR),
     dimension(other.dimension),
     m_stride(3)
@@ -109,6 +117,7 @@ CoordinateSequence::CoordinateSequence(CoordinateSequence&& other) :
 
     if (other.m_type == DataType::VECTOR) {
         m_vect = std::move(other.m_vect);
+        m_ptr = m_vect.data();
     } else {
         add(other.cbegin(), other.cend());
     }
@@ -122,6 +131,7 @@ CoordinateSequence::operator=(CoordinateSequence&& other) {
 
     if (other.m_type == DataType::VECTOR) {
         m_vect = std::move(other.m_vect);
+        m_ptr = m_vect.data();
     } else {
         add(other.cbegin(), other.cend());
     }
@@ -154,8 +164,6 @@ CoordinateSequence::CoordinateSequence(std::unique_ptr<std::vector<Coordinate>> 
 void
 CoordinateSequence::add(const Coordinate& c, bool allowRepeated)
 {
-    convertToVector();
-
     if(!allowRepeated && !isEmpty()) {
         const Coordinate& last = back();
         if(last.equals2D(c)) {
@@ -168,7 +176,6 @@ CoordinateSequence::add(const Coordinate& c, bool allowRepeated)
 void
 CoordinateSequence::add(const CoordinateSequence* cl, bool allowRepeated, bool direction)
 {
-    convertToVector();
     // FIXME:  don't rely on negative values for 'j' (the reverse case)
 
     const auto npts = cl->size();
@@ -188,8 +195,6 @@ CoordinateSequence::add(const CoordinateSequence* cl, bool allowRepeated, bool d
 void
 CoordinateSequence::add(std::size_t i, const Coordinate& coord, bool allowRepeated)
 {
-    convertToVector();
-
     // don't add duplicate coordinates
     if(! allowRepeated) {
         std::size_t sz = size();
@@ -209,10 +214,12 @@ CoordinateSequence::add(std::size_t i, const Coordinate& coord, bool allowRepeat
         }
     }
 
+    convertToVector();
     m_vect.insert(
                 std::next(m_vect.begin(), static_cast<std::ptrdiff_t>(i * m_stride)),
                 &coord.x,
                 &coord.x + m_stride);
+    m_ptr = m_vect.data();
 }
 
 void
@@ -511,9 +518,12 @@ CoordinateSequence::setOrdinate(std::size_t index, std::size_t ordinateIndex, do
 void
 CoordinateSequence::setPoints(const std::vector<Coordinate>& v)
 {
+    convertToVector();
+
     assert(m_stride == 3);
     const double* cbuf = reinterpret_cast<const double*>(v.data());
     m_vect.assign(cbuf, cbuf + v.size()*sizeof(Coordinate)/sizeof(double));
+    m_ptr = m_vect.data();
 }
 
 void
@@ -590,6 +600,7 @@ CoordinateSequence::convertToVector() {
             vect.assign(from, from + m_stride);
             new(&m_vect) std::vector<double>(std::move(vect));
             m_type = DataType::VECTOR;
+            updateData();
             return;
         }
         case DataType::BUFFER: {
@@ -597,9 +608,19 @@ CoordinateSequence::convertToVector() {
             vect.assign(m_buf.m_buf, m_buf.m_buf + m_buf.m_buf_size);
             new(&m_vect) std::vector<double>(std::move(vect));
             m_type = DataType::VECTOR;
+            updateData();
             return;
         }
         case DataType::VECTOR: return;
+    }
+}
+
+void
+CoordinateSequence::updateData() {
+    switch (m_type) {
+        case DataType::VECTOR: m_ptr = m_vect.data(); break;
+        case DataType::BUFFER: m_ptr = m_buf.m_buf; break;
+        case DataType::SINGLE: m_ptr = &m_coord.x; break;
     }
 }
 

@@ -169,6 +169,7 @@ public:
         // Ignore false warning for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
         m_vect.insert(m_vect.end(), from, to);
 #pragma GCC diagnostic pop
+        updateData();
     }
 
     void add(double x, double y) {
@@ -222,11 +223,14 @@ public:
         m_vect.insert(std::next(m_vect.begin(), static_cast<decltype(m_vect)::iterator::difference_type>(i * m_stride)),
                       npts * m_stride,
                       0.0);
+        m_ptr = m_vect.data();
 
         for (auto it = from; it != to; ++it) {
             setAt(*it, i);
             i++;
         }
+
+        m_ptr = m_vect.data();
     }
 
     void add(const CoordinateSequence* cl, bool allowRepeated, bool direction);
@@ -416,23 +420,11 @@ public:
     const_iterator cend() const;
 
     double* data() {
-        switch (m_type) {
-            case DataType::VECTOR: return m_vect.data();
-            case DataType::BUFFER: return m_buf.m_buf;
-            case DataType::SINGLE: return &m_coord.x;
-        }
-        assert(0);
-        return nullptr;
+        return m_ptr;
     }
 
     const double* data() const {
-        switch (m_type) {
-            case DataType::VECTOR: return m_vect.data();
-            case DataType::BUFFER: return m_buf.m_buf;
-            case DataType::SINGLE: return &m_coord.x;
-        }
-        assert(0);
-        return nullptr;
+        return m_ptr;
     }
 
 private:
@@ -453,9 +445,12 @@ private:
         SINGLE
     };
 
+    double* m_ptr;
+
     DataType m_type;
 
     void convertToVector();
+    void updateData();
 
     mutable std::size_t dimension;
     uint8_t m_stride;
