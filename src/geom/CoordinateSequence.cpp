@@ -39,7 +39,7 @@ CoordinateSequence::CoordinateSequence(std::size_t size, std::size_t dim) :
     m_vect(size*3),
     m_ptr(nullptr),
     m_type(DataType::VECTOR),
-    dimension(dim),
+    dimension(static_cast<std::uint8_t>(dim)),
     m_stride(3)
 {
     assert(dimension == 0 || dimension == 2 || dimension == 3);
@@ -78,7 +78,7 @@ CoordinateSequence::CoordinateSequence(double* buf, std::size_t size, std::uint8
     m_buf{buf, size},
     m_ptr(m_buf.m_buf),
     m_type(DataType::BUFFER),
-    dimension(dim),
+    dimension(static_cast<std::uint8_t>(dim)),
     m_stride(stride)
 {
 }

@@ -446,8 +446,9 @@ private:
     };
 
     double* m_ptr;
-
     DataType m_type;
+    mutable std::uint8_t dimension;
+    uint8_t m_stride;
 
     void convertToVector() {
         switch (m_type) {
@@ -472,8 +473,6 @@ private:
         }
     }
 
-    mutable std::size_t dimension;
-    uint8_t m_stride;
 };
 
 GEOS_DLL std::ostream& operator<< (std::ostream& os, const CoordinateSequence& cs);
