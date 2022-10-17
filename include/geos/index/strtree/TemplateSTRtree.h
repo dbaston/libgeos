@@ -393,6 +393,10 @@ protected:
     size_t nodeCapacity; //*< maximum number of children of each node */
     size_t numItems;     //*< total number of items in the tree, if it has been built. */
 
+public:
+    bool needsSorting = true;
+protected:
+
     // Prevent instantiation of base class.
     // ~TemplateSTRtreeImpl() = default;
 
@@ -497,12 +501,14 @@ protected:
     }
 
     void sortNodesX(const NodeListIterator& begin, const NodeListIterator& end) {
+        if (needsSorting)
         std::sort(begin, end, [](const Node &a, const Node &b) {
             return BoundsTraits::getX(a.getBounds()) < BoundsTraits::getX(b.getBounds());
         });
     }
 
     void sortNodesY(const NodeListIterator& begin, const NodeListIterator& end) {
+        if (needsSorting)
         std::sort(begin, end, [](const Node &a, const Node &b) {
             return BoundsTraits::getY(a.getBounds()) < BoundsTraits::getY(b.getBounds());
         });

@@ -18,4 +18,7 @@ IF(benchmark_FOUND)
             $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
     target_link_libraries(perf_spatial_index PRIVATE
             benchmark::benchmark geos)
+
+    add_executable(perf_strtree GEOSSTRtreePerfTest.cpp)
+    target_link_libraries(perf_strtree PRIVATE benchmark::benchmark geos_c)
 endif()
