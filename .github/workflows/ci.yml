@@ -162,7 +162,7 @@ jobs:
         mkdir build.cmake
         cd build.cmake
         cmake --version
-        cmake ${{ matrix.ci.cmake_extra }} -DCMAKE_C_COMPILER=${{ matrix.ci.c_compiler }} DCMAKE_CXX_COMPILER=${{ matrix.ci.cxx_compiler }} -DCMAKE_CXX_STANDARD=${{ matrix.ci.cxxstd }} -DBUILD_DOCUMENTATION=YES -DCMAKE_BUILD_TYPE=${{ matrix.ci.build_type }} ..
+        cmake ${{ matrix.ci.cmake_extra }} -DCMAKE_C_COMPILER=${{ matrix.ci.c_compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.ci.cxx_compiler }} -DCMAKE_CXX_STANDARD=${{ matrix.ci.cxxstd }} -DBUILD_DOCUMENTATION=YES -DCMAKE_BUILD_TYPE=${{ matrix.ci.build_type }} ..
         make -j 2
         cmake --build . --target docs
 
