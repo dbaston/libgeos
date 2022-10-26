@@ -110,16 +110,34 @@ jobs:
           cmake: 3.22.*
           os: ubuntu-22.04
 
-        - cxx_compiler: clang++
-          c_compiler: clang
+        - cxx_compiler: clang++-7
+          c_compiler: clang-7
           build_type: Release
           cxxstd: 11
           arch: 64
-          packages: 'clang'
+          packages: 'clang-7'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
+        - cxx_compiler: clang++-8
+          c_compiler: clang-8
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'clang-8'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
+        - cxx_compiler: clang++-9
+          c_compiler: clang-9
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'clang-9'
           cmake: 3.13.*
           os: ubuntu-18.04
         
-        - cxx_compiler: clang++
+        - cxx_compiler: clang++-10
           c_compiler: clang
           build_type: Debug
           cxxstd: 11
@@ -128,7 +146,7 @@ jobs:
           cmake: 3.17.*
           os: ubuntu-20.04
         
-        - cxx_compiler: clang++
+        - cxx_compiler: clang++-10
           c_compiler: clang
           build_type: Release
           cxxstd: 14
