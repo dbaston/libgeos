@@ -28,14 +28,78 @@ jobs:
           cmake_extra: '-DBUILD_BENCHMARKS=ON'
           os: ubuntu-18.04
           
-        - compiler: g++
+        - compiler: g++-4.8
           build_type: Release
           cxxstd: 11
           arch: 32
-          packages: 'g++-4.8-multilib gcc-4.8-multilib g++-multilib gcc-multilib'
+          packages: 'g++-4.8-multilib gcc-4.8-multilib'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
+        - compiler: g++-5
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'g++-5-multilib gcc-5-multilib'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
+        - compiler: g++-6
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'g++-6-multilib gcc-6-multilib'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
+        - compiler: g++-7
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'g++-7-multilib gcc-7-multilib'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
+        - compiler: g++-8
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'g++-8-multilib gcc-8-multilib'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
+        - compiler: g++-9
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'g++-9-multilib gcc-9-multilib'
           cmake: 3.13.*
           os: ubuntu-18.04
         
+        - compiler: g++-10
+          build_type: Release
+          cxxstd: 11
+          arch: 64
+          packages: 'g++-10-multilib gcc-10-multilib'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+        
+        - compiler: g++-11
+          build_type: Release
+          cxxstd: 17
+          arch: 64
+          packages: 'g++'
+          cmake: 3.22.*
+          os: ubuntu-22.04
+        
+        - compiler: g++-11
+          build_type: Release
+          cxxstd: 20
+          arch: 64
+          packages: 'g++'
+          cmake: 3.22.*
+          os: ubuntu-22.04
+
         - compiler: clang++
           build_type: Release
           cxxstd: 11
@@ -60,21 +124,6 @@ jobs:
           cmake: 3.17.*
           os: ubuntu-20.04
 
-        - compiler: g++
-          build_type: Release
-          cxxstd: 17
-          arch: 64
-          packages: 'g++'
-          cmake: 3.22.*
-          os: ubuntu-22.04
-        
-        - compiler: g++
-          build_type: Release
-          cxxstd: 20
-          arch: 64
-          packages: 'g++'
-          cmake: 3.22.*
-          os: ubuntu-22.04
 
     runs-on: ${{ matrix.ci.os }}
     steps:
