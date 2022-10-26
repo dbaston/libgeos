@@ -19,7 +19,8 @@ jobs:
     strategy:
       matrix:
         ci:
-        - compiler: g++
+        - cxx_compiler: g++
+          c_compiler: gcc
           build_type: Coverage
           cxxstd: 11
           arch: 64
@@ -28,7 +29,8 @@ jobs:
           cmake_extra: '-DBUILD_BENCHMARKS=ON'
           os: ubuntu-18.04
           
-        - compiler: g++-4.8
+        - cxx_compiler: g++-4.8
+          c_compiler: gcc-4.8
           build_type: Release
           cxxstd: 11
           arch: 32
@@ -36,7 +38,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
 
-        - compiler: g++-5
+        - cxx_compiler: g++-5
+          c_compiler: gcc-5
           build_type: Release
           cxxstd: 11
           arch: 64
@@ -44,7 +47,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
 
-        - compiler: g++-6
+        - cxx_compiler: g++-6
+          c_compiler: gcc-6
           build_type: Release
           cxxstd: 11
           arch: 64
@@ -52,7 +56,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
 
-        - compiler: g++-7
+        - cxx_compiler: g++-7
+          c_compiler: gcc-7
           build_type: Release
           cxxstd: 11
           arch: 64
@@ -60,7 +65,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
 
-        - compiler: g++-8
+        - cxx_compiler: g++-8
+          c_compiler: gcc-8
           build_type: Release
           cxxstd: 11
           arch: 64
@@ -68,7 +74,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
 
-        - compiler: g++-9
+        - cxx_compiler: g++-9
+          c_compiler: gcc-9
           build_type: Release
           cxxstd: 11
           arch: 64
@@ -76,7 +83,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
         
-        - compiler: g++-10
+        - cxx_compiler: g++-10
+          c_compiler: gcc-10
           build_type: Release
           cxxstd: 11
           arch: 64
@@ -84,7 +92,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
         
-        - compiler: g++-11
+        - cxx_compiler: g++-11
+          c_compiler: gcc-11
           build_type: Release
           cxxstd: 17
           arch: 64
@@ -92,7 +101,8 @@ jobs:
           cmake: 3.22.*
           os: ubuntu-22.04
         
-        - compiler: g++-11
+        - cxx_compiler: g++-11
+          c_compiler: gcc-11
           build_type: Release
           cxxstd: 20
           arch: 64
@@ -100,7 +110,8 @@ jobs:
           cmake: 3.22.*
           os: ubuntu-22.04
 
-        - compiler: clang++
+        - cxx_compiler: clang++
+          c_compiler: clang
           build_type: Release
           cxxstd: 11
           arch: 64
@@ -108,7 +119,8 @@ jobs:
           cmake: 3.13.*
           os: ubuntu-18.04
         
-        - compiler: clang++
+        - cxx_compiler: clang++
+          c_compiler: clang
           build_type: Debug
           cxxstd: 11
           arch: 64
@@ -116,7 +128,8 @@ jobs:
           cmake: 3.17.*
           os: ubuntu-20.04
         
-        - compiler: clang++
+        - cxx_compiler: clang++
+          c_compiler: clang
           build_type: Release
           cxxstd: 14
           arch: 64
