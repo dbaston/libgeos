@@ -98,48 +98,23 @@ public:
          */
         double constexpr DP_SAFE_EPSILON =  1e-15;
 
-        double detsum;
         double const detleft = (pax - pcx) * (pby - pcy);
         double const detright = (pay - pcy) * (pbx - pcx);
         double const det = detleft - detright;
+        double const detsum = detleft + detright;
+        double const errbound = DP_SAFE_EPSILON * std::abs(detsum);
 
-        if(detleft > 0.0) {
-            if(detright <= 0.0) {
-                return orientation(det);
-            }
-            else {
-                detsum = detleft + detright;
-            }
-        }
-        else if(detleft < 0.0) {
-            if(detright >= 0.0) {
-                return orientation(det);
-            }
-            else {
-                detsum = -detleft - detright;
-            }
-        }
-        else {
+        if (std::abs(det) >= errbound) {
             return orientation(det);
         }
 
-        double const errbound = DP_SAFE_EPSILON * detsum;
-        if((det >= errbound) || (-det >= errbound)) {
-            return orientation(det);
-        }
         return CGAlgorithmsDD::FAILURE;
     };
 
     static int
     orientation(double x)
     {
-        if(x < 0) {
-            return CGAlgorithmsDD::RIGHT;
-        }
-        if(x > 0) {
-            return CGAlgorithmsDD::LEFT;
-        }
-        return CGAlgorithmsDD::STRAIGHT;
+        return (x > 0) - (x < 0);
     };
 
     /**
