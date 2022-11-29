@@ -2751,7 +2751,7 @@ extern "C" {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
             const GeometryFactory* gf = handle->geomFactory;
 
-            return gf->createLinearRing(cs);
+            return gf->createLinearRing(std::unique_ptr<CoordinateSequence>(cs)).release();
         });
     }
 
@@ -2773,7 +2773,7 @@ extern "C" {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
             const GeometryFactory* gf = handle->geomFactory;
 
-            return gf->createLineString(cs);
+            return gf->createLineString(std::unique_ptr<CoordinateSequence>(cs)).release();
         });
     }
 

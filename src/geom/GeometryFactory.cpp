@@ -392,14 +392,8 @@ GeometryFactory::createMultiPolygon(const std::vector<const Geometry*>& fromPoly
 std::unique_ptr<LinearRing>
 GeometryFactory::createLinearRing() const
 {
-    return std::unique_ptr<LinearRing>(new LinearRing(nullptr, this));
-}
-
-/*public*/
-LinearRing*
-GeometryFactory::createLinearRing(CoordinateSequence* newCoords) const
-{
-    return new LinearRing(newCoords, this);
+    // Can't use make_unique with protected constructor
+    return std::unique_ptr<LinearRing>(new LinearRing(nullptr, *this));
 }
 
 std::unique_ptr<LinearRing>
@@ -410,14 +404,10 @@ GeometryFactory::createLinearRing(CoordinateSequence::Ptr && newCoords) const
 }
 
 /*public*/
-LinearRing*
+std::unique_ptr<LinearRing>
 GeometryFactory::createLinearRing(const CoordinateSequence& fromCoords) const
 {
-    auto newCoords = fromCoords.clone();
-    LinearRing* g = nullptr;
-    // construction failure will delete newCoords
-    g = new LinearRing(newCoords.release(), this);
-    return g;
+    return createLinearRing(fromCoords.clone());
 }
 
 /*public*/
@@ -540,11 +530,8 @@ const
 std::unique_ptr<LineString>
 GeometryFactory::createLineString(std::size_t coordinateDimension) const
 {
-    if (coordinateDimension == 3) {
-        auto cs = detail::make_unique<CoordinateSequence>(0u, coordinateDimension);
-        return createLineString(std::move(cs));
-    }
-    return std::unique_ptr<LineString>(new LineString(nullptr, this));
+    auto cs = detail::make_unique<CoordinateSequence>(0u, coordinateDimension);
+    return createLineString(std::move(cs));
 }
 
 /*public*/
@@ -553,14 +540,6 @@ GeometryFactory::createLineString(const LineString& ls) const
 {
     // Can't use make_unique with protected constructor
     return std::unique_ptr<LineString>(new LineString(ls));
-}
-
-/*public*/
-LineString*
-GeometryFactory::createLineString(CoordinateSequence* newCoords)
-const
-{
-    return new LineString(newCoords, this);
 }
 
 /*public*/
@@ -573,15 +552,12 @@ const
 }
 
 /*public*/
-LineString*
+std::unique_ptr<LineString>
 GeometryFactory::createLineString(const CoordinateSequence& fromCoords)
 const
 {
-    auto newCoords = fromCoords.clone();
-    LineString* g = nullptr;
-    // construction failure will delete newCoords
-    g = new LineString(newCoords.release(), this);
-    return g;
+    // Can't use make_unique with protected constructor
+    return std::unique_ptr<LineString>(new LineString(fromCoords.clone(), *this));
 }
 
 /*public*/

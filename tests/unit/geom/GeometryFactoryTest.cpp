@@ -440,7 +440,7 @@ void object::test<12>
     ensure_equals(lr->getArea(), 0.0);
 }
 
-// Test of createLinearRing(CoordinateSequence* newCoords) const
+// Test of createLinearRing(std::unique_ptr<CoordinateSequence>&& newCoords) const
 template<>
 template<>
 void object::test<13>
@@ -451,7 +451,7 @@ void object::test<13>
     ensure(coords != nullptr);
     ensure_equals(coords->getSize(), size);
 
-    LinearRingPtr lr = factory_->createLinearRing(coords.release());
+    auto lr = factory_->createLinearRing(std::move(coords));
     ensure("createLinearRing() returned null pointer.", lr != nullptr);
     ensure("createLinearRing() returned empty point.", !lr->isEmpty());
     ensure(lr->isSimple());
@@ -466,9 +466,6 @@ void object::test<13>
     ensure_equals(lr->getNumPoints(), size);
     ensure_equals(lr->getLength(), 0.0);
     ensure_equals(lr->getArea(), 0.0);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(lr);
 }
 
 // Test of createLinearRing(const CoordinateSequence& coordinates) const
@@ -481,7 +478,7 @@ void object::test<14>
     geos::geom::CoordinateSequence coords(size);
     ensure_equals(coords.getSize(), size);
 
-    LinearRingPtr lr = factory_->createLinearRing(coords);
+    auto lr = factory_->createLinearRing(coords);
     ensure("createLinearRing() returned empty point.", !lr->isEmpty());
     ensure_equals(lr->getNumPoints(), size);
     ensure(lr->isSimple());
@@ -493,9 +490,6 @@ void object::test<14>
     ensure_equals(lr->getNumPoints(), size);
     ensure_equals(lr->getLength(), 0.0);
     ensure_equals(lr->getArea(), 0.0);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(lr);
 }
 
 // Test of createLineString() const
@@ -537,7 +531,7 @@ void object::test<15>
     ensure_equals(line->getArea(), 0.0);
 }
 
-// Test of createLineString(CoordinateSequence* coordinates) const
+// Test of createLineString(std::unique_ptr<CoordinateSequence>&& coordinates) const
 template<>
 template<>
 void object::test<16>
@@ -575,7 +569,7 @@ void object::test<17>
     geos::geom::CoordinateSequence coords(size);
     ensure_equals(coords.getSize(), size);
 
-    LineStringPtr line = factory_->createLineString(coords);
+    auto line = factory_->createLineString(coords);
     ensure("createLineString() returned empty point.", !line->isEmpty());
     ensure_equals(line->getNumPoints(), size);
     ensure(line->isSimple());
@@ -587,10 +581,8 @@ void object::test<17>
     ensure_equals(line->getNumPoints(), size);
     ensure_equals(line->getLength(), 0.0);
     ensure_equals(line->getArea(), 0.0);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(line);
 }
+
 // Test of createPolygon() const
 template<>
 template<>

@@ -80,11 +80,11 @@ RectangleIntersectionBuilder::reconnect()
     delete line1;
     delete line2;
 
-    LineString* nline = _gf.createLineString(ncs.release());
+    auto nline = _gf.createLineString(std::move(ncs));
     lines.pop_front();
     lines.pop_back();
 
-    lines.push_front(nline);
+    lines.push_front(nline.release());
 }
 
 

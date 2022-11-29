@@ -213,13 +213,11 @@ public:
     std::unique_ptr<LinearRing> createLinearRing() const;
 
     /// Construct a LinearRing taking ownership of given arguments
-    LinearRing* createLinearRing(CoordinateSequence* newCoords) const;
-
     std::unique_ptr<LinearRing> createLinearRing(
         std::unique_ptr<CoordinateSequence> && newCoords) const;
 
     /// Construct a LinearRing with a deep-copy of given arguments
-    LinearRing* createLinearRing(
+    std::unique_ptr<LinearRing> createLinearRing(
         const CoordinateSequence& coordinates) const;
 
     /// Constructs an EMPTY <code>MultiPoint</code>.
@@ -279,13 +277,11 @@ public:
     std::unique_ptr<LineString> createLineString(const LineString& ls) const;
 
     /// Construct a LineString taking ownership of given argument
-    LineString* createLineString(CoordinateSequence* coordinates) const;
-
     std::unique_ptr<LineString> createLineString(
         std::unique_ptr<CoordinateSequence> && coordinates) const;
 
     /// Construct a LineString with a deep-copy of given argument
-    LineString* createLineString(
+    std::unique_ptr<LineString> createLineString(
         const CoordinateSequence& coordinates) const;
 
     /**
