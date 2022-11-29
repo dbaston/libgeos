@@ -2173,7 +2173,6 @@ extern "C" {
         return execute(extHandle, [&]() {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
             const GeometryFactory* gf = handle->geomFactory;
-            Geometry* out;
 
             // Polygonize
             Polygonizer plgnzr;
@@ -2191,20 +2190,16 @@ extern "C" {
             // (it's just a waste of processor and memory, btw)
             // XXX mloskot: See comment for GEOSPolygonize_r
 
-            // TODO avoid "new" here
-            std::vector<Geometry*>* linevec = new std::vector<Geometry*>(lines.size());
+            std::vector<std::unique_ptr<Geometry>> linevec(lines.size());
 
             for(std::size_t i = 0, n = lines.size(); i < n; ++i) {
-                (*linevec)[i] = lines[i]->clone().release();
+                linevec[i] = lines[i]->clone();
             }
 
-            // The below takes ownership of the passed vector,
-            // so we must *not* delete it
-
-            out = gf->createGeometryCollection(linevec);
+            auto out = gf->createGeometryCollection(std::move(linevec));
             out->setSRID(srid);
 
-            return out;
+            return out.release();
         });
     }
 

@@ -283,7 +283,7 @@ const
         newGeoms[i].reset(new LineString(*line));
     }
 
-    return std::unique_ptr<MultiLineString>(new MultiLineString(std::move(newGeoms), *this));
+    return createMultiLineString(std::move(newGeoms));
 }
 
 std::unique_ptr<MultiLineString>
@@ -302,7 +302,7 @@ GeometryFactory::createMultiLineString(std::vector<std::unique_ptr<Geometry>> &&
 std::unique_ptr<GeometryCollection>
 GeometryFactory::createGeometryCollection() const
 {
-    return std::unique_ptr<GeometryCollection>(new GeometryCollection(nullptr, this));
+    return createGeometryCollection(std::vector<std::unique_ptr<Geometry>>());
 }
 
 /*public*/
@@ -313,14 +313,7 @@ GeometryFactory::createEmptyGeometry() const
 }
 
 /*public*/
-GeometryCollection*
-GeometryFactory::createGeometryCollection(std::vector<Geometry*>* newGeoms) const
-{
-    return new GeometryCollection(newGeoms, this);
-}
-
-/*public*/
-GeometryCollection*
+std::unique_ptr<GeometryCollection>
 GeometryFactory::createGeometryCollection(const std::vector<const Geometry*>& fromGeoms) const
 {
     std::vector<std::unique_ptr<Geometry>> newGeoms(fromGeoms.size());
@@ -329,23 +322,17 @@ GeometryFactory::createGeometryCollection(const std::vector<const Geometry*>& fr
         newGeoms[i] = fromGeoms[i]->clone();
     }
 
-    return new GeometryCollection(std::move(newGeoms), *this);
+    return createGeometryCollection(std::move(newGeoms));
 }
 
 /*public*/
 std::unique_ptr<MultiPolygon>
 GeometryFactory::createMultiPolygon() const
 {
-    return std::unique_ptr<MultiPolygon>(new MultiPolygon(nullptr, this));
+    return createMultiPolygon(std::vector<std::unique_ptr<Polygon>>());
 }
 
 /*public*/
-MultiPolygon*
-GeometryFactory::createMultiPolygon(std::vector<Geometry*>* newPolys) const
-{
-    return new MultiPolygon(newPolys, this);
-}
-
 std::unique_ptr<MultiPolygon>
 GeometryFactory::createMultiPolygon(std::vector<std::unique_ptr<Polygon>> && newPolys) const
 {
@@ -361,7 +348,7 @@ GeometryFactory::createMultiPolygon(std::vector<std::unique_ptr<Geometry>> && ne
 }
 
 /*public*/
-MultiPolygon*
+std::unique_ptr<MultiPolygon>
 GeometryFactory::createMultiPolygon(const std::vector<const Geometry*>& fromPolys) const
 {
     std::vector<std::unique_ptr<Geometry>> newGeoms(fromPolys.size());
@@ -370,7 +357,7 @@ GeometryFactory::createMultiPolygon(const std::vector<const Geometry*>& fromPoly
         newGeoms[i] = fromPolys[i]->clone();
     }
 
-    return new MultiPolygon(std::move(newGeoms), *this);
+    return createMultiPolygon(std::move(newGeoms));
 }
 
 /*public*/
@@ -645,22 +632,22 @@ GeometryFactory::buildGeometry(std::vector<std::unique_ptr<Polygon>> && geoms) c
 }
 
 /*public*/
-Geometry*
+std::unique_ptr<Geometry>
 GeometryFactory::buildGeometry(const std::vector<const Geometry*>& fromGeoms) const
 {
     if(fromGeoms.empty()) {
-        return createGeometryCollection().release();
+        return createGeometryCollection();
     }
 
     if(fromGeoms.size() == 1) {
-        return fromGeoms[0]->clone().release();
+        return fromGeoms[0]->clone();
     }
 
     auto resultType = commonType(fromGeoms);
 
     switch(resultType) {
-        case GEOS_MULTIPOINT: return createMultiPoint(fromGeoms).release();
-        case GEOS_MULTILINESTRING: return createMultiLineString(fromGeoms).release();
+        case GEOS_MULTIPOINT: return createMultiPoint(fromGeoms);
+        case GEOS_MULTILINESTRING: return createMultiLineString(fromGeoms);
         case GEOS_MULTIPOLYGON: return createMultiPolygon(fromGeoms);
         default: return createGeometryCollection(fromGeoms);
     }

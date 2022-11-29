@@ -160,9 +160,6 @@ public:
     std::unique_ptr<Geometry> createEmptyGeometry() const;
 
     /// Construct a GeometryCollection taking ownership of given arguments
-    GeometryCollection* createGeometryCollection(
-        std::vector<Geometry*>* newGeoms) const;
-
     template<typename T>
     std::unique_ptr<GeometryCollection> createGeometryCollection(
             std::vector<std::unique_ptr<T>> && newGeoms) const {
@@ -171,7 +168,7 @@ public:
     }
 
     /// Constructs a GeometryCollection with a deep-copy of args
-    GeometryCollection* createGeometryCollection(
+    std::unique_ptr<GeometryCollection> createGeometryCollection(
         const std::vector<const Geometry*>& newGeoms) const;
 
     /// Construct an EMPTY MultiLineString
@@ -191,13 +188,11 @@ public:
     /// Construct an EMPTY MultiPolygon
     std::unique_ptr<MultiPolygon> createMultiPolygon() const;
 
-    /// Construct a MultiPolygon taking ownership of given arguments
-    MultiPolygon* createMultiPolygon(std::vector<Geometry*>* newPolys) const;
-
     /// Construct a MultiPolygon with a deep-copy of given arguments
-    MultiPolygon* createMultiPolygon(
+    std::unique_ptr<MultiPolygon> createMultiPolygon(
         const std::vector<const Geometry*>& fromPolys) const;
 
+    /// Construct a MultiPolygon taking ownership of given arguments
     std::unique_ptr<MultiPolygon> createMultiPolygon(
         std::vector<std::unique_ptr<Polygon>> && fromPolys) const;
 
@@ -393,7 +388,7 @@ public:
      * The difference is that this version will copy needed data
      * leaving ownership to the caller.
      */
-    Geometry* buildGeometry(const std::vector<const Geometry*>& geoms) const;
+    std::unique_ptr<Geometry> buildGeometry(const std::vector<const Geometry*>& geoms) const;
 
     int getSRID() const
     {

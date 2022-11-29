@@ -761,7 +761,7 @@ void object::test<22>
     ensure_equals(col->getNumGeometries(), 2u);
 }
 
-// Test of createGeometryCollection(const std::vector<Geometry*>& newGeoms) const
+// Test of createGeometryCollection(const std::vector<const Geometry*>& newGeoms) const
 template<>
 template<>
 void object::test<23>
@@ -788,13 +788,10 @@ void object::test<23>
     vec.push_back(geo3.get());
 
     // Factory creates copy of the vec collection
-    GeometryColPtr col = factory_->createGeometryCollection(vec);
+    auto col = factory_->createGeometryCollection(vec);
     ensure(col != nullptr);
     ensure_equals(col->getGeometryTypeId(), geos::geom::GEOS_GEOMETRYCOLLECTION);
     ensure_equals(col->getNumGeometries(), size);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(col);
 }
 
 // Test of createMultiPoint() const
