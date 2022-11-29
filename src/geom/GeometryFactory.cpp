@@ -383,18 +383,6 @@ GeometryFactory::createLinearRing(const CoordinateSequence& fromCoords) const
 }
 
 /*public*/
-
-std::unique_ptr<MultiPoint>
-GeometryFactory::createMultiPoint(std::vector<CoordinateXY> && newPoints) const {
-    std::vector<std::unique_ptr<Geometry>> pts(newPoints.size());
-
-    for(std::size_t i = 0; i < newPoints.size(); ++i) {
-        pts[i] = createPoint(newPoints[i]);
-    }
-
-    return std::unique_ptr<MultiPoint>(new MultiPoint(std::move(pts), *this));
-}
-
 std::unique_ptr<MultiPoint>
 GeometryFactory::createMultiPoint(std::vector<std::unique_ptr<Point>> && newPoints) const
 {
@@ -654,14 +642,14 @@ GeometryFactory::buildGeometry(const std::vector<const Geometry*>& fromGeoms) co
 }
 
 /*public*/
-Geometry*
+std::unique_ptr<Geometry>
 GeometryFactory::createGeometry(const Geometry* g) const
 {
     // could this be cached to make this more efficient? Or maybe it isn't enough overhead to bother
-    //return g->clone();
+    //return g->clone(); <-- a simple clone() wouldn't change the factory to `this`
     util::GeometryEditor editor(this);
     gfCoordinateOperation coordOp;
-    return editor.edit(g, &coordOp).release();
+    return editor.edit(g, &coordOp);
 }
 
 /*public*/

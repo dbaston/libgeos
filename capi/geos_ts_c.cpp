@@ -2869,7 +2869,7 @@ extern "C" {
 
             const PrecisionModel* pm = g->getPrecisionModel();
             double cursize = pm->isFloating() ? 0 : 1.0 / pm->getScale();
-            Geometry* ret;
+            std::unique_ptr<Geometry> ret;
             GeometryFactory::Ptr gf =
                 GeometryFactory::create(&newpm, g->getSRID());
             if(gridSize != 0 && cursize != gridSize) {
@@ -2878,13 +2878,13 @@ extern "C" {
                 reducer.setUseAreaReducer(!(flags & GEOS_PREC_NO_TOPO));
                 reducer.setPointwise(flags & GEOS_PREC_NO_TOPO);
                 reducer.setRemoveCollapsedComponents(!(flags & GEOS_PREC_KEEP_COLLAPSED));
-                ret = reducer.reduce(*g).release();
+                ret = reducer.reduce(*g);
             }
             else {
                 // No need or willing to snap, just change the factory
                 ret = gf->createGeometry(g);
             }
-            return ret;
+            return ret.release();
         });
     }
 

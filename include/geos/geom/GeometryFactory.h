@@ -218,14 +218,12 @@ public:
     {
         std::vector<std::unique_ptr<Geometry>> pts;
         pts.reserve(fromCoords.size());
-        for (const Coordinate& c : fromCoords) {
+        for (const auto& c : fromCoords) {
             pts.emplace_back(createPoint(c));
         }
 
         return createMultiPoint(std::move(pts));
     }
-
-    std::unique_ptr<MultiPoint> createMultiPoint(std::vector<CoordinateXY> && newPoints) const;
 
     /// Construct a MultiPoint taking ownership of given arguments
     std::unique_ptr<MultiPoint> createMultiPoint(std::vector<std::unique_ptr<Point>> && newPoints) const;
@@ -396,7 +394,7 @@ public:
     };
 
     /// Returns a clone of given Geometry.
-    Geometry* createGeometry(const Geometry* g) const;
+    std::unique_ptr<Geometry> createGeometry(const Geometry* g) const;
 
     /// Destroy a Geometry, or release it
     void destroyGeometry(Geometry* g) const;
