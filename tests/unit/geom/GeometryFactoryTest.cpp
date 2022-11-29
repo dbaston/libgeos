@@ -258,7 +258,7 @@ void object::test<9>
 {
     geos::geom::Coordinate coord(x_, y_, z_);
 
-    PointPtr pt = factory_->createPoint(coord);
+    auto pt = factory_->createPoint(coord);
 
     ensure("createPoint() returned null pointer.", pt != nullptr);
     ensure("createPoint() returned empty point.", !pt->isEmpty());
@@ -296,12 +296,9 @@ void object::test<9>
     ensure_equals(pt->getNumPoints(), 1u);
     ensure_equals(pt->getLength(), 0.0);
     ensure_equals(pt->getArea(), 0.0);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(pt);
 }
 
-// Test of createPoint(CoordinateSequence *coordinates) const
+// Test of createPoint(std::unique_ptr<CoordinateSequence>&& coordinates) const
 template<>
 template<>
 void object::test<10>
@@ -314,7 +311,7 @@ void object::test<10>
     ensure("sequence is null pointer.", sequence != nullptr);
     sequence->add(coord);
 
-    PointPtr pt = factory_->createPoint(sequence.release());
+    auto pt = factory_->createPoint(std::move(sequence));
 
     ensure("createPoint() returned null pointer.", pt != nullptr);
     ensure("createPoint() returned empty point.", !pt->isEmpty());
@@ -351,9 +348,6 @@ void object::test<10>
     ensure_equals(pt->getNumPoints(), 1u);
     ensure_equals(pt->getLength(), 0.0);
     ensure_equals(pt->getArea(), 0.0);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(pt);
 }
 
 // Test of createPoint(const CoordinateSequence &coordinates) const
@@ -367,7 +361,7 @@ void object::test<11>
     geos::geom::CoordinateSequence sequence;
     sequence.add(coord);
 
-    PointPtr pt = factory_->createPoint(sequence);
+    auto pt = factory_->createPoint(sequence);
 
     ensure("createPoint() returned null pointer.", pt != nullptr);
     ensure("createPoint() returned empty point.", !pt->isEmpty());
@@ -404,9 +398,6 @@ void object::test<11>
     ensure_equals(pt->getNumPoints(), 1u);
     ensure_equals(pt->getLength(), 0.0);
     ensure_equals(pt->getArea(), 0.0);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(pt);
 }
 
 // Test of createLinearRing() const
@@ -796,21 +787,20 @@ void object::test<23>
 
     std::vector<const geos::geom::Geometry*> vec;
 
-    GeometryPtr geo = nullptr;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo1 = factory_->createPoint(coord);
+    vec.push_back(geo1.get());
 
     coord.x *= 2;
     coord.y *= 2;
     coord.z *= 2;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo2 = factory_->createPoint(coord);
+    vec.push_back(geo2.get());
 
     coord.x *= 3;
     coord.y *= 3;
     coord.z *= 3;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo3 = factory_->createPoint(coord);
+    vec.push_back(geo3.get());
 
     // Factory creates copy of the vec collection
     GeometryColPtr col = factory_->createGeometryCollection(vec);
@@ -820,9 +810,6 @@ void object::test<23>
 
     // FREE MEMORY
     factory_->destroyGeometry(col);
-    for(auto& g : vec) {
-        delete g;
-    }
 }
 
 // Test of createMultiPoint() const
@@ -876,21 +863,21 @@ void object::test<25>
     std::vector<GeometryPtr>* vec = new std::vector<GeometryPtr>();
 
     GeometryPtr geo = nullptr;
-    geo = factory_->createPoint(coord);
+    geo = factory_->createPoint(coord).release();
     ensure(geo != nullptr);
     vec->push_back(geo);
 
     coord.x *= 2;
     coord.y *= 2;
     coord.z *= 2;
-    geo = factory_->createPoint(coord);
+    geo = factory_->createPoint(coord).release();
     ensure(geo != nullptr);
     vec->push_back(geo);
 
     coord.x *= 3;
     coord.y *= 3;
     coord.z *= 3;
-    geo = factory_->createPoint(coord);
+    geo = factory_->createPoint(coord).release();
     ensure(geo != nullptr);
     vec->push_back(geo);
 
@@ -917,21 +904,20 @@ void object::test<26>
 
     std::vector<const geos::geom::Geometry*> vec;
 
-    GeometryPtr geo = nullptr;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo1 = factory_->createPoint(coord);
+    vec.push_back(geo1.get());
 
     coord.x *= 2;
     coord.y *= 2;
     coord.z *= 2;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo2 = factory_->createPoint(coord);
+    vec.push_back(geo2.get());
 
     coord.x *= 3;
     coord.y *= 3;
     coord.z *= 3;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo3 = factory_->createPoint(coord);
+    vec.push_back(geo3.get());
 
     // Factory creates copy of the vec collection
     MultiPointPtr mp = factory_->createMultiPoint(vec);
@@ -943,9 +929,6 @@ void object::test<26>
 
     // FREE MEMORY
     factory_->destroyGeometry(mp);
-    for(auto& g : vec) {
-        delete g;
-    }
 }
 
 // Test of createMultiPoint(const CoordinateSequence& fromCoords) const
@@ -1157,33 +1140,26 @@ void object::test<36>
 
     PointVect vec;
 
-    PointPtr geo = nullptr;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo1 = factory_->createPoint(coord);
+    vec.push_back(geo1.get());
 
     coord.x *= 2;
     coord.y *= 2;
     coord.z *= 2;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo2 = factory_->createPoint(coord);
+    vec.push_back(geo2.get());
 
     coord.x *= 3;
     coord.y *= 3;
     coord.z *= 3;
-    geo = factory_->createPoint(coord);
-    vec.push_back(geo);
+    auto geo3 = factory_->createPoint(coord);
+    vec.push_back(geo3.get());
 
     // Factory creates copy of the vec collection
     GeometryAutoPtr g = factory_->buildGeometry(vec.begin(), vec.end());
     ensure(g.get() != nullptr);
     ensure_equals(g->getGeometryTypeId(), geos::geom::GEOS_MULTIPOINT);
     ensure_equals(g->getNumGeometries(), size);
-
-    // FREE MEMORY
-    PointVect::const_iterator it;
-    for(it = vec.begin(); it != vec.end(); ++it) {
-        delete(*it);
-    }
 }
 
 // Test of

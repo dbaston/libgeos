@@ -123,8 +123,8 @@ public:
 
 //Skipped a lot of list to array convertors
 
-    Point* createPointFromInternalCoord(const Coordinate* coord,
-                                        const Geometry* exemplar) const;
+    static std::unique_ptr<Point> createPointFromInternalCoord(const Coordinate* coord,
+                                        const Geometry* exemplar);
 
     /// Converts an Envelope to a Geometry.
     ///
@@ -144,16 +144,14 @@ public:
     std::unique_ptr<Point> createPoint(std::size_t coordinateDimension = 2) const;
 
     /// Creates a Point using the given Coordinate
-    Point* createPoint(const Coordinate& coordinate) const;
+    std::unique_ptr<Point> createPoint(const Coordinate& coordinate) const;
     std::unique_ptr<Point> createPoint(const CoordinateXY& coordinate) const;
 
     /// Creates a Point taking ownership of the given CoordinateSequence
-    Point* createPoint(CoordinateSequence* coordinates) const;
+    std::unique_ptr<Point> createPoint(std::unique_ptr<CoordinateSequence>&& coordinates) const;
 
     /// Creates a Point with a deep-copy of the given CoordinateSequence.
-    Point* createPoint(const CoordinateSequence& coordinates) const;
-
-    std::unique_ptr<Point> createPoint(std::unique_ptr<CoordinateSequence>&& coordinates) const;
+    std::unique_ptr<Point> createPoint(const CoordinateSequence& coordinates) const;
 
     /// Construct an EMPTY GeometryCollection
     std::unique_ptr<GeometryCollection> createGeometryCollection() const;

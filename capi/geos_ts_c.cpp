@@ -2728,7 +2728,7 @@ extern "C" {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
             const GeometryFactory* gf = handle->geomFactory;
 
-            return gf->createPoint(cs);
+            return gf->createPoint(std::unique_ptr<CoordinateSequence>(cs)).release();
         });
     }
 
@@ -2739,8 +2739,8 @@ extern "C" {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
             const GeometryFactory* gf = handle->geomFactory;
 
-            geos::geom::Coordinate c(x, y);
-            return gf->createPoint(c);
+            geos::geom::CoordinateXY c(x, y);
+            return gf->createPoint(c).release();
         });
     }
 
@@ -3667,9 +3667,9 @@ extern "C" {
             geos::linearref::LengthIndexedLine lil(g);
             geos::geom::Coordinate coord = lil.extractPoint(d);
             const GeometryFactory* gf = handle->geomFactory;
-            Geometry* point = gf->createPoint(coord);
+            auto point = gf->createPoint(coord);
             point->setSRID(g->getSRID());
-            return point;
+            return point.release();
         });
     }
 
@@ -3724,20 +3724,20 @@ extern "C" {
             g->apply_ro(&filter);
 
             /* 2: for each point, create a geometry and put into a vector */
-            std::vector<Geometry*>* points = new std::vector<Geometry*>();
-            points->reserve(coords.size());
+            std::vector<std::unique_ptr<Geometry>> points;
+            points.reserve(coords.size());
             const GeometryFactory* factory = g->getFactory();
             for(std::vector<const Coordinate*>::iterator it = coords.begin(),
                     itE = coords.end();
                     it != itE; ++it) {
-                Geometry* point = factory->createPoint(*(*it));
-                points->push_back(point);
+                auto point = factory->createPoint(*(*it));
+                points.push_back(std::move(point));
             }
 
             /* 3: create a multipoint */
-            Geometry* out = factory->createMultiPoint(points);
+            auto out = factory->createMultiPoint(std::move(points));
             out->setSRID(g->getSRID());
-            return out;
+            return out.release();
 
         });
     }

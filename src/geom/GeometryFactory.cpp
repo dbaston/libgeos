@@ -161,9 +161,9 @@ GeometryFactory::~GeometryFactory()
 }
 
 /*public*/
-Point*
+std::unique_ptr<Point>
 GeometryFactory::createPointFromInternalCoord(const Coordinate* coord,
-        const Geometry* exemplar) const
+        const Geometry* exemplar)
 {
     assert(coord);
     Coordinate newcoord = *coord;
@@ -216,15 +216,15 @@ GeometryFactory::toGeometry(const Envelope* envelope) const
 std::unique_ptr<Point>
 GeometryFactory::createPoint(std::size_t coordinateDimension) const
 {
-    auto coords = detail::make_unique<CoordinateSequence>(0u, coordinateDimension);
-    return std::unique_ptr<Point>(new Point(coords.release(), this));
+    CoordinateSequence seq(0u, coordinateDimension);
+    return std::unique_ptr<Point>(new Point(std::move(seq), this));
 }
 
 /*public*/
 std::unique_ptr<Point>
 GeometryFactory::createPoint(std::unique_ptr<CoordinateSequence>&& coords) const
 {
-    return std::unique_ptr<Point>(new Point(coords.release(), this));
+    return std::unique_ptr<Point>(new Point(std::move(*coords), this));
 }
 
 std::unique_ptr<Point>
@@ -239,30 +239,23 @@ GeometryFactory::createPoint(const CoordinateXY& coordinate) const
 }
 
 /*public*/
-Point*
+std::unique_ptr<Point>
 GeometryFactory::createPoint(const Coordinate& coordinate) const
 {
     if(coordinate.isNull()) {
-        return createPoint().release();
+        return createPoint();
     }
     else {
-        return new Point(coordinate, this);
+        return std::unique_ptr<Point>(new Point(coordinate, this));
     }
 }
 
 /*public*/
-Point*
-GeometryFactory::createPoint(CoordinateSequence* newCoords) const
-{
-    return new Point(newCoords, this);
-}
-
-/*public*/
-Point*
+std::unique_ptr<Point>
 GeometryFactory::createPoint(const CoordinateSequence& fromCoords) const
 {
-    auto newCoords = fromCoords.clone();
-    return new Point(newCoords.release(), this);
+    CoordinateSequence newCoords(fromCoords);
+    return std::unique_ptr<Point>(new Point(std::move(newCoords), this));
 
 }
 
@@ -467,7 +460,7 @@ GeometryFactory::createMultiPoint(const CoordinateSequence& fromCoords) const
     std::vector<std::unique_ptr<Geometry>> pts(npts);
 
     for(std::size_t i = 0; i < npts; ++i) {
-        pts[i].reset(createPoint(fromCoords.getAt(i)));
+        pts[i] = createPoint(fromCoords.getAt(i));
     }
 
     return new MultiPoint(std::move(pts), *this);
