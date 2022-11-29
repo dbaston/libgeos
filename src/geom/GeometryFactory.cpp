@@ -263,19 +263,11 @@ GeometryFactory::createPoint(const CoordinateSequence& fromCoords) const
 std::unique_ptr<MultiLineString>
 GeometryFactory::createMultiLineString() const
 {
-    return std::unique_ptr<MultiLineString>(new MultiLineString(nullptr, this));
+    return createMultiLineString(std::vector<std::unique_ptr<Geometry>>());
 }
 
 /*public*/
-MultiLineString*
-GeometryFactory::createMultiLineString(std::vector<Geometry*>* newLines)
-const
-{
-    return new MultiLineString(newLines, this);
-}
-
-/*public*/
-MultiLineString*
+std::unique_ptr<MultiLineString>
 GeometryFactory::createMultiLineString(const std::vector<const Geometry*>& fromLines)
 const
 {
@@ -291,7 +283,7 @@ const
         newGeoms[i].reset(new LineString(*line));
     }
 
-    return new MultiLineString(std::move(newGeoms), *this);
+    return std::unique_ptr<MultiLineString>(new MultiLineString(std::move(newGeoms), *this));
 }
 
 std::unique_ptr<MultiLineString>
@@ -668,7 +660,7 @@ GeometryFactory::buildGeometry(const std::vector<const Geometry*>& fromGeoms) co
 
     switch(resultType) {
         case GEOS_MULTIPOINT: return createMultiPoint(fromGeoms).release();
-        case GEOS_MULTILINESTRING: return createMultiLineString(fromGeoms);
+        case GEOS_MULTILINESTRING: return createMultiLineString(fromGeoms).release();
         case GEOS_MULTIPOLYGON: return createMultiPolygon(fromGeoms);
         default: return createGeometryCollection(fromGeoms);
     }

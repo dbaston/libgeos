@@ -177,14 +177,11 @@ public:
     /// Construct an EMPTY MultiLineString
     std::unique_ptr<MultiLineString> createMultiLineString() const;
 
-    /// Construct a MultiLineString taking ownership of given arguments
-    MultiLineString* createMultiLineString(
-        std::vector<Geometry*>* newLines) const;
-
     /// Construct a MultiLineString with a deep-copy of given arguments
-    MultiLineString* createMultiLineString(
+    std::unique_ptr<MultiLineString> createMultiLineString(
         const std::vector<const Geometry*>& fromLines) const;
 
+    /// Construct a MultiLineString taking ownership of given arguments
     std::unique_ptr<MultiLineString> createMultiLineString(
             std::vector<std::unique_ptr<LineString>> && fromLines) const;
 

@@ -3793,39 +3793,33 @@ extern "C" {
         const GeometryFactory* factory = g1->getFactory();
         std::size_t count;
 
-        std::unique_ptr< std::vector<Geometry*> > out1(
-            new std::vector<Geometry*>()
-        );
+        std::vector<std::unique_ptr<Geometry>> out1;
         count = forw.size();
-        out1->reserve(count);
+        out1.reserve(count);
         for(std::size_t i = 0; i < count; ++i) {
-            out1->push_back(forw[i]);
+            out1.emplace_back(forw[i]);
         }
         std::unique_ptr<Geometry> out1g(
-            factory->createMultiLineString(out1.release())
+            factory->createMultiLineString(std::move(out1))
         );
 
-        std::unique_ptr< std::vector<Geometry*> > out2(
-            new std::vector<Geometry*>()
-        );
+        std::vector<std::unique_ptr<Geometry>> out2;
         count = back.size();
-        out2->reserve(count);
+        out2.reserve(count);
         for(std::size_t i = 0; i < count; ++i) {
-            out2->push_back(back[i]);
+            out2.emplace_back(back[i]);
         }
         std::unique_ptr<Geometry> out2g(
-            factory->createMultiLineString(out2.release())
+            factory->createMultiLineString(std::move(out2))
         );
 
-        std::unique_ptr< std::vector<Geometry*> > out(
-            new std::vector<Geometry*>()
-        );
-        out->reserve(2);
-        out->push_back(out1g.release());
-        out->push_back(out2g.release());
+        std::vector<std::unique_ptr<Geometry>> out;
+        out.reserve(2);
+        out.push_back(std::move(out1g));
+        out.push_back(std::move(out2g));
 
         std::unique_ptr<Geometry> outg(
-            factory->createGeometryCollection(out.release())
+            factory->createGeometryCollection(std::move(out))
         );
 
         outg->setSRID(g1->getSRID());

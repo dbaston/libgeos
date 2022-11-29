@@ -135,9 +135,6 @@ template<>
 void object::test<4>
 ()
 {
-    using geos::geom::PrecisionModel;
-    using geos::geom::GeometryFactory;
-
     PrecisionModel pm(PrecisionModel::FIXED);
     GeometryFactory::Ptr gf(GeometryFactory::create(&pm));
 
@@ -156,9 +153,6 @@ template<>
 void object::test<5>
 ()
 {
-    using geos::geom::PrecisionModel;
-    using geos::geom::GeometryFactory;
-
     PrecisionModel pm(PrecisionModel::FIXED);
     GeometryFactory::Ptr gf(GeometryFactory::create(&pm, srid_));
 
@@ -177,7 +171,6 @@ template<>
 void object::test<6>
 ()
 {
-    using geos::geom::GeometryFactory;
     GeometryFactory::Ptr gf(GeometryFactory::create(*factory_));
 
     ensure_equals(factory_->getSRID(), gf->getSRID());
