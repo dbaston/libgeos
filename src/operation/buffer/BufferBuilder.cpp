@@ -412,7 +412,7 @@ BufferBuilder::buffer(const Geometry* g, double distance)
 #endif
 
     std::unique_ptr<Geometry> resultGeom(nullptr);
-    std::unique_ptr< std::vector<Geometry*> > resultPolyList;
+    std::vector<std::unique_ptr<Geometry>> resultPolyList;
     std::vector<BufferSubgraph*> subgraphList;
 
     try {
@@ -439,7 +439,7 @@ BufferBuilder::buffer(const Geometry* g, double distance)
             PolygonBuilder polyBuilder(geomFact);
             buildSubgraphs(subgraphList, polyBuilder);
 
-            resultPolyList.reset(polyBuilder.getPolygons());
+            resultPolyList = polyBuilder.getPolygons();
         }
 
         // Get rid of the subgraphs, shouldn't be needed anymore
@@ -459,12 +459,12 @@ BufferBuilder::buffer(const Geometry* g, double distance)
 #endif
 
         // just in case ...
-        if(resultPolyList->empty()) {
+        if(resultPolyList.empty()) {
             return createEmptyResultGeometry();
         }
 
         // resultPolyList ownership transferred here
-        resultGeom.reset(geomFact->buildGeometry(resultPolyList.release()));
+        resultGeom = geomFact->buildGeometry(std::move(resultPolyList));
 
     }
     catch(const util::GEOSException& /* exc */) {

@@ -404,11 +404,6 @@ GeometryFactory::createLinearRing(const CoordinateSequence& fromCoords) const
 }
 
 /*public*/
-MultiPoint*
-GeometryFactory::createMultiPoint(std::vector<Geometry*>* newPoints) const
-{
-    return new MultiPoint(newPoints, this);
-}
 
 std::unique_ptr<MultiPoint>
 GeometryFactory::createMultiPoint(std::vector<CoordinateXY> && newPoints) const {
@@ -434,7 +429,7 @@ GeometryFactory::createMultiPoint(std::vector<std::unique_ptr<Geometry>> && newP
 }
 
 /*public*/
-MultiPoint*
+std::unique_ptr<MultiPoint>
 GeometryFactory::createMultiPoint(const std::vector<const Geometry*>& fromPoints) const
 {
     std::vector<std::unique_ptr<Geometry>> newGeoms(fromPoints.size());
@@ -442,18 +437,18 @@ GeometryFactory::createMultiPoint(const std::vector<const Geometry*>& fromPoints
         newGeoms[i] = fromPoints[i]->clone();
     }
 
-    return new MultiPoint(std::move(newGeoms), *this);
+    return createMultiPoint(std::move(newGeoms));
 }
 
 /*public*/
 std::unique_ptr<MultiPoint>
 GeometryFactory::createMultiPoint() const
 {
-    return std::unique_ptr<MultiPoint>(new MultiPoint(nullptr, this));
+    return std::unique_ptr<MultiPoint>(new MultiPoint(std::vector<std::unique_ptr<Geometry>>(), *this));
 }
 
 /*public*/
-MultiPoint*
+std::unique_ptr<MultiPoint>
 GeometryFactory::createMultiPoint(const CoordinateSequence& fromCoords) const
 {
     std::size_t npts = fromCoords.getSize();
@@ -463,7 +458,7 @@ GeometryFactory::createMultiPoint(const CoordinateSequence& fromCoords) const
         pts[i] = createPoint(fromCoords.getAt(i));
     }
 
-    return new MultiPoint(std::move(pts), *this);
+    return createMultiPoint(std::move(pts));
 }
 
 /*public*/
@@ -594,32 +589,6 @@ GeometryTypeId commonType(const T& geoms) {
     }
 }
 
-/*public*/
-Geometry*
-GeometryFactory::buildGeometry(std::vector<Geometry*>* newGeoms) const
-{
-    if(newGeoms->empty()) {
-        // we do not need the vector anymore
-        delete newGeoms;
-        return createGeometryCollection().release();
-    }
-
-    if (newGeoms->size() == 1) {
-        Geometry* ret = (*newGeoms)[0];
-        delete newGeoms;
-        return ret;
-    }
-
-    auto resultType = commonType(*newGeoms);
-
-    switch(resultType) {
-        case GEOS_MULTIPOINT: return createMultiPoint(newGeoms);
-        case GEOS_MULTILINESTRING: return createMultiLineString(newGeoms);
-        case GEOS_MULTIPOLYGON: return createMultiPolygon(newGeoms);
-        default: return createGeometryCollection(newGeoms);
-    }
-}
-
 std::unique_ptr<Geometry>
 GeometryFactory::buildGeometry(std::vector<std::unique_ptr<Geometry>> && geoms) const
 {
@@ -698,7 +667,7 @@ GeometryFactory::buildGeometry(const std::vector<const Geometry*>& fromGeoms) co
     auto resultType = commonType(fromGeoms);
 
     switch(resultType) {
-        case GEOS_MULTIPOINT: return createMultiPoint(fromGeoms);
+        case GEOS_MULTIPOINT: return createMultiPoint(fromGeoms).release();
         case GEOS_MULTILINESTRING: return createMultiLineString(fromGeoms);
         case GEOS_MULTIPOLYGON: return createMultiPolygon(fromGeoms);
         default: return createGeometryCollection(fromGeoms);

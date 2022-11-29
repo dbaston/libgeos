@@ -169,27 +169,26 @@ RectangleIntersectionBuilder::build()
         return std::unique_ptr<Geometry>(_gf.createGeometryCollection());
     }
 
-    std::vector<Geometry*>* geoms = new std::vector<Geometry*>;
-    geoms->reserve(n);
+    std::vector<std::unique_ptr<Geometry>> geoms;
+    geoms.reserve(n);
 
     for(std::list<geom::Polygon*>::iterator i = polygons.begin(), e = polygons.end(); i != e; ++i) {
-        geoms->push_back(*i);
+        geoms.emplace_back(*i);
     }
     polygons.clear();
 
     for(std::list<geom::LineString*>::iterator i = lines.begin(), e = lines.end(); i != e; ++i) {
-        geoms->push_back(*i);
+        geoms.emplace_back(*i);
     }
     lines.clear();
 
     for(std::list<geom::Point*>::iterator i = points.begin(), e = points.end(); i != e; ++i) {
-        geoms->push_back(*i);
+        geoms.emplace_back(*i);
     }
     points.clear();
 
-    return std::unique_ptr<Geometry>(
-               (*geoms)[0]->getFactory()->buildGeometry(geoms)
-           );
+    const auto* factory = geoms[0]->getFactory();
+    return factory->buildGeometry(std::move(geoms));
 }
 
 /**

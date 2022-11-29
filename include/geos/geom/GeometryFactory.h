@@ -221,9 +221,6 @@ public:
     /// Constructs an EMPTY <code>MultiPoint</code>.
     std::unique_ptr<MultiPoint> createMultiPoint() const;
 
-    /// Construct a MultiPoint taking ownership of given arguments
-    MultiPoint* createMultiPoint(std::vector<Geometry*>* newPoints) const;
-
     template<typename T>
     std::unique_ptr<MultiPoint> createMultiPoint(const T& fromCoords) const
     {
@@ -238,18 +235,19 @@ public:
 
     std::unique_ptr<MultiPoint> createMultiPoint(std::vector<CoordinateXY> && newPoints) const;
 
+    /// Construct a MultiPoint taking ownership of given arguments
     std::unique_ptr<MultiPoint> createMultiPoint(std::vector<std::unique_ptr<Point>> && newPoints) const;
 
     std::unique_ptr<MultiPoint> createMultiPoint(std::vector<std::unique_ptr<Geometry>> && newPoints) const;
 
     /// Construct a MultiPoint with a deep-copy of given arguments
-    MultiPoint* createMultiPoint(
+    std::unique_ptr<MultiPoint> createMultiPoint(
         const std::vector<const Geometry*>& fromPoints) const;
 
     /// \brief
     /// Construct a MultiPoint containing a Point geometry
     /// for each Coordinate in the given list.
-    MultiPoint* createMultiPoint(
+    std::unique_ptr<MultiPoint> createMultiPoint(
         const CoordinateSequence& fromCoords) const;
 
     /// Construct an EMPTY Polygon
@@ -321,8 +319,6 @@ public:
      * NOTE: the returned Geometry will take ownership of the
      *       given vector AND its elements
      */
-    Geometry* buildGeometry(std::vector<Geometry*>* geoms) const;
-
     std::unique_ptr<Geometry> buildGeometry(std::vector<std::unique_ptr<Geometry>> && geoms) const;
 
     std::unique_ptr<Geometry> buildGeometry(std::vector<std::unique_ptr<Point>> && geoms) const;

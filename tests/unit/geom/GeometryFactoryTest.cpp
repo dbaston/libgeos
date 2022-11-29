@@ -25,6 +25,9 @@
 #include <vector>
 #include <cstring> // std::size_t
 
+using geos::geom::GeometryFactory;
+using geos::geom::PrecisionModel;
+
 /*!
  * \brief
  * Write brief comment for tut here.
@@ -80,16 +83,15 @@ template<>
 void object::test<1>
 ()
 {
-    using geos::geom::GeometryFactory;
     GeometryFactory::Ptr gf = GeometryFactory::create();
 
     ensure_equals(gf->getSRID(), 0);
-    ensure_equals(gf->getPrecisionModel()->getType(), geos::geom::PrecisionModel::FLOATING);
+    ensure_equals(gf->getPrecisionModel()->getType(), PrecisionModel::FLOATING);
 
     auto geo = gf->createEmptyGeometry();
     ensure("createEmptyGeometry() returned null pointer.", geo != nullptr);
     ensure_equals(geo->getSRID(), gf->getSRID());
-    ensure_equals(geo->getPrecisionModel()->getType(), geos::geom::PrecisionModel::FLOATING);
+    ensure_equals(geo->getPrecisionModel()->getType(), PrecisionModel::FLOATING);
 }
 
 // Test of user's constructor
@@ -98,22 +100,16 @@ template<>
 void object::test<2>
 ()
 {
-    using geos::geom::GeometryFactory;
-    using geos::geom::PrecisionModel;
+    PrecisionModel pm(1.0);
+    GeometryFactory::Ptr gf = GeometryFactory::create(&pm, srid_);
 
-    {
-        PrecisionModel pm(1.0);
-        GeometryFactory::Ptr gf = GeometryFactory::create(&pm, srid_);
+    ensure_equals(gf->getSRID(), srid_);
+    ensure_equals(gf->getPrecisionModel()->getType(), PrecisionModel::FIXED);
 
-        ensure_equals(gf->getSRID(), srid_);
-        ensure_equals(gf->getPrecisionModel()->getType(), geos::geom::PrecisionModel::FIXED);
-
-        auto geo = gf->createEmptyGeometry();
-        ensure("createEmptyGeometry() returned null pointer.", geo != nullptr);
-        ensure_equals(geo->getSRID(), gf->getSRID());
-        ensure_equals(geo->getPrecisionModel()->getType(), geos::geom::PrecisionModel::FIXED);
-    }
-
+    auto geo = gf->createEmptyGeometry();
+    ensure("createEmptyGeometry() returned null pointer.", geo != nullptr);
+    ensure_equals(geo->getSRID(), gf->getSRID());
+    ensure_equals(geo->getPrecisionModel()->getType(), PrecisionModel::FIXED);
 } // test<2>
 
 // Test of user's constructor
@@ -122,19 +118,15 @@ template<>
 void object::test<3>
 ()
 {
-    using geos::geom::GeometryFactory;
+    GeometryFactory::Ptr gf = GeometryFactory::create();
 
-    {
-        GeometryFactory::Ptr gf = GeometryFactory::create();
+    ensure_equals(gf->getSRID(), 0);
+    ensure_equals(gf->getPrecisionModel()->getType(), PrecisionModel::FLOATING);
 
-        ensure_equals(gf->getSRID(), 0);
-        ensure_equals(gf->getPrecisionModel()->getType(), geos::geom::PrecisionModel::FLOATING);
-
-        auto geo = gf->createEmptyGeometry();
-        ensure("createEmptyGeometry() returned null pointer.", geo != nullptr);
-        ensure_equals(geo->getSRID(), gf->getSRID());
-        ensure_equals(geo->getPrecisionModel()->getType(), geos::geom::PrecisionModel::FLOATING);
-    }
+    auto geo = gf->createEmptyGeometry();
+    ensure("createEmptyGeometry() returned null pointer.", geo != nullptr);
+    ensure_equals(geo->getSRID(), gf->getSRID());
+    ensure_equals(geo->getPrecisionModel()->getType(), PrecisionModel::FLOATING);
 }
 
 // Test of user's constructor
@@ -851,7 +843,7 @@ void object::test<24>
     ensure_equals(mp->getArea(), 0.0);
 }
 
-// Test of createMultiPoint(std::vector<Geometry*>* newPoints) const
+// Test of createMultiPoint(std::vector<std::unique_ptr<Geometry>>&& newPoints) const
 template<>
 template<>
 void object::test<25>
@@ -860,40 +852,36 @@ void object::test<25>
     const std::size_t size = 3;
     geos::geom::Coordinate coord(x_, y_, z_);
 
-    std::vector<GeometryPtr>* vec = new std::vector<GeometryPtr>();
+    std::vector<std::unique_ptr<Geometry>> vec;
 
-    GeometryPtr geo = nullptr;
-    geo = factory_->createPoint(coord).release();
+    auto geo = factory_->createPoint(coord);
     ensure(geo != nullptr);
-    vec->push_back(geo);
+    vec.push_back(std::move(geo));
 
     coord.x *= 2;
     coord.y *= 2;
     coord.z *= 2;
-    geo = factory_->createPoint(coord).release();
+    geo = factory_->createPoint(coord);
     ensure(geo != nullptr);
-    vec->push_back(geo);
+    vec.push_back(std::move(geo));
 
     coord.x *= 3;
     coord.y *= 3;
     coord.z *= 3;
-    geo = factory_->createPoint(coord).release();
+    geo = factory_->createPoint(coord);
     ensure(geo != nullptr);
-    vec->push_back(geo);
+    vec.push_back(std::move(geo));
 
     // Factory creates copy of the vec collection
-    MultiPointPtr mp = factory_->createMultiPoint(vec);
+    auto mp = factory_->createMultiPoint(std::move(vec));
     ensure(mp != nullptr);
     ensure(mp->isValid());
     ensure(mp->isSimple());
     ensure_equals(mp->getNumGeometries(), size);
     ensure_equals(mp->getGeometryTypeId(), geos::geom::GEOS_MULTIPOINT);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(mp);
 }
 
-// Test of createMultiPoint(const std::vector<Geometry*>& fromPoints) const
+// Test of createMultiPoint(const std::vector<const Geometry*>& fromPoints) const
 template<>
 template<>
 void object::test<26>
@@ -920,15 +908,12 @@ void object::test<26>
     vec.push_back(geo3.get());
 
     // Factory creates copy of the vec collection
-    MultiPointPtr mp = factory_->createMultiPoint(vec);
+    auto mp = factory_->createMultiPoint(vec);
     ensure(mp != nullptr);
     ensure(mp->isValid());
     ensure(mp->isSimple());
     ensure_equals(mp->getNumGeometries(), size);
     ensure_equals(mp->getGeometryTypeId(), geos::geom::GEOS_MULTIPOINT);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(mp);
 }
 
 // Test of createMultiPoint(const CoordinateSequence& fromCoords) const
@@ -947,15 +932,12 @@ void object::test<27>
     coords.setAt(Coordinate(10, 5), 2);
     ensure_equals(coords.getSize(), size);
 
-    MultiPointPtr mp = factory_->createMultiPoint(coords);
+    auto mp = factory_->createMultiPoint(coords);
     ensure(mp != nullptr);
     ensure(mp->isValid());
     ensure(mp->isSimple());
     ensure_equals(mp->getNumGeometries(), size);
     ensure_equals(mp->getGeometryTypeId(), geos::geom::GEOS_MULTIPOINT);
-
-    // FREE MEMORY
-    factory_->destroyGeometry(mp);
 }
 
 // Test of createMultiLineString() const
@@ -997,7 +979,7 @@ void object::test<28>
     ensure_equals(mls->getArea(), 0.0);
 }
 
-// Test of createMultiLineString(std::vector<Geometry*>* newLines) const
+// Test of createMultiLineString(std::vector<std::unique_ptr<Geometry>>&& newLines) const
 template<>
 template<>
 void object::test<29>
@@ -1132,7 +1114,6 @@ template<>
 void object::test<36>
 ()
 {
-    typedef std::unique_ptr<geos::geom::Geometry> GeometryAutoPtr;
     typedef std::vector<PointPtr> PointVect;
 
     const std::size_t size = 3;
@@ -1156,7 +1137,7 @@ void object::test<36>
     vec.push_back(geo3.get());
 
     // Factory creates copy of the vec collection
-    GeometryAutoPtr g = factory_->buildGeometry(vec.begin(), vec.end());
+    auto g = factory_->buildGeometry(vec.begin(), vec.end());
     ensure(g.get() != nullptr);
     ensure_equals(g->getGeometryTypeId(), geos::geom::GEOS_MULTIPOINT);
     ensure_equals(g->getNumGeometries(), size);
