@@ -488,16 +488,8 @@ std::unique_ptr<Polygon>
 GeometryFactory::createPolygon(std::size_t coordinateDimension) const
 {
     auto cs = detail::make_unique<CoordinateSequence>(0u, coordinateDimension);
-    auto lr = createLinearRing(cs.release());
-    return std::unique_ptr<Polygon>(createPolygon(lr, nullptr));
-}
-
-/*public*/
-Polygon*
-GeometryFactory::createPolygon(LinearRing* shell, std::vector<LinearRing*>* holes)
-const
-{
-    return new Polygon(shell, holes, this);
+    auto lr = createLinearRing(std::move(cs));
+    return createPolygon(std::move(lr));
 }
 
 std::unique_ptr<Polygon>

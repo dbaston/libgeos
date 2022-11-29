@@ -260,9 +260,6 @@ public:
     std::unique_ptr<Polygon> createPolygon(std::size_t coordinateDimension = 2) const;
 
     /// Construct a Polygon taking ownership of given arguments
-    Polygon* createPolygon(LinearRing* shell,
-                           std::vector<LinearRing*>* holes) const;
-
     std::unique_ptr<Polygon> createPolygon(std::unique_ptr<LinearRing> && shell) const;
 
     std::unique_ptr<Polygon> createPolygon(std::unique_ptr<LinearRing> && shell,
