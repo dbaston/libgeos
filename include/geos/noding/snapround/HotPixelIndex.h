@@ -20,10 +20,8 @@
 #include <geos/algorithm/LineIntersector.h>
 #include <geos/noding/snapround/HotPixel.h>
 #include <geos/geom/PrecisionModel.h>
-#include <geos/util/IllegalArgumentException.h>
 #include <geos/io/WKTWriter.h>
-#include <geos/index/kdtree/KdTree.h>
-#include <geos/index/kdtree/KdNodeVisitor.h>
+#include <geos/index/strtree/TemplateSTRtree.h>
 #include <geos/util.h>
 
 #include <array>
@@ -64,8 +62,10 @@ private:
     /* members */
     const geom::PrecisionModel* pm;
     double scaleFactor;
-    std::unique_ptr<geos::index::kdtree::KdTree> index;
+    //std::unique_ptr<geos::index::kdtree::KdTree> index;
+    index::strtree::TemplateSTRtree<HotPixel*> index;
     std::deque<HotPixel> hotPixelQue;
+    std::map<geom::Coordinate, HotPixel*> hotPixelMap;
 
     /* methods */
     template<typename CoordType>
@@ -100,8 +100,18 @@ public:
     * The visitor must determine whether each hot pixel actually intersects
     * the segment.
     */
+    template<typename Visitor>
     void query(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1,
-               index::kdtree::KdNodeVisitor& visitor);
+               Visitor&& visitor) {
+        geom::Envelope queryEnv(p0, p1);
+        queryEnv.expandBy(1.0 / scaleFactor);
+
+        index.query(queryEnv, visitor);
+    }
+
+    // Declare type as noncopyable
+    HotPixelIndex(const HotPixelIndex& other) = delete;
+    HotPixelIndex& operator=(const HotPixelIndex& rhs) = delete;
 
 };
 
