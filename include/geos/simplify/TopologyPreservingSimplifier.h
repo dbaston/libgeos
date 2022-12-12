@@ -81,7 +81,7 @@ private:
 
     const geom::Geometry* inputGeom;
 
-    std::unique_ptr<TaggedLinesSimplifier> lineSimplifier;
+    TaggedLinesSimplifier lineSimplifier;
 
 };
 

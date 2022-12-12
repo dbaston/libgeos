@@ -197,8 +197,7 @@ TopologyPreservingSimplifier::simplify(
 /*public*/
 TopologyPreservingSimplifier::TopologyPreservingSimplifier(const Geometry* geom)
     :
-    inputGeom(geom),
-    lineSimplifier(new TaggedLinesSimplifier())
+    inputGeom(geom)
 {
 }
 
@@ -212,7 +211,7 @@ TopologyPreservingSimplifier::setDistanceTolerance(double d)
         throw IllegalArgumentException("Tolerance must be non-negative");
     }
 
-    lineSimplifier->setDistanceTolerance(d);
+    lineSimplifier.setDistanceTolerance(d);
 }
 
 
@@ -239,7 +238,7 @@ TopologyPreservingSimplifier::getResultGeometry()
           << linestringMap.size() << " elements\n";
 #endif
 
-    lineSimplifier->simplify(linestringMap.begin(), linestringMap.end());
+    lineSimplifier.simplify(linestringMap.begin(), linestringMap.end());
 
 #if GEOS_DEBUG
     std::cerr << "all TaggedLineString simplified\n";
