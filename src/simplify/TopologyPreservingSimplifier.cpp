@@ -48,7 +48,7 @@ using namespace geos::geom;
 namespace geos {
 namespace simplify { // geos::simplify
 
-using LinesMap = std::unordered_map<const geom::Geometry*, TaggedLineString*>;
+using LinesMap = std::map<const geom::Geometry*, TaggedLineString>;
 
 
 namespace { // module-statics
@@ -93,10 +93,10 @@ LineStringTransformer::transformCoordinates(
               << std::endl;
 #endif
     if(dynamic_cast<const LineString*>(parent)) {
-        LinesMap::iterator it = linestringMap.find(parent);
+        const auto& it = linestringMap.find(parent);
         assert(it != linestringMap.end());
 
-        TaggedLineString* taggedLine = it->second;
+        const TaggedLineString& taggedLine = it->second;
 #if GEOS_DEBUG
         std::cerr << "LineStringTransformer[" << this << "] "
                   << " getting result Coordinates from "
@@ -104,10 +104,9 @@ LineStringTransformer::transformCoordinates(
                   << std::endl;
 #endif
 
-        assert(taggedLine);
-        assert(taggedLine->getParent() == parent);
+        assert(taggedLine.getParent() == parent);
 
-        return taggedLine->getResultCoordinates();
+        return taggedLine.getResultCoordinates();
     }
 
     // for anything else (e.g. points) just copy the coordinates
@@ -149,46 +148,36 @@ public:
      * User's constructor.
      * @param nMap - reference to LinesMap instance.
      */
-    LineStringMapBuilderFilter(LinesMap& nMap, std::vector<TaggedLineString*>& tlsVec);
+    LineStringMapBuilderFilter(LinesMap& nMap) :
+        linestringMap(nMap) {}
 
 private:
 
     LinesMap& linestringMap;
-    std::vector<TaggedLineString*>& tlsVector;
 
     // Declare type as noncopyable
     LineStringMapBuilderFilter(const LineStringMapBuilderFilter& other) = delete;
     LineStringMapBuilderFilter& operator=(const LineStringMapBuilderFilter& rhs) = delete;
 };
 
-/*public*/
-LineStringMapBuilderFilter::LineStringMapBuilderFilter(LinesMap& nMap, std::vector<TaggedLineString*>& tlsVec)
-    :
-    linestringMap(nMap), tlsVector(tlsVec)
-{
-}
 
 /*public*/
 void
 LineStringMapBuilderFilter::filter_ro(const Geometry* geom)
 {
-    TaggedLineString* taggedLine;
-
-    if(const LineString* ls =
-                dynamic_cast<const LineString*>(geom)) {
-        std::size_t minSize = ls->isClosed() ? 4 : 2;
-        taggedLine = new TaggedLineString(ls, minSize);
-    }
-    else {
+    auto ls = dynamic_cast<const LineString*>(geom);
+    if (!ls) {
         return;
     }
 
+    std::size_t minSize = ls->isClosed() ? 4 : 2;
+
     // Duplicated Geometry pointers shouldn't happen
-    if(! linestringMap.insert(std::make_pair(geom, taggedLine)).second) {
-        delete taggedLine;
+    auto it = linestringMap.insert(std::make_pair(geom, TaggedLineString(ls, minSize)));
+    if(! it.second) {
         throw util::GEOSException("Duplicated Geometry components detected");
     }
-    tlsVector.push_back(taggedLine);
+
 }
 
 
@@ -241,51 +230,27 @@ TopologyPreservingSimplifier::getResultGeometry()
 
     std::unique_ptr<geom::Geometry> result;
 
-    try {
-        //-- vector ensures deterministic simplification order of TaggedLineStrings
-        std::vector<TaggedLineString*> tlsVector;
-        LineStringMapBuilderFilter lsmbf(linestringMap, tlsVector);
-        inputGeom->apply_ro(&lsmbf);
+    LineStringMapBuilderFilter lsmbf(linestringMap);
+    inputGeom->apply_ro(&lsmbf);
 
 #if GEOS_DEBUG
-        std::cerr << "LineStringMapBuilderFilter applied, "
-                  << " lineStringMap contains "
-                  << linestringMap.size() << " elements\n";
+    std::cerr << "LineStringMapBuilderFilter applied, "
+          << " lineStringMap contains "
+          << linestringMap.size() << " elements\n";
 #endif
 
-        lineSimplifier->simplify(tlsVector.begin(), tlsVector.end());
+    lineSimplifier->simplify(linestringMap.begin(), linestringMap.end());
 
 #if GEOS_DEBUG
-        std::cerr << "all TaggedLineString simplified\n";
+    std::cerr << "all TaggedLineString simplified\n";
 #endif
 
-        LineStringTransformer trans(linestringMap);
-        result = trans.transform(inputGeom);
+    LineStringTransformer trans(linestringMap);
+    result = trans.transform(inputGeom);
 
 #if GEOS_DEBUG
-        std::cerr << "inputGeom transformed\n";
+    std::cerr << "inputGeom transformed\n";
 #endif
-
-    }
-    catch(...) {
-        for(LinesMap::iterator
-                it = linestringMap.begin(),
-                itEnd = linestringMap.end();
-                it != itEnd;
-                ++it) {
-            delete it->second;
-        }
-
-        throw;
-    }
-
-    for(LinesMap::iterator
-            it = linestringMap.begin(),
-            itEnd = linestringMap.end();
-            it != itEnd;
-            ++it) {
-        delete it->second;
-    }
 
 #if GEOS_DEBUG
     std::cerr << "returning result\n";

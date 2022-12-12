@@ -95,6 +95,10 @@ public:
 
     std::unique_ptr<geom::Geometry> asLinearRing() const;
 
+    TaggedLineString(TaggedLineString&&) = default;
+
+    TaggedLineString& operator=(TaggedLineString&&) = default;
+
 private:
 
     const geom::LineString* parentLine;

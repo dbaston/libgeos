@@ -73,7 +73,8 @@ public:
      *
      * @tparam iterator_type an iterator, must support assignment, increment,
      *                       inequality and dereference operators. Dereference
-     *                       operator must return a `TaggedLineString*`.
+     *                       operator must return a std::pair whose second
+     *                       element is a `TaggedLineString*`.
      * @param begin iterator to the first element to be simplified.
      * @param end an iterator to one-past-last element to be simplified.
      */
@@ -85,14 +86,12 @@ public:
     {
         // add lines to the index
         for(iterator_type it = begin; it != end; ++it) {
-            assert(*it);
-            inputIndex->add(*(*it));
+            inputIndex->add(it->second);
         }
 
         // Simplify lines
         for(iterator_type it = begin; it != end; ++it) {
-            assert(*it);
-            simplify(*(*it));
+            simplify(it->second);
         }
     }
 
