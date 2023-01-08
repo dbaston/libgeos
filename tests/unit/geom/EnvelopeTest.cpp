@@ -7,13 +7,26 @@
 #include <geos/geom/Envelope.h>
 #include <geos/geom/Coordinate.h>
 
+#include <cfenv>
+
 namespace tut {
 //
 // Test Group
 //
 
 // dummy data, not used
-struct test_envelope_data {};
+struct test_envelope_data {
+    test_envelope_data()
+    {
+        std::feclearexcept(FE_ALL_EXCEPT);
+    }
+
+
+    static void ensure_no_fp_except()
+    {
+        ensure(!std::fetestexcept(FE_ALL_EXCEPT));
+    }
+};
 
 typedef test_group<test_envelope_data> group;
 typedef group::object object;

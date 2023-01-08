@@ -39,15 +39,15 @@ private:
     void parseCase(const tinyxml2::XMLNode* node);
     void parseTest(const tinyxml2::XMLNode* node);
     void runPredicates(const geom::Geometry* a, const geom::Geometry* b);
-    geom::Geometry* parseGeometry(const std::string& in, const char* label = "parsed");
+    std::unique_ptr<geom::Geometry> parseGeometry(const std::string& in, const char* label = "parsed");
     void printGeom(std::ostream& os, const geom::Geometry* g);
 
     std::string printGeom(const geom::Geometry* g);
     void printTest(bool success, const std::string& expected_result, const std::string& actual_result,
                    const util::Profile&);
 
-    geom::Geometry* gA;
-    geom::Geometry* gB;
+    std::unique_ptr<geom::Geometry> gA;
+    std::unique_ptr<geom::Geometry> gB;
 
     bool usePrepared;
     std::unique_ptr<geom::PrecisionModel> pm;
