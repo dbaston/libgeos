@@ -16,6 +16,10 @@
 
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/PrecisionModel.h>
+#include <geos/io/WKTReader.h>
+#include <geos/io/WKTWriter.h>
+#include <geos/io/WKBReader.h>
+#include <geos/io/WKBWriter.h>
 #include <geos/profiler.h>
 #include <tinyxml2.h>
 
@@ -46,8 +50,8 @@ private:
     void printTest(bool success, const std::string& expected_result, const std::string& actual_result,
                    const util::Profile&);
 
-    std::unique_ptr<geom::Geometry> gA;
-    std::unique_ptr<geom::Geometry> gB;
+    std::shared_ptr<const geom::Geometry> gA;
+    std::shared_ptr<const geom::Geometry> gB;
 
     bool usePrepared;
     std::unique_ptr<geom::PrecisionModel> pm;

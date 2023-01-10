@@ -205,16 +205,22 @@ normalize_filename(const std::string& str)
     return newstring;
 }
 
-#if 0
 static int
-checkOverlaySuccess(geom::Geometry const& gRes, geom::Geometry const& gRealRes)
+checkUnionSuccess(geom::Geometry const& gRes, geom::Geometry const& gRealRes)
 {
     double tol = operation::overlay::snap::GeometrySnapper::computeSizeBasedSnapTolerance(gRes);
-    if(gRes.equals(&gRealRes)) {
+
+    auto gResNorm = gRes.clone();
+    auto gRealResNorm = gRealRes.clone();
+    gResNorm->normalize();
+    gRealResNorm->normalize();
+
+    if(gResNorm->equals(gRealResNorm.get())) {
         return 1;
     }
     std::cerr << "Using an overlay tolerance of " << tol << std::endl;
-    if(gRes.equalsExact(&gRealRes, tol)) {
+
+    if(gResNorm->equalsExact(gRealResNorm.get(), tol)) {
         return 1;
     }
     return 0;
@@ -261,6 +267,7 @@ checkBufferSuccess(geom::Geometry const& gRes, geom::Geometry const& gRealRes, d
     return success;
 }
 
+#if 0
 static int
 checkSingleSidedBufferSuccess(geom::Geometry& gRes,
                               geom::Geometry& gRealRes, double dist)
@@ -848,31 +855,33 @@ public:
         m_args[index - 1] = Value(value);
     }
 
-    void setGeomA(const geom::Geometry* g) {
+    void setGeomA(std::shared_ptr<const geom::Geometry> g) {
         m_geoms[0] = g;
     }
 
-    void setGeomB(const geom::Geometry* g) {
+    void setGeomB(std::shared_ptr<const geom::Geometry> g) {
         m_geoms[1] = g;
     }
 
     bool has(std::size_t index) const {
-        return !get(index).isNull();
+        return !get(index - 1).isNull();
     }
 
     const geom::Geometry* A() const {
-        return swapGeomArgs() ? m_geoms[1] : m_geoms[0];
+        return swapGeomArgs() ? m_geoms[1].get() : m_geoms[0].get();
     }
 
     const geom::Geometry* B() const {
-        return swapGeomArgs() ? m_geoms[0] : m_geoms[1];
+        return swapGeomArgs() ? m_geoms[0].get() : m_geoms[1].get();
     }
 
     const geom::prep::PreparedGeometry* pA() const {
+        prepareGeometries();
         return swapGeomArgs() ? m_prep[1].get() : m_prep[0].get();
     }
 
     const geom::prep::PreparedGeometry* pB() const {
+        prepareGeometries();
         return swapGeomArgs() ? m_prep[0].get() : m_prep[1].get();
     }
 
@@ -900,14 +909,14 @@ private:
     void prepareGeometries() const {
         for (std::size_t i = 0; i < m_prep.size(); i++) {
             if (m_prep[i] == nullptr) {
-                m_prep[i] = PreparedGeometryFactory::prepare(m_geoms[i]);
+                m_prep[i] = PreparedGeometryFactory::prepare(m_geoms[i].get());
             }
         }
     }
 
     static constexpr std::size_t MAX_ARGS = 4;
     std::array<Value, MAX_ARGS> m_args;
-    std::array<const geom::Geometry*, 2> m_geoms;
+    std::array<std::shared_ptr<const geom::Geometry>, 2> m_geoms;
     mutable std::array<std::unique_ptr<geom::prep::PreparedGeometry>, 2> m_prep;
     bool m_useprepared;
 
@@ -932,6 +941,10 @@ public:
     void setName(const std::string& value) {
         m_name = XMLTester::trimBlanks(value);
         tolower(m_name);
+    }
+
+    void setExpected(const char* value) {
+        setExpected(std::string(value));
     }
 
     void setExpected(const std::string& value) {
@@ -977,11 +990,11 @@ public:
         return m_args;
     }
 
-    void setGeomA(const geom::Geometry* g) {
+    void setGeomA(std::shared_ptr<const geom::Geometry> g) {
         m_args.setGeomA(g);
     }
 
-    void setGeomB(const geom::Geometry* g) {
+    void setGeomB(std::shared_ptr<const geom::Geometry> g) {
         m_args.setGeomB(g);
     }
 
@@ -1107,7 +1120,11 @@ std::map<std::string, std::function<Result(const Args&)>> getFunctions() {
     };
 
     functions["union"] = [](const Args& args) {
-        return Result(args.A()->Union(args.B()));
+        if (args.B()) {
+            return Result(args.A()->Union(args.B()));
+        } else {
+            return Result(args.A()->Union());
+        }
     };
 
     functions["difference"] = [](const Args& args) {
@@ -1424,8 +1441,8 @@ XMLTester::parseTest(const tinyxml2::XMLNode* node)
     op.setArg(2, opel->Attribute("arg2"));
     op.setArg(3, opel->Attribute("arg3"));
     op.setArg(4, opel->Attribute("arg4"));
-    op.setGeomA(gA.get());
-    op.setGeomB(gB.get());
+    op.setGeomA(gA);
+    op.setGeomB(gB);
 
     op.setUsePrepared(usePrepared);
 
@@ -1472,13 +1489,19 @@ XMLTester::parseTest(const tinyxml2::XMLNode* node)
         actual_result = "Unknown exception thrown";
     }
 
-    // TODO: Have control over geometry equality metric
-    if (actual_result == op.getExpected()) {
-        success = true;
-    }
-
     if (actual_result.isGeometry()) {
         op.setExpected(parseGeometry(op.getExpected().getString()));
+    }
+
+    // TODO: Have control over geometry equality metric
+    if (op.getName() == "areatest") {
+        success = actual_result.getDouble() <= op.getExpected().getDouble();
+    } else if (op.getName() == "buffer") {
+        success = checkBufferSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry(), op.getArgs()[3].getDouble());
+    } else if (op.getName() == "union") {
+        success = checkUnionSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry());
+    } else if (actual_result == op.getExpected()) {
+        success = true;
     }
 
     if(testValidOutput && actual_result.isGeometry()) {
@@ -1493,11 +1516,17 @@ XMLTester::parseTest(const tinyxml2::XMLNode* node)
     }
 
     if((!success && verbose) || verbose > 0) {
-        printTest(success, op.getExpected().toString(), actual_result.toString(), profile);
+        if (actual_result.isGeometry()) {
+            printTest(success,
+                  printGeom(op.getExpected().getGeometry()),
+                  printGeom(actual_result.getGeometry()), profile);
+        } else {
+            printTest(success, op.getExpected().toString(), actual_result.toString(), profile);
+        }
     }
 
     if(test_predicates && gB && gA) {
-        runPredicates(gA, gB);
+        runPredicates(gA.get(), gB.get());
     }
 
 }

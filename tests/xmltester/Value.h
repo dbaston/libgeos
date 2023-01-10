@@ -61,8 +61,25 @@ public:
     }
 
     bool getBool() const {
-        checkType(BOOL);
-        return m_bool;
+        if (m_type == BOOL) {
+            return m_bool;
+        }
+
+        if (m_type == STRING) {
+            std::string ustring = m_string;
+            for (auto& c : ustring) {
+                c = static_cast<char>(toupper(c));
+            }
+
+            if (ustring == "TRUE") {
+                return true;
+            }
+            if (ustring == "FALSE") {
+                return false;
+            }
+        }
+
+        throw TypeError();
     }
 
     double getDouble() const {
