@@ -820,37 +820,56 @@ XMLTester::areaDelta(const geom::Geometry* a, const geom::Geometry* b, std::stri
 
 class Fizz {
 public:
+    using Operation = std::function<Value(const Args&)>;
+    using Matcher = std::function<bool(const Value&, const Value&)>;
 
-    Fizz(std::function<Value(const Args&)> f) :
-        m_run(f),
-        m_test([](const Value& a, const Value& b) {
-            return a == b;
-        })
-    {}
+    //Fizz() :
+    //    m_run(f),
+    //    m_test([](const Value& a, const Value& b) {
+    //        return a == b;
+    //    })
+    //{}
 
-    Fizz(std::function<Value(const Args&)> f,
-         std::function<bool(const Value&, const Value&)> t) :
-        m_run(f),
-        m_test(t)
-    {}
+    //Fizz(std::function<Value(const Args&)> f,
+    //     std::function<bool(const Value&, const Value&)> t) :
+    //    m_operation(f),
+    //    m_test(t)
+    //{}
+
+    Value getResult(const Args& args) {
+        return m_operation(args);
+    }
+
+    bool isSuccess(const Value& actual, const Value& expected) {
+        return m_matcher(actual, expected);
+    }
 
     template<typename F>
     Fizz& operator=(F&& f) {
-        m_run = std::move(f);
+        m_operation = std::move(f);
+        return *this;
+    }
+
+    Fizz& setMatcher(Matcher m) {
+        m_matcher = m;
         return *this;
     }
 
 private:
-    std::function<Value(const Args&)> m_run;
-    std::function<bool(const Value&, const Value&)> m_test;
+    Operation m_operation;
+    Matcher m_matcher;
 };
 
-std::map<std::string, std::function<Result(const Args&)>> getFunctions() {
+using Function = Fizz;
+//using Function = std::function<Result(const Args&)>;
+
+std::map<std::string, Function> getFunctions() {
+//std::map<std::string, std::function<Result(const Args&)>> getFunctions() {
     using operation::buffer::BufferBuilder;
     using operation::buffer::BufferOp;
     using operation::buffer::BufferParameters;
 
-    std::map<std::string, std::function<Result(const Args&)>> functions;
+    std::map<std::string, Function> functions;
     //std::map<std::string, Fizz> functions;
 
     functions["isvalid"] = [](const Args& args) {
@@ -1269,9 +1288,10 @@ XMLTester::runTest(Test& op) {
     auto functions = getFunctions();
 
     Value actual_result;
+    auto function = functions[op.getName()];
 
     try {
-        actual_result = functions[op.getName()](op.getArgs());
+        actual_result = function.getResult(op.getArgs());
     } catch(const std::exception& e) {
         if (op.getExpected() == "exception") {
             success = true;
