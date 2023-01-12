@@ -817,11 +817,11 @@ XMLTester::areaDelta(const geom::Geometry* a, const geom::Geometry* b, std::stri
     return diffScore;
 }
 
+using Matcher = std::function<bool(const Value&, const Value&)>;
 
 class Fizz {
 public:
     using Operation = std::function<Value(const Args&)>;
-    using Matcher = std::function<bool(const Value&, const Value&)>;
 
     //Fizz() :
     //    m_run(f),
@@ -1313,9 +1313,25 @@ XMLTester::runTest(Test& op) {
         op.setExpected(parseGeometry(op.getExpected().getString()));
     }
 
+
+
+    Matcher ActualLessThanExpected = [](const Value& actual, const Value& expected) {
+        return actual.getDouble() <= expected.getDouble();
+    };
+
+    Matcher RelativeErrorLessThan = [](const Value& actual, const Value& expected) {
+        return std::abs(expected.getDouble() -  actual.getDouble()) / expected.getDouble() < 1e-3;
+    };
+
+    Matcher DefaultMatcher = [](const Value& actual, const Value& expected) {
+        return actual == expected;
+    };
+
+    Matcher matcher = DefaultMatcher;
+
     // TODO: Have control over geometry equality metric
     if (op.getName() == "areatest") {
-        success = actual_result.getDouble() <= op.getExpected().getDouble();
+        matcher = ActualLessThanExpected;
     } else if (op.getName() == "buffer") {
         success = checkBufferSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry(), op.getArgs()[3].getDouble());
     } else if (op.getName() == "buffermitredjoin") {
@@ -1325,12 +1341,10 @@ XMLTester::runTest(Test& op) {
     } else if (op.getName() == "union") {
         success = checkUnionSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry());
     } else if (op.getName() == "unionarea" || op.getName() == "unionlength") {
-        double resultArea = actual_result.getDouble();
-        double expectedArea = op.getExpected().getDouble();
-        success = std::abs(expectedArea-resultArea) / expectedArea < 1e-3;
-    } else if (actual_result == op.getExpected()) {
-        success = true;
+        matcher = RelativeErrorLessThan;
     }
+
+    success = matcher(actual_result, op.getExpected());
 
     if(testValidOutput && actual_result.isGeometry()) {
         success &= testValid(actual_result.getGeometry(), "result");
