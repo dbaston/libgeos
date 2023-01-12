@@ -817,7 +817,27 @@ XMLTester::areaDelta(const geom::Geometry* a, const geom::Geometry* b, std::stri
     return diffScore;
 }
 
-using Matcher = std::function<bool(const Value&, const Value&)>;
+class Matcher {
+public:
+    using MatcherFunction = std::function<bool(const Value&, const Value&)>;
+    using MatcherFunctionWithArgs = std::function<bool(const Value&, const Value&, const Args&)>;
+
+    Matcher(MatcherFunction f) : m_matcher(f), uses_args(false) {}
+    Matcher(MatcherFunctionWithArgs f) : m_matcher_with_args(f), uses_args(true) {}
+
+    bool operator()(const Value& a, const Value& b, const Args& args) {
+        if (uses_args) {
+            return m_matcher_with_args(a, b, args);
+        } else {
+            return m_matcher(a, b);
+        }
+    }
+
+private:
+    MatcherFunction m_matcher;
+    MatcherFunctionWithArgs m_matcher_with_args;
+    bool uses_args;
+};
 
 class Fizz {
 public:
@@ -1315,17 +1335,21 @@ XMLTester::runTest(Test& op) {
 
 
 
-    Matcher ActualLessThanExpected = [](const Value& actual, const Value& expected) {
+    Matcher ActualLessThanExpected([](const Value& actual, const Value& expected) {
         return actual.getDouble() <= expected.getDouble();
-    };
+    });
 
-    Matcher RelativeErrorLessThan = [](const Value& actual, const Value& expected) {
+    Matcher RelativeErrorLessThan([](const Value& actual, const Value& expected) {
         return std::abs(expected.getDouble() -  actual.getDouble()) / expected.getDouble() < 1e-3;
-    };
+    });
 
-    Matcher DefaultMatcher = [](const Value& actual, const Value& expected) {
+    Matcher DefaultMatcher([](const Value& actual, const Value& expected) {
         return actual == expected;
-    };
+    });
+
+    Matcher BufferResultMatcher([](const Value& actual, const Value& expected, const Args& args) {
+
+    });
 
     Matcher matcher = DefaultMatcher;
 
