@@ -86,7 +86,6 @@
 #include "Stackwalker.h"
 #endif
 
-using namespace geos;
 using namespace geos::operation::polygonize;
 using namespace geos::operation::linemerge;
 using namespace geos::geom::prep;
@@ -94,12 +93,13 @@ using std::runtime_error;
 using geos::operation::overlayng::OverlayNG;
 using geos::operation::overlayng::UnaryUnionNG;
 using geos::operation::overlayng::OverlayNGRobust;
-using operation::valid::TopologyValidationError;
+using geos::operation::valid::TopologyValidationError;
 
 using Value = geos::xmltester::Value;
 using Result = Value;
 
-namespace {
+namespace geos {
+namespace xmltester {
 
 std::unique_ptr<const PreparedGeometry>
 prepare(const geom::Geometry* g)
@@ -167,20 +167,6 @@ getIndent(unsigned int numIndents)
 //     pParent->Accept(&printer);
 // }
 
-
-}
-
-void
-tolower(std::string& str)
-{
-    std::transform(
-        str.begin(),
-        str.end(),
-        str.begin(),
-        [](char c){ return (char)std::tolower(c); }
-        );
-}
-
 std::string
 normalize_filename(const std::string& str)
 {
@@ -200,7 +186,7 @@ normalize_filename(const std::string& str)
         }
     }
 
-    tolower(newstring);
+    XMLTesterUtil::tolower(newstring);
 
     return newstring;
 }
@@ -267,10 +253,9 @@ checkBufferSuccess(geom::Geometry const& gRes, geom::Geometry const& gRealRes, d
     return success;
 }
 
-#if 0
 static int
-checkSingleSidedBufferSuccess(geom::Geometry& gRes,
-                              geom::Geometry& gRealRes, double dist)
+checkSingleSidedBufferSuccess(const geom::Geometry& gRes,
+                              const geom::Geometry& gRealRes, double dist)
 {
     int success = 1;
     do {
@@ -299,7 +284,6 @@ checkSingleSidedBufferSuccess(geom::Geometry& gRes,
 
     return success;
 }
-#endif
 
 XMLTester::XMLTester()
     :
@@ -494,7 +478,7 @@ XMLTester::parseRun(const tinyxml2::XMLNode* node)
     if(el) {
         const tinyxml2::XMLNode* txt = el->FirstChild();
         if(txt) {
-            std::string op = trimBlanks(txt->Value());
+            std::string op = XMLTesterUtil::trimBlanks(txt->Value());
             if(op.find("PreparedGeometryOperation")) {
                 usePrepared = true;
             }
@@ -648,21 +632,6 @@ XMLTester::parseGeometry(const std::string& in, const char* label)
     return ret;
 }
 
-std::string
-XMLTester::trimBlanks(const std::string& in)
-{
-    std::string out;
-    std::string::size_type pos = in.find_first_not_of(" \t\n\r");
-    if(pos != std::string::npos) {
-        out = in.substr(pos);
-    }
-    pos = out.find_last_not_of(" \t\n\r");
-    if(pos != std::string::npos) {
-        out = out.substr(0, pos + 1);
-    }
-    return out;
-}
-
 void
 XMLTester::parseCase(const tinyxml2::XMLNode* node)
 {
@@ -683,7 +652,7 @@ XMLTester::parseCase(const tinyxml2::XMLNode* node)
     if(txt) {
         txt = txt->FirstChild();
         if(txt) {
-            curr_case_desc = trimBlanks(txt->Value());
+            curr_case_desc = XMLTesterUtil::trimBlanks(txt->Value());
         }
     }
 
@@ -693,12 +662,12 @@ XMLTester::parseCase(const tinyxml2::XMLNode* node)
     try {
         const tinyxml2::XMLNode* el = node->FirstChildElement("a");
         geomAin = el->FirstChild()->Value();
-        geomAin = trimBlanks(geomAin);
+        geomAin = XMLTesterUtil::trimBlanks(geomAin);
         gA = parseGeometry(geomAin, "Geometry A");
 
         if(nullptr != (el = node->FirstChildElement("b"))) {
             geomBin = el->FirstChild()->Value();
-            geomBin = trimBlanks(geomBin);
+            geomBin = XMLTesterUtil::trimBlanks(geomBin);
             gB = parseGeometry(geomBin, "Geometry B");
         }
     }
@@ -727,7 +696,8 @@ XMLTester::parseCase(const tinyxml2::XMLNode* node)
     for(testnode = node->FirstChildElement("test");
             testnode;
             testnode = testnode->NextSiblingElement("test")) {
-        parseTest(testnode);
+        Test test = parseTest(testnode);
+        runTest(test);
     }
 
     totalTestCount += testCount;
@@ -847,178 +817,6 @@ XMLTester::areaDelta(const geom::Geometry* a, const geom::Geometry* b, std::stri
     return diffScore;
 }
 
-class Args {
-
-public:
-
-    void set(std::size_t index, const std::string& value) {
-        m_args[index - 1] = Value(value);
-    }
-
-    void setGeomA(std::shared_ptr<const geom::Geometry> g) {
-        m_geoms[0] = g;
-    }
-
-    void setGeomB(std::shared_ptr<const geom::Geometry> g) {
-        m_geoms[1] = g;
-    }
-
-    bool has(std::size_t index) const {
-        return !get(index - 1).isNull();
-    }
-
-    const geom::Geometry* A() const {
-        return swapGeomArgs() ? m_geoms[1].get() : m_geoms[0].get();
-    }
-
-    const geom::Geometry* B() const {
-        return swapGeomArgs() ? m_geoms[0].get() : m_geoms[1].get();
-    }
-
-    const geom::prep::PreparedGeometry* pA() const {
-        prepareGeometries();
-        return swapGeomArgs() ? m_prep[1].get() : m_prep[0].get();
-    }
-
-    const geom::prep::PreparedGeometry* pB() const {
-        prepareGeometries();
-        return swapGeomArgs() ? m_prep[0].get() : m_prep[1].get();
-    }
-
-    bool usePrepared() const {
-        return m_useprepared;
-    }
-
-    void setUsePrepared(bool value) {
-        m_useprepared = value;
-    }
-
-    const Value& get(std::size_t index) const {
-        return m_args[index - 1];
-    }
-
-    const Value& operator[](std::size_t index) const {
-        return get(index);
-    }
-
-private:
-    bool swapGeomArgs() const {
-        return (get(1) == "B" || get(1) == "b") && m_geoms[1] != nullptr;
-    }
-
-    void prepareGeometries() const {
-        for (std::size_t i = 0; i < m_prep.size(); i++) {
-            if (m_prep[i] == nullptr) {
-                m_prep[i] = PreparedGeometryFactory::prepare(m_geoms[i].get());
-            }
-        }
-    }
-
-    static constexpr std::size_t MAX_ARGS = 4;
-    std::array<Value, MAX_ARGS> m_args;
-    std::array<std::shared_ptr<const geom::Geometry>, 2> m_geoms;
-    mutable std::array<std::unique_ptr<geom::prep::PreparedGeometry>, 2> m_prep;
-    bool m_useprepared;
-
-    using const_iterator = decltype(m_args.cbegin());
-public:
-    const_iterator begin() const {
-        return m_args.begin();
-    }
-
-    const_iterator end() const {
-        return m_args.end();
-    }
-};
-
-class Test {
-
-public:
-    const std::string& getName() const {
-        return m_name;
-    }
-
-    void setName(const std::string& value) {
-        m_name = XMLTester::trimBlanks(value);
-        tolower(m_name);
-    }
-
-    void setExpected(const char* value) {
-        setExpected(std::string(value));
-    }
-
-    void setExpected(const std::string& value) {
-        m_expected = Value(XMLTester::trimBlanks(value));
-    }
-
-    void setExpected(Value value) {
-        m_expected = std::move(value);
-    }
-
-    const Value& getExpected() const {
-        return m_expected;
-    }
-
-    void setResult(bool value) {
-        if (value) {
-            m_actual = "true";
-        } else {
-            m_actual = "false";
-        }
-    }
-
-    std::string getSignature() const {
-        std::string opSig;
-
-        for (const auto& opArg : m_args) {
-            if (!opArg.isNull()) {
-                if (opSig == "") {
-                    opSig += ", ";
-                }
-                opSig += opArg.toString();
-            }
-        }
-
-        return getName() + "(" + opSig + ")";
-    }
-
-    bool isSuccess() const {
-        return m_actual == m_expected;
-    }
-
-    const Args& getArgs() const {
-        return m_args;
-    }
-
-    void setGeomA(std::shared_ptr<const geom::Geometry> g) {
-        m_args.setGeomA(g);
-    }
-
-    void setGeomB(std::shared_ptr<const geom::Geometry> g) {
-        m_args.setGeomB(g);
-    }
-
-    void setArg(std::size_t i, const char* s) {
-        if (s)
-            m_args.set(i, s);
-    }
-
-    void setArg(std::size_t i, const std::string& s) {
-        m_args.set(i, s);
-    }
-
-    void setUsePrepared(bool value) {
-        m_args.setUsePrepared(value);
-    }
-
-private:
-    std::string m_name;
-
-    Value m_expected;
-    Value m_actual;
-
-    Args m_args;
-};
 
 class Fizz {
 public:
@@ -1063,7 +861,7 @@ std::map<std::string, std::function<Result(const Args&)>> getFunctions() {
         return Result(toTest->isValid());
     };
 
-    functions["isSimple"] = [](const Args& args) {
+    functions["issimple"] = [](const Args& args) {
         return Result(args.A()->isSimple());
     };
 
@@ -1090,31 +888,31 @@ std::map<std::string, std::function<Result(const Args&)>> getFunctions() {
     };
 
     functions["intersectionsr"] = [](const Args& args) {
-        auto precision = args[3].getDoubleOr(0.0);
+        auto precision = args[3].getDoubleOr(1.0);
         geom::PrecisionModel precMod(precision);
         return Result(OverlayNG::overlay(args.A(), args.B(), OverlayNG::INTERSECTION, &precMod));
     };
 
     functions["intersectionsin"] = [](const Args& args) {
-        auto precision = args[3].getDoubleOr(0.0);
+        auto precision = args[3].getDoubleOr(1.0);
         geom::PrecisionModel precMod(precision); // never used?
         return Result(OverlayNGRobust::Intersection(args.A(), args.B()));
     };
 
     functions["unionsr"] = [](const Args& args) {
-        auto precision = args[3].getDoubleOr(0.0);
+        auto precision = args[3].getDoubleOr(1.0);
         geom::PrecisionModel precMod(precision);
         return Result(OverlayNG::overlay(args.A(), args.B(), OverlayNG::UNION, &precMod));
     };
 
     functions["differencesr"] = [](const Args& args) {
-        auto precision = args[3].getDoubleOr(0.0);
+        auto precision = args[3].getDoubleOr(1.0);
         geom::PrecisionModel precMod(precision);
         return Result(OverlayNG::overlay(args.A(), args.B(), OverlayNG::DIFFERENCE, &precMod));
     };
 
     functions["symdifferencesr"] = [](const Args& args) {
-        auto precision = args[3].getDoubleOr(0.0);
+        auto precision = args[3].getDoubleOr(1.0);
         geom::PrecisionModel precMod(precision);
         return Result(OverlayNG::overlay(args.A(), args.B(), OverlayNG::SYMDIFFERENCE, &precMod));
     };
@@ -1362,14 +1160,10 @@ std::map<std::string, std::function<Result(const Args&)>> getFunctions() {
         return Result(unionResult->getLength());
     };
 
-    //functions["unionarea"] = Fizz(
-    //            [](const Args& args) {
-    //                auto unionResult = OverlayNGRobust::Union(args.A());
-    //                return Result(unionResult->getArea());
-    //},
-    //            [](const Value& actual, const Value& expected) {
-
-    //});
+    functions["unionarea"] = [](const Args& args) {
+                    auto unionResult = OverlayNGRobust::Union(args.A());
+                    return Result(unionResult->getArea());
+    };
 
     functions["areatest"] = [](const Args& args) {
         double areaA = args.A()->getArea();
@@ -1421,13 +1215,9 @@ std::map<std::string, std::function<Result(const Args&)>> getFunctions() {
     return functions;
 }
 
-void
+Test
 XMLTester::parseTest(const tinyxml2::XMLNode* node)
 {
-    bool success = false; // no success by default
-
-    ++testCount;
-
     const tinyxml2::XMLNode* opnode = node->FirstChildElement("op");
     if(! opnode) {
         throw std::runtime_error("case has no op");
@@ -1456,7 +1246,17 @@ XMLTester::parseTest(const tinyxml2::XMLNode* node)
     }
     op.setExpected(resnode->Value());
 
+    return op;
+}
+
+void
+XMLTester::runTest(Test& op) {
     util::Profile profile("op");
+
+    bool success = false; // no success by default
+
+    ++testCount;
+
 
     // TODO overlayareatest
     // TODO unionlength
@@ -1498,8 +1298,16 @@ XMLTester::parseTest(const tinyxml2::XMLNode* node)
         success = actual_result.getDouble() <= op.getExpected().getDouble();
     } else if (op.getName() == "buffer") {
         success = checkBufferSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry(), op.getArgs()[3].getDouble());
+    } else if (op.getName() == "buffermitredjoin") {
+        success = checkBufferSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry(), op.getArgs()[2].getDouble());
+    } else if (op.getName() == "buffersinglesided") {
+        success = checkSingleSidedBufferSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry(), op.getArgs()[2].getDouble());
     } else if (op.getName() == "union") {
         success = checkUnionSuccess(*op.getExpected().getGeometry(), *actual_result.getGeometry());
+    } else if (op.getName() == "unionarea" || op.getName() == "unionlength") {
+        double resultArea = actual_result.getDouble();
+        double expectedArea = op.getExpected().getDouble();
+        success = std::abs(expectedArea-resultArea) / expectedArea < 1e-3;
     } else if (actual_result == op.getExpected()) {
         success = true;
     }
@@ -1571,6 +1379,8 @@ XMLTester::~XMLTester()
 {
 }
 
+}
+}
 
 static void
 usage(char* me, int exitcode, std::ostream& os)
@@ -1610,7 +1420,7 @@ main(int argC, char* argV[])
 
         signal(15, request_interrupt);
 
-        XMLTester tester;
+        geos::xmltester::XMLTester tester;
         tester.setVerbosityLevel(verbose);
 
         for(int i = 1; i < argC; ++i) {
@@ -1656,7 +1466,7 @@ main(int argC, char* argV[])
             tester.resultSummary(std::cerr);
         }
 
-        io::Unload::Release();
+        geos::io::Unload::Release();
 
         return tester.getFailuresCount();
 

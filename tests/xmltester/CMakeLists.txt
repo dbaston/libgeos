@@ -25,6 +25,7 @@ target_compile_options(
 
 add_executable(test_xmltester
     XMLTester.cpp
+    XMLTesterUtil.cpp
     BufferResultMatcher.cpp
     SingleSidedBufferResultMatcher.cpp)
 target_link_libraries(test_xmltester PRIVATE geos tinyxml2)

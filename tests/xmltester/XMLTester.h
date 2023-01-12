@@ -23,7 +23,10 @@
 #include <geos/profiler.h>
 #include <tinyxml2.h>
 
-using namespace geos;
+#include "Test.h"
+
+namespace geos {
+namespace xmltester {
 
 class XMLTester {
 
@@ -41,7 +44,10 @@ private:
     void parsePrecisionModel(const tinyxml2::XMLElement* el);
     void parseRun(const tinyxml2::XMLNode* node);
     void parseCase(const tinyxml2::XMLNode* node);
-    void parseTest(const tinyxml2::XMLNode* node);
+
+    Test parseTest(const tinyxml2::XMLNode* node);
+    void runTest(Test&);
+
     void runPredicates(const geom::Geometry* a, const geom::Geometry* b);
     std::unique_ptr<geom::Geometry> parseGeometry(const std::string& in, const char* label = "parsed");
     void printGeom(std::ostream& os, const geom::Geometry* g);
@@ -128,7 +134,8 @@ public:
         HEXWKB_output = val;
     }
 
-    static std::string trimBlanks(const std::string& in);
     static double areaDelta(const geom::Geometry* a, const geom::Geometry* b, std::string& rsltMaxDiffOp, double maxDiff, std::stringstream& ss);
 };
 
+}
+}
