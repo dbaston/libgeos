@@ -8,6 +8,10 @@
 namespace geos {
 namespace algorithm {
 
+// Define some machinery to access Z and M values from various types in a
+// generic way, substituting NaN for types that do not have Z/M values.
+namespace {
+
     enum InterpolationOrdinate {
         Z, M
     };
@@ -53,6 +57,7 @@ namespace algorithm {
             return DoubleNotANumber;
         }
     };
+}
 
 class GEOS_DLL Interpolate {
 
@@ -143,6 +148,7 @@ private:
     }
 
 public:
+    /// Interpolate a Z value for a coordinate from two other coordinates.
     template<typename CoordType>
     static double
     zInterpolate(const geom::CoordinateXY& p, const CoordType& p1, const CoordType& p2)
@@ -150,6 +156,7 @@ public:
         return interpolate<Z>(p, p1, p2);
     }
 
+    /// Calculate an average interpolated Z value from two pairs of other coordinates.
     template<typename C1, typename C2>
     static double
     zInterpolate(const geom::CoordinateXY& p, const C1& p1, const C1& p2, const C2& q1, const C2& q2)
@@ -157,6 +164,7 @@ public:
         return interpolate<Z>(p, p1, p2, q1, q2);
     }
 
+    /// Interpolate an M value for a coordinate from two other coordinates.
     template<typename CoordType>
     static double
     mInterpolate(const geom::CoordinateXY& p, const CoordType& p1, const CoordType& p2)
@@ -164,6 +172,7 @@ public:
         return interpolate<M>(p, p1, p2);
     }
 
+    /// Calculate an average interpolated M value from two pairs of other coordinates.
     template<typename C1, typename C2>
     static double
     mInterpolate(const geom::CoordinateXY& p, const C1& p1, const C1& p2, const C2& q1, const C2& q2)
@@ -171,20 +180,23 @@ public:
         return interpolate<M>(p, p1, p2, q1, q2);
     }
 
-    template<typename CoordType>
+    /// Return the first non-NaN Z value from two coordinates, or NaN if both values are NaN.
+    template<typename C1, typename C2>
     static double
-    zGet(const CoordType& p, const CoordType& q)
+    zGet(const C1& p, const C2& q)
     {
         return get<Z>(p, q);
     }
 
-    template<typename CoordType>
+    /// Return the first non-NaN M value from two coordinates, or NaN if both values are NaN.
+    template<typename C1, typename C2>
     static double
-    mGet(const CoordType& p, const CoordType& q)
+    mGet(const C1& p, const C2& q)
     {
         return get<M>(p, q);
     }
 
+    /// Return a coordinates's non-NaN Z value or interpolate it from two other coordinates if it is NaN.
     template<typename C1, typename C2>
     static double
     zGetOrInterpolate(const C1& p, const C2& p1, const C2& p2)
@@ -192,6 +204,7 @@ public:
         return getOrInterpolate<Z>(p, p1, p2);
     }
 
+    /// Return a coordinates's non-NaN M value or interpolate it from two other coordinates if it is NaN.
     template<typename C1, typename C2>
     static double
     mGetOrInterpolate(const C1& p, const C2& p1, const C2& p2)
