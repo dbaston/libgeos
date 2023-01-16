@@ -29,6 +29,15 @@ jobs:
           cmake_extra: '-DBUILD_BENCHMARKS=ON'
           os: ubuntu-latest
 
+        - cxx_compiler: g++-4.9
+          c_compiler: gcc-4.9
+          build_type: Release
+          cxxstd: 14
+          arch: 64
+          packages: 'g++-4.9-multilib gcc-4.9-multilib'
+          cmake: 3.13.*
+          os: ubuntu-18.04
+
         - cxx_compiler: g++-5
           c_compiler: gcc-5
           build_type: Release
