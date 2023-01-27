@@ -97,6 +97,15 @@ instanceOf(InstanceType const* instance)
 }
 
 inline void
+ensure_equals_xy(const geos::geom::CoordinateXY& lhs,
+         const geos::geom::Coordinate& rhs,
+         double tolerance = 0)
+{
+    ensure_equals("x coordinate does not match", lhs.x, rhs.x, tolerance);
+    ensure_equals("y coordinate does not match", lhs.y, rhs.y, tolerance);
+}
+
+inline void
 ensure_equals_xyz(geos::geom::Coordinate const& actual,
                   geos::geom::Coordinate const& expected)
 {

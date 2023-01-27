@@ -20,6 +20,8 @@
 #include <string>
 #include <memory>
 
+#include <utility.h>
+
 
 
 using namespace geos;
@@ -54,14 +56,6 @@ struct test_lec_data {
     }
 
     void
-    ensure_equals_coordinate(const geos::geom::Coordinate &lhs,
-                             const geos::geom::Coordinate &rhs, double tolerance)
-    {
-        ensure_equals("x coordinate does not match", lhs.x, rhs.x, tolerance);
-        ensure_equals("y coordinate does not match", lhs.y, rhs.y, tolerance);
-    }
-
-    void
     checkCircle(const Geometry *geom, double build_tolerance, double x, double y, double expectedRadius)
     {
         double tolerance = 2*build_tolerance;
@@ -69,7 +63,7 @@ struct test_lec_data {
         std::unique_ptr<Point> centerPoint = lec.getCenter();
         Coordinate centerPt(*centerPoint->getCoordinate());
         Coordinate expectedCenter(x, y);
-        ensure_equals_coordinate(centerPt, expectedCenter, tolerance);
+        ensure_equals_xy(centerPt, expectedCenter, tolerance);
         std::unique_ptr<LineString> radiusLine = lec.getRadiusLine();
         double actualRadius = radiusLine->getLength();
         ensure_equals("radius", actualRadius, expectedRadius, tolerance);
@@ -80,9 +74,9 @@ struct test_lec_data {
         // std::cout << writer_.write(geom) << std::endl;
         // std::cout << writer_.write(radiusLine.get()) << std::endl;
 
-        ensure_equals_coordinate(centerPt, linePt0, tolerance);
+        ensure_equals_xy(centerPt, linePt0, tolerance);
         Coordinate radiusPt(*lec.getRadiusPoint()->getCoordinate());
-        ensure_equals_coordinate(radiusPt, linePt1, tolerance);
+        ensure_equals_xy(radiusPt, linePt1, tolerance);
     }
 
     void
@@ -98,9 +92,9 @@ struct test_lec_data {
         const Coordinate& linePt0 = radiusLine->getCoordinateN(0);
         const Coordinate& linePt1 = radiusLine->getCoordinateN(1);
 
-        ensure_equals_coordinate(centerPt, linePt0, tolerance);
+        ensure_equals_xy(centerPt, linePt0, tolerance);
         Coordinate radiusPt(*lec.getRadiusPoint()->getCoordinate());
-        ensure_equals_coordinate(radiusPt, linePt1, tolerance);
+        ensure_equals_xy(radiusPt, linePt1, tolerance);
     }
 
     void
