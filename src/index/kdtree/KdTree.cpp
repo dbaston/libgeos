@@ -27,17 +27,17 @@ namespace kdtree { // geos.index.kdtree
 
 
 /*public static*/
-std::unique_ptr<std::vector<Coordinate>>
-KdTree::toCoordinates(std::vector<KdNode*>& kdnodes)
+std::unique_ptr<std::vector<CoordinateXY>>
+KdTree::toCoordinates(std::vector<const KdNode*>& kdnodes)
 {
     return toCoordinates(kdnodes, false);
 }
 
 /*public static*/
-std::unique_ptr<std::vector<Coordinate>>
-KdTree::toCoordinates(std::vector<KdNode*>& kdnodes, bool includeRepeated)
+std::unique_ptr<std::vector<CoordinateXY>>
+KdTree::toCoordinates(std::vector<const KdNode*>& kdnodes, bool includeRepeated)
 {
-    std::unique_ptr<std::vector<Coordinate>> coord(new std::vector<Coordinate>);
+    std::unique_ptr<std::vector<CoordinateXY>> coord(new std::vector<CoordinateXY>);
     for (auto node: kdnodes) {
         std::size_t count = includeRepeated ? node->getCount() : 1;
         for (std::size_t i = 0; i < count; i++) {
@@ -53,22 +53,22 @@ KdTree::toCoordinates(std::vector<KdNode*>& kdnodes, bool includeRepeated)
 
 /*private*/
 KdNode*
-KdTree::createNode(const Coordinate& p, void* data)
+KdTree::createNode(const CoordinateXY& p, void* data)
 {
     auto it = nodeQue.emplace(nodeQue.end(), p, data);
     return &(*it);
 }
 
 /*public*/
-KdNode*
-KdTree::insert(const Coordinate& p)
+const KdNode*
+KdTree::insert(const CoordinateXY& p)
 {
     return insert(p, nullptr);
 }
 
 /*public*/
-KdNode*
-KdTree::insert(const Coordinate& p, void* data)
+const KdNode*
+KdTree::insert(const CoordinateXY& p, void* data)
 {
     if (root == nullptr) {
         root = createNode(p, data);
@@ -80,7 +80,7 @@ KdTree::insert(const Coordinate& p, void* data)
     * If tolerance is zero, this phase of the insertion can be skipped.
     */
     if (tolerance > 0) {
-        KdNode* matchNode = findBestMatchNode(p);
+        KdNode* matchNode = const_cast<KdNode*>(findBestMatchNode(p));
         if (matchNode != nullptr) {
             // point already in index - increment counter
             matchNode->increment();
@@ -92,15 +92,15 @@ KdTree::insert(const Coordinate& p, void* data)
 }
 
 /*private*/
-KdNode*
-KdTree::findBestMatchNode(const Coordinate& p) {
+const KdNode*
+KdTree::findBestMatchNode(const CoordinateXY& p) {
     BestMatchVisitor visitor(p, tolerance);
     query(visitor.queryEnvelope(), visitor);
     return visitor.getNode();
 }
 
-KdNode*
-KdTree::insertExact(const geom::Coordinate& p, void* data)
+const KdNode*
+KdTree::insertExact(const geom::CoordinateXY& p, void* data)
 {
     KdNode* currentNode = root;
     KdNode* leafNode = root;
@@ -228,7 +228,7 @@ KdTree::queryNode(KdNode* currentNode, const geom::Envelope& queryEnv, bool odd,
 
 /*private*/
 KdNode*
-KdTree::queryNodePoint(KdNode* currentNode, const geom::Coordinate& queryPt, bool odd)
+KdTree::queryNodePoint(KdNode* currentNode, const geom::CoordinateXY& queryPt, bool odd)
 {
     while (currentNode != nullptr)
     {
@@ -267,17 +267,17 @@ KdTree::query(const geom::Envelope& queryEnv, KdNodeVisitor& visitor)
 }
 
 /*public*/
-std::unique_ptr<std::vector<KdNode*>>
+std::unique_ptr<std::vector<const KdNode*>>
 KdTree::query(const geom::Envelope& queryEnv)
 {
-    std::unique_ptr<std::vector<KdNode*>> result(new std::vector<KdNode*>);
+    std::unique_ptr<std::vector<const KdNode*>> result(new std::vector<const KdNode*>);
     query(queryEnv, *result);
     return result;
 }
 
 /*public*/
 void
-KdTree::query(const geom::Envelope& queryEnv, std::vector<KdNode*>& result)
+KdTree::query(const geom::Envelope& queryEnv, std::vector<const KdNode*>& result)
 {
     AccumulatingVisitor visitor(result);
     queryNode(root, queryEnv, true, visitor);
@@ -285,7 +285,7 @@ KdTree::query(const geom::Envelope& queryEnv, std::vector<KdNode*>& result)
 
 /*public*/
 KdNode*
-KdTree::query(const geom::Coordinate& queryPt) {
+KdTree::query(const geom::CoordinateXY& queryPt) {
     return queryNodePoint(root, queryPt, true);
 }
 
@@ -293,7 +293,7 @@ KdTree::query(const geom::Coordinate& queryPt) {
 /**********************************************************************/
 
 /*private*/
-KdTree::BestMatchVisitor::BestMatchVisitor(const geom::Coordinate& p_p, double p_tolerance)
+KdTree::BestMatchVisitor::BestMatchVisitor(const geom::CoordinateXY& p_p, double p_tolerance)
     : tolerance(p_tolerance)
     , matchNode(nullptr)
     , matchDist(0.0)
@@ -308,14 +308,14 @@ KdTree::BestMatchVisitor::queryEnvelope() {
 }
 
 /*private*/
-KdNode*
+const KdNode*
 KdTree::BestMatchVisitor::getNode() {
     return matchNode;
 }
 
 /*private*/
 void
-KdTree::BestMatchVisitor::visit(KdNode* node) {
+KdTree::BestMatchVisitor::visit(const KdNode* node) {
     double dist = p.distance(node->getCoordinate());
     if (! (dist <= tolerance)) return;
     bool update = false;

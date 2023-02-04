@@ -61,17 +61,17 @@ private:
     std::size_t numberOfNodes;
     double tolerance;
 
-    KdNode* findBestMatchNode(const geom::Coordinate& p);
-    KdNode* insertExact(const geom::Coordinate& p, void* data);
+    const KdNode* findBestMatchNode(const geom::CoordinateXY& p);
+    const KdNode* insertExact(const geom::CoordinateXY& p, void* data);
 
     void queryNode(KdNode* currentNode, const geom::Envelope& queryEnv, bool odd, KdNodeVisitor& visitor);
-    KdNode* queryNodePoint(KdNode* currentNode, const geom::Coordinate& queryPt, bool odd);
+    KdNode* queryNodePoint(KdNode* currentNode, const geom::CoordinateXY& queryPt, bool odd);
 
     /**
     * Create a node on a locally managed deque to allow easy
     * disposal and hopefully faster allocation as well.
     */
-    KdNode* createNode(const geom::Coordinate& p, void* data);
+    KdNode* createNode(const geom::CoordinateXY& p, void* data);
 
 
     /**
@@ -80,17 +80,17 @@ private:
     */
     class BestMatchVisitor : public KdNodeVisitor {
     public:
-        BestMatchVisitor(const geom::Coordinate& p_p, double p_tolerance);
+        BestMatchVisitor(const geom::CoordinateXY& p_p, double p_tolerance);
         geom::Envelope queryEnvelope();
-        KdNode* getNode();
-        void visit(KdNode* node) override;
+        const KdNode* getNode();
+        void visit(const KdNode* node) override;
 
     private:
         // Members
         double tolerance;
-        KdNode* matchNode;
+        const KdNode* matchNode;
         double matchDist;
-        const geom::Coordinate& p;
+        const geom::CoordinateXY& p;
         // Declare type as noncopyable
         BestMatchVisitor(const BestMatchVisitor& other);
         BestMatchVisitor& operator=(const BestMatchVisitor& rhs);
@@ -102,13 +102,13 @@ private:
     */
     class AccumulatingVisitor : public KdNodeVisitor {
     public:
-        AccumulatingVisitor(std::vector<KdNode*>& p_nodeList) :
+        AccumulatingVisitor(std::vector<const KdNode*>& p_nodeList) :
             nodeList(p_nodeList) {};
-        void visit(KdNode* node) override { nodeList.push_back(node); }
+        void visit(const KdNode* node) override { nodeList.push_back(node); }
 
     private:
         // Members
-        std::vector<KdNode*>& nodeList;
+        std::vector<const KdNode*>& nodeList;
         // Declare type as noncopyable
         AccumulatingVisitor(const AccumulatingVisitor& other);
         AccumulatingVisitor& operator=(const AccumulatingVisitor& rhs);
@@ -124,7 +124,7 @@ public:
     * @param kdnodes a collection of nodes
     * @return an vector of the coordinates represented by the nodes
     */
-    static std::unique_ptr<std::vector<geom::Coordinate>> toCoordinates(std::vector<KdNode*>& kdnodes);
+    static std::unique_ptr<std::vector<geom::CoordinateXY>> toCoordinates(std::vector<const KdNode*>& kdnodes);
 
     /**
     * Converts a collection of {@link KdNode}s
@@ -137,7 +137,7 @@ public:
     *   be included multiple times
     * @return an vector of the coordinates represented by the nodes
     */
-    static std::unique_ptr<std::vector<geom::Coordinate>> toCoordinates(std::vector<KdNode*>& kdnodes, bool includeRepeated);
+    static std::unique_ptr<std::vector<geom::CoordinateXY>> toCoordinates(std::vector<const KdNode*>& kdnodes, bool includeRepeated);
 
     KdTree() :
         root(nullptr),
@@ -156,8 +156,8 @@ public:
     /**
     * Inserts a new point in the kd-tree.
     */
-    KdNode* insert(const geom::Coordinate& p);
-    KdNode* insert(const geom::Coordinate& p, void* data);
+    const KdNode* insert(const geom::CoordinateXY& p);
+    const KdNode* insert(const geom::CoordinateXY& p, void* data);
 
     /**
     * Performs a range search of the points in the index and visits all nodes found.
@@ -167,17 +167,17 @@ public:
     /**
     * Performs a range search of the points in the index.
     */
-    std::unique_ptr<std::vector<KdNode*>> query(const geom::Envelope& queryEnv);
+    std::unique_ptr<std::vector<const KdNode*>> query(const geom::Envelope& queryEnv);
 
     /**
     * Performs a range search of the points in the index.
     */
-    void query(const geom::Envelope& queryEnv, std::vector<KdNode*>& result);
+    void query(const geom::Envelope& queryEnv, std::vector<const KdNode*>& result);
 
     /**
     * Searches for a given point in the index and returns its node if found.
     */
-    KdNode* query(const geom::Coordinate& queryPt);
+    KdNode* query(const geom::CoordinateXY& queryPt);
 
 };
 

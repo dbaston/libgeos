@@ -25,14 +25,14 @@ SnappingPointIndex::SnappingPointIndex(double p_snapTolerance) :
     snapPointIndex(new index::kdtree::KdTree(p_snapTolerance)) {}
 
 
-const Coordinate&
-SnappingPointIndex::snap(const Coordinate& p)
+const CoordinateXY&
+SnappingPointIndex::snap(const CoordinateXY& p)
 {
     /**
     * Inserting the coordinate snaps it to any existing
     * one within tolerance, or adds it if not.
     */
-    index::kdtree::KdNode* node = snapPointIndex->insert(p);
+    const index::kdtree::KdNode* node = snapPointIndex->insert(p);
     return node->getCoordinate();
 }
 

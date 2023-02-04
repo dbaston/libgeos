@@ -20,20 +20,6 @@ namespace geos {
 namespace index { // geos.index
 namespace kdtree { // geos.index.kdtree
 
-KdNode::KdNode(double p_x, double p_y, void* p_data) :
-    p(p_x, p_y),
-    data(p_data),
-    left(nullptr),
-    right(nullptr),
-    count(1) {}
-
-KdNode::KdNode(const Coordinate& p_p, void* p_data) :
-    p(p_p),
-    data(p_data),
-    left(nullptr),
-    right(nullptr),
-    count(1) {}
-
 
 } // namespace geos.index.kdtree
 } // namespace geos.index

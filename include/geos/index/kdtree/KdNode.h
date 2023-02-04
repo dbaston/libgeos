@@ -31,26 +31,40 @@ class GEOS_DLL KdNode {
 
 private:
 
-    geom::Coordinate p;
-    void* data;
-    KdNode* left;
-    KdNode* right;
-    std::size_t count;
+    geom::CoordinateXY p; // 16
+    void* data; // 8
+    KdNode* left; // 8
+    KdNode* right; // 8
+    std::size_t count; // 8
 
 public:
 
-    KdNode(double p_x, double p_y, void* p_data);
-    KdNode(const geom::Coordinate& p_p, void* p_data);
+    KdNode(double p_x, double p_y, void* p_data) :
+        p(p_x, p_y), data(p_data),
+        left(0),
+        right(0),
+        count(1)
+    {}
 
-    double getX() { return p.x; }
-    double getY() { return p.y; }
-    const geom::Coordinate& getCoordinate() { return p; }
-    void* getData() { return data; }
+    KdNode(const geom::CoordinateXY& p_p, void* p_data) :
+        p(p_p),
+        data(p_data),
+        left(0),
+        right(0),
+        count(1)
+    {}
+
+    double getX() const { return p.x; }
+    double getY() const { return p.y; }
+    const geom::CoordinateXY& getCoordinate() const { return p; }
+    void* getData() const { return data; }
+    const KdNode* getLeft() const { return left; }
+    const KdNode* getRight() const { return right; }
     KdNode* getLeft() { return left; }
     KdNode* getRight() { return right; }
     void increment() { count++; }
-    std::size_t getCount() { return count; }
-    bool isRepeated() { return count > 1; }
+    std::size_t getCount() const { return count; }
+    bool isRepeated() const { return count > 1; }
     void setLeft(KdNode* p_left) { left = p_left; }
     void setRight(KdNode* p_right) { right = p_right; }
 

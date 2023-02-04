@@ -40,6 +40,7 @@
 #include <geos/constants.h>
 #include <iostream>
 #include <geos/geomgraph/index/SweepLineEvent.h>
+#include <geos/index/kdtree/KdNode.h>
 #include <geos/triangulate/quadedge/QuadEdge.h>
 #include <geos/triangulate/quadedge/QuadEdgeQuartet.h>
 #include <geos/triangulate/quadedge/Vertex.h>
@@ -75,6 +76,7 @@ main()
     check(geom::MultiLineString);
     check(geom::MultiPolygon);
     check(geom::CoordinateSequence);
+    check(index::kdtree::KdNode);
     check(triangulate::quadedge::QuadEdge);
     check(triangulate::quadedge::QuadEdgeQuartet);
     check(triangulate::quadedge::Vertex);

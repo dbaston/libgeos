@@ -23,6 +23,7 @@
 #include <geos/util/IllegalArgumentException.h>
 #include <geos/io/WKTWriter.h>
 #include <geos/index/kdtree/KdTree.h>
+#include <geos/index/kdtree/BulkKdTree.h>
 #include <geos/index/kdtree/KdNodeVisitor.h>
 #include <geos/util.h>
 
@@ -64,8 +65,9 @@ private:
     /* members */
     const geom::PrecisionModel* pm;
     double scaleFactor;
-    std::unique_ptr<geos::index::kdtree::KdTree> index;
+    geos::index::kdtree::BulkKdTree index;
     std::deque<HotPixel> hotPixelQue;
+    std::map<geom::CoordinateXY, HotPixel*> hotPixelMap;
 
     /* methods */
     template<typename CoordType>
@@ -100,8 +102,13 @@ public:
     * The visitor must determine whether each hot pixel actually intersects
     * the segment.
     */
+    template<typename Visitor>
     void query(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1,
-               index::kdtree::KdNodeVisitor& visitor);
+               Visitor&& visitor) {
+        geom::Envelope queryEnv(p0, p1);
+        queryEnv.expandBy(1.0 / scaleFactor);
+        index.query(queryEnv, visitor);
+    }
 
 };
 

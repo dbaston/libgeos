@@ -110,10 +110,9 @@ SnappingNoder::snap(const CoordinateSequence* cs)
     auto snapCoords = detail::make_unique<CoordinateSequence>();
     snapCoords->reserve(cs->size());
 
-    cs->forEach<Coordinate>([&snapCoords, this](const Coordinate& origPt) {
-        const Coordinate& pt = snapIndex.snap(origPt);
+    cs->forEach<CoordinateXY>([&snapCoords, this](const CoordinateXY& origPt) {
+        const CoordinateXY& pt = snapIndex.snap(origPt);
         snapCoords->add(pt, false); // Remove repeated points
-
     });
     return snapCoords;
 }

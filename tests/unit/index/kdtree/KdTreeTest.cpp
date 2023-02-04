@@ -25,10 +25,10 @@ struct test_kdtree_data {
         // Read expected output into vector of coordinates
         auto geoExpected = reader_.read(wktExpected);
         auto csExpected = geoExpected->getCoordinates();
-        std::vector<Coordinate> expectedCoord;
+        std::vector<CoordinateXY> expectedCoord;
         csExpected->toVector(expectedCoord);
         // Read tree into vector of coordinates
-        std::unique_ptr<std::vector<Coordinate>> result = KdTree::toCoordinates(*(index.query(queryEnv)), includeRepeated);
+        const auto& result = KdTree::toCoordinates(*(index.query(queryEnv)), includeRepeated);
 
         std::sort(result->begin(), result->end());
         std::sort(expectedCoord.begin(), expectedCoord.end());
@@ -61,17 +61,17 @@ void object::test<1> ()
 {
     KdTree index(.001);
 
-    KdNode* node1 = index.insert(Coordinate(1, 1));
-    KdNode* node2 = index.insert(Coordinate(1, 1));
+    const KdNode* node1 = index.insert(Coordinate(1, 1));
+    const KdNode* node2 = index.insert(Coordinate(1, 1));
 
     ensure("Inserting 2 identical points should create one node", node1 == node2);
 
     Envelope queryEnv(0, 10, 0, 10);
-    std::unique_ptr<std::vector<KdNode*>> result = index.query(queryEnv);
+    std::unique_ptr<std::vector<const KdNode*>> result = index.query(queryEnv);
 
     ensure("query should return 1 result", result->size() == 1);
 
-    KdNode* node = result->at(0);
+    const KdNode* node = result->at(0);
     ensure("node should have two entries", node->getCount() == 2);
     ensure("node should be repeated", node->isRepeated());
 }
@@ -174,21 +174,20 @@ template<>
 void object::test<8> ()
 {
     KdTree index(.001);
-    KdNode* node1 = index.insert(Coordinate(1, 1));
-    KdNode* node2 = index.insert(Coordinate(1, 1));
+    const KdNode* node1 = index.insert(Coordinate(1, 1));
+    const KdNode* node2 = index.insert(Coordinate(1, 1));
 
     ensure("Inserting 2 identical points should create one node", node1 == node2);
 
     Envelope queryEnv(0, 10, 0, 10);
-    std::unique_ptr<std::vector<KdNode*>> result = index.query(queryEnv);
+    std::unique_ptr<std::vector<const KdNode*>> result = index.query(queryEnv);
 
     ensure(result->size() == 1);
 
-    KdNode* node = (KdNode*)(*result)[0];
+    const KdNode* node = (*result)[0];
     ensure(node->getCount() == 2);
     ensure(node->isRepeated());
 }
-
 
 
 

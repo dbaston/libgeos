@@ -183,6 +183,42 @@ SnapRoundingNoder::computeSegmentSnaps(NodedSegmentString* ss)
     return snapSS;
 }
 
+struct SnapRoundingVisitor {
+    const CoordinateXY& p0;
+    const CoordinateXY& p1;
+    NodedSegmentString* ss;
+    std::size_t segIndex;
+
+    SnapRoundingVisitor(const CoordinateXY& pp0, const CoordinateXY& pp1, NodedSegmentString* pss, std::size_t psegIndex)
+        : p0(pp0), p1(pp1), ss(pss), segIndex(psegIndex) {};
+
+    template<typename NodeType>
+    void operator()(const NodeType& node) {
+        HotPixel* hp = static_cast<HotPixel*>(node.getData());
+        /**
+        * If the hot pixel is not a node, and it contains one of the segment vertices,
+        * then that vertex is the source for the hot pixel.
+        * To avoid over-noding a node is not added at this point.
+        * The hot pixel may be subsequently marked as a node,
+        * in which case the intersection will be added during the final vertex noding phase.
+        */
+        if (! hp->isNode()) {
+            if (hp->intersects(p0) || hp->intersects(p1)) {
+                return;
+            }
+        }
+        /**
+        * Add a node if the segment intersects the pixel.
+        * Mark the HotPixel as a node (since it may not have been one before).
+        * This ensures the vertex for it is added as a node during the final vertex noding phase.
+        */
+        if (hp->intersects(p0, p1)) {
+            ss->addIntersection(hp->getCoordinate(), segIndex);
+            hp->setToNode();
+        }
+    }
+};
+
 /**
 * Snaps a segment in a segmentString to HotPixels that it intersects.
 *
@@ -196,40 +232,6 @@ void
 SnapRoundingNoder::snapSegment(const CoordinateXY& p0, const CoordinateXY& p1, NodedSegmentString* ss, std::size_t segIndex)
 {
     /* First define a visitor to use in the pixelIndex.query() */
-    struct SnapRoundingVisitor : KdNodeVisitor {
-        const CoordinateXY& p0;
-        const CoordinateXY& p1;
-        NodedSegmentString* ss;
-        std::size_t segIndex;
-
-        SnapRoundingVisitor(const CoordinateXY& pp0, const CoordinateXY& pp1, NodedSegmentString* pss, std::size_t psegIndex)
-            : p0(pp0), p1(pp1), ss(pss), segIndex(psegIndex) {};
-
-        void visit(KdNode* node) override {
-            HotPixel* hp = static_cast<HotPixel*>(node->getData());
-            /**
-            * If the hot pixel is not a node, and it contains one of the segment vertices,
-            * then that vertex is the source for the hot pixel.
-            * To avoid over-noding a node is not added at this point.
-            * The hot pixel may be subsequently marked as a node,
-            * in which case the intersection will be added during the final vertex noding phase.
-            */
-            if (! hp->isNode()) {
-                if (hp->intersects(p0) || hp->intersects(p1)) {
-                    return;
-                }
-            }
-            /**
-            * Add a node if the segment intersects the pixel.
-            * Mark the HotPixel as a node (since it may not have been one before).
-            * This ensures the vertex for it is added as a node during the final vertex noding phase.
-            */
-            if (hp->intersects(p0, p1)) {
-                ss->addIntersection(hp->getCoordinate(), segIndex);
-                hp->setToNode();
-            }
-        }
-    };
 
     /* Then run the query with the visitor */
     SnapRoundingVisitor srv(p0, p1, ss, segIndex);
@@ -251,31 +253,32 @@ SnapRoundingNoder::addVertexNodeSnaps(NodedSegmentString* ss)
     });
 }
 
+/* First define a visitor to use in the pixelIndex.query() */
+struct SnapRoundingVertexNodeVisitor {
+
+    const CoordinateXY& p0;
+    NodedSegmentString* ss;
+    std::size_t segIndex;
+
+    SnapRoundingVertexNodeVisitor(const CoordinateXY& pp0, NodedSegmentString* pss, std::size_t psegIndex)
+        : p0(pp0), ss(pss), segIndex(psegIndex) {};
+
+    template<typename NodeType>
+    void operator()(const NodeType& node) {
+        HotPixel* hp = static_cast<HotPixel*>(node.getData());
+
+        /**
+    * If vertex pixel is a node, add it.
+    */
+        if (hp->isNode() && hp->getCoordinate().equals2D(p0)) {
+            ss->addIntersection(p0, segIndex);
+        }
+    }
+};
+
 void
 SnapRoundingNoder::snapVertexNode(const CoordinateXY& p0, NodedSegmentString* ss, std::size_t segIndex)
 {
-
-    /* First define a visitor to use in the pixelIndex.query() */
-    struct SnapRoundingVertexNodeVisitor : KdNodeVisitor {
-
-        const CoordinateXY& p0;
-        NodedSegmentString* ss;
-        std::size_t segIndex;
-
-        SnapRoundingVertexNodeVisitor(const CoordinateXY& pp0, NodedSegmentString* pss, std::size_t psegIndex)
-            : p0(pp0), ss(pss), segIndex(psegIndex) {};
-
-        void visit(KdNode* node) override {
-            HotPixel* hp = static_cast<HotPixel*>(node->getData());
-
-            /**
-            * If vertex pixel is a node, add it.
-            */
-            if (hp->isNode() && hp->getCoordinate().equals2D(p0)) {
-                ss->addIntersection(p0, segIndex);
-            }
-        }
-    };
 
     /* Then run the query with the visitor */
     SnapRoundingVertexNodeVisitor srv(p0, ss, segIndex);

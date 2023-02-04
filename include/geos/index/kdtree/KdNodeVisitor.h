@@ -33,7 +33,7 @@ protected:
 public:
 
     KdNodeVisitor() {};
-    virtual void visit(KdNode *node) = 0;
+    virtual void visit(const KdNode *node) = 0;
 
 
 };

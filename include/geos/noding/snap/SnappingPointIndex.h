@@ -50,7 +50,7 @@ public:
     * @param p the point to snap
     * @return the point it snapped to, or the input point
     */
-    const geom::Coordinate& snap(const geom::Coordinate& p);
+    const geom::CoordinateXY& snap(const geom::CoordinateXY& p);
 
 };
 
