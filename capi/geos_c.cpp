@@ -667,6 +667,12 @@ extern "C" {
     }
 
     int
+    GEOSGeom_filteDimension(Geometry* g, int dimension)
+    {
+        return GEOSGeom_filterDimension_r(handle, g, dimension);
+    }
+
+    int
     GEOSGetNumInteriorRings(const Geometry* g)
     {
         return GEOSGetNumInteriorRings_r(handle, g);

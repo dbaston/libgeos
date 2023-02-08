@@ -46,6 +46,7 @@
 #include <geos/geom/prep/PreparedGeometry.h>
 #include <geos/geom/prep/PreparedGeometryFactory.h>
 #include <geos/geom/util/Densifier.h>
+#include <geos/geom/util/GeometryDimensionFilter.h>
 #include <geos/geom/util/GeometryFixer.h>
 #include <geos/index/ItemVisitor.h>
 #include <geos/index/strtree/TemplateSTRtree.h>
@@ -1642,6 +1643,19 @@ extern "C" {
         return execute(extHandle, -1, [&]() {
             g->normalize();
             return 0; // SUCCESS
+        });
+    }
+
+    Geometry*
+    GEOSGeom_filterDimension_r(GEOSContextHandle_t extHandle, Geometry* g, int dimension)
+    {
+        return execute(extHandle, [&]() {
+            auto srid = g->getSRID();
+
+            auto ret = geos::geom::util::GeometryDimensionFilter::filterDimension(std::unique_ptr<Geometry>(g), dimension);
+
+            ret->setSRID(srid);
+            return ret.release();
         });
     }
 

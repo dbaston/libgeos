@@ -1477,6 +1477,12 @@ extern int GEOS_DLL GEOSNormalize_r(
     GEOSContextHandle_t handle,
     GEOSGeometry* g);
 
+/** \see GEOSGeom_filterDimension */
+extern int GEOS_DLL GEOSGeom_filterDimension_r(
+    GEOSContextHandle_t handle,
+    GEOSGeometry* g,
+    int dimension);
+
 /**
 * Controls the behavior of GEOSGeom_setPrecision()
 * when altering the precision of a geometry.
@@ -2722,6 +2728,16 @@ extern void GEOS_DLL GEOSGeom_setUserData(GEOSGeometry* g, void* userData);
 * \return 0 on success or -1 on exception
 */
 extern int GEOS_DLL GEOSNormalize(GEOSGeometry* g);
+
+/**
+ * Remove elements of a geometry that are not of the specified dimension (Point/Line/Area).
+ * The input geometry is modified.
+ *
+ * @param g
+ * @param dimension
+ * @return
+ */
+extern int GEOS_DLL GEOSGeom_filterDimension(GEOSGeometry* g, int dimension);
 
 ///@}
 
