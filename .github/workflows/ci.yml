@@ -179,7 +179,7 @@ jobs:
       run: |
         set -e
         cd build.cmake
-        ctest --output-on-failure .
+        ctest --output-on-failure . -j 2
 
     # Run the all-unit-tests under
     # the memory checker when we have Debug symbols
@@ -235,7 +235,7 @@ jobs:
     - name: 'Test'
       run: |
        cd build
-       ctest --output-on-failure .
+       ctest --output-on-failure . -j 2
 
   windows-mingw-release:
     name: 'Windows (mingw-w64, Release, 11, x86_64, windows-2019)'
@@ -264,7 +264,7 @@ jobs:
     - name: 'Test'
       run: |
        cd build
-       ctest --output-on-failure .
+       ctest --output-on-failure . -j 2
 
   windows-msvc-22:
     name: 'Windows (Visual Studio 2022, Debug, windows-2022)'
@@ -284,7 +284,7 @@ jobs:
     - name: 'Test'
       run: |
        cd build
-       ctest --output-on-failure -C Debug
+       ctest --output-on-failure -C Debug -j 2
 
   windows-msvc-19:
     name: 'Windows (Visual Studio 2019, Release, windows-2019)'
@@ -304,7 +304,7 @@ jobs:
     - name: 'Test'
       run: |
        cd build
-       ctest --output-on-failure -C Release
+       ctest --output-on-failure -C Release -j 2
 
   macos:
     name: 'macOS clang'
@@ -352,7 +352,7 @@ jobs:
     - name: 'Test'
       run: |
         cd build
-        ctest -V --output-on-failure -C ${BUILD_TYPE}
+        ctest -V --output-on-failure -C ${BUILD_TYPE} -j 3
 
 
   code-quality:
