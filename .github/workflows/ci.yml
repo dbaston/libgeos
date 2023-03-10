@@ -299,11 +299,14 @@ jobs:
        mkdir build
        cd build
        cmake --version
+       ccache -p
+       ccache -s
        cmake \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DUSE_CCACHE=ON \
         -G"MSYS Makefiles" ..
        cmake --build . -j 2
+       ccache -s
 
     - name: Save build cache
       uses: actions/cache/save@v3
