@@ -295,7 +295,7 @@ jobs:
 
     - name: 'Build'
       run: |
-       export CCACHE_BASE_DIR=$(pwd)
+       export CCACHE_BASE_DIR="$(cygpath $(pwd))"
        mkdir build
        cd build
        cmake --version
