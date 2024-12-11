@@ -248,6 +248,19 @@ protected:
 
     bool hasCurvedComponents() const override;
 
+    struct CollectionFlags {
+        bool flagsCalculated : 1;
+        bool hasPoints : 1;
+        bool hasLines : 1;
+        bool hasPolygons : 1;
+        bool hasM : 1;
+        bool hasZ : 1;
+        bool hasCurves : 1;
+    };
+
+    mutable CollectionFlags flags;
+
+    void setFlags() const;
 
 };
 
