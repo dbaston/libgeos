@@ -252,6 +252,28 @@ void object::test<12>()
     ensure_equals("length does not match", result_length, input_length, 1e-5);
 }
 
+template<>
+template<>
+void object::test<13>()
+{
+    set_test_name("progress callback invoked");
+
+    input_ = fromWKT("POINT (8 02)");
+
+    auto context = initGEOS_r(nullptr, nullptr);
+
+    double frac = 0;
+    auto progress = [](double f, const char*, void* userData) {
+        *static_cast<double*>(userData) = f;
+    };
+
+    GEOSContext_setProgressCallback_r(context, progress, &frac);
+    result_ = GEOSUnaryUnion_r(context, input_);
+    finishGEOS_r(context);
+
+    ensure_equals(frac, 1.0);
+}
+
 
 } // namespace tut
 
