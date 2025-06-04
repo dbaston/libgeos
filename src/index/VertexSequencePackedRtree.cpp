@@ -199,7 +199,7 @@ VertexSequencePackedRtree::queryNode(const Envelope& queryEnv,
     std::vector<std::size_t>& result) const
 {
     std::size_t boundsIndex = levelOffset[level] + nodeIndex;
-    Envelope nodeEnv = bounds[boundsIndex];
+    const Envelope& nodeEnv = bounds[boundsIndex];
 
     //--- node is empty
     if (nodeEnv.isNull())
