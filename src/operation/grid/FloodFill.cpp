@@ -32,9 +32,9 @@ FloodFill::FloodFill(const Geometry& g, const Grid<bounded_extent>& extent)
 FloodFill::~FloodFill() = default;
 
 bool
-FloodFill::cell_is_inside(size_t i, size_t j) const
+FloodFill::cellIsInside(size_t i, size_t j) const
 {
-    geom::CoordinateXY p(  m_extent.x_for_col(j), m_extent.y_for_row(i) );
+    geom::CoordinateXY p(  m_extent.getColX(j), m_extent.getRowY(i) );
 
     return m_loc->locate(&p) == geom::Location::INTERIOR;
 }

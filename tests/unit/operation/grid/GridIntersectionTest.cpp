@@ -120,8 +120,8 @@ template<> template<> void object::test<6>
 
     auto rci =  GridIntersection::grid_intersection(ex, *g);
 
-    ensure_equals(rci->rows(), 3ul);
-    ensure_equals(rci->cols(), 3ul);
+    ensure_equals(rci->getNumRows(), 3ul);
+    ensure_equals(rci->getNumCols(), 3ul);
     ensure_equals((*rci)(2, 0),  static_cast<float>(g_area));
 }
 
@@ -150,8 +150,8 @@ template<> template<> void object::test<8>
 
     auto rci =  GridIntersection::grid_intersection(ex, *g);
 
-    ensure_equals(rci->rows(), 3u);
-    ensure_equals(rci->cols(), 3u);
+    ensure_equals(rci->getNumRows(), 3u);
+    ensure_equals(rci->getNumCols(), 3u);
     ensure_equals((*rci)(2, 0), static_cast<float>(g_length));
 }
 
@@ -238,8 +238,8 @@ template<> template<> void object::test<12>
 
     auto rci = GridIntersection::grid_intersection(ex, *g);
 
-    ensure_equals(rci->rows(), 3u);
-    ensure_equals(rci->cols(), 3u);
+    ensure_equals(rci->getNumRows(), 3u);
+    ensure_equals(rci->getNumCols(), 3u);
 }
 
 template<> template<> void object::test<13>
@@ -470,8 +470,8 @@ template<> template<> void object::test<29>() {
     Grid<bounded_extent> extent{ { 179.96666666664618, 179.99999999997954, -16.541666666669137, -16.475000000002474 }, 0.0083333333333328596, 0.0083333333333328596 };
 
     auto g = wkt_reader_.read("POLYGON ((179.9715827094184135 -16.5409617106119526,  180.0000000000000000 -16.5326999999999984, 179.9872884114583655 -16.5342697143554425,  179.9715827094184135 -16.5409617106119526))");
-    Envelope env = g->getEnvelopeInternal()->intersection(extent.extent());
-    extent = extent.shrink_to_fit(env);
+    Envelope env = g->getEnvelopeInternal()->intersection(extent.getExtent());
+    extent = extent.shrinkToFit(env);
 
     ensure_NO_THROW( GridIntersection::grid_intersection(extent, *g));
 }
@@ -504,12 +504,12 @@ template<> template<> void object::test<32>() {
 
     auto g = wkt_reader_.read(load_resource("regression6.wkt"));
     GridIntersection gi(ex, *g);
-    const auto& result = *gi.results();
+    const auto& result = *gi.getResults();
 
     float tot = 0;
 
-    for (size_t i = 0; i < result.rows(); i++) {
-        for (size_t j = 0; j < result.cols(); j++) {
+    for (size_t i = 0; i < result.getNumRows(); i++) {
+        for (size_t j = 0; j < result.getNumCols(); j++) {
             tot += result(i, j);
             if (result(i, j) < 0 || result(i, j) > 1) {
                 fail();
@@ -526,7 +526,7 @@ template<> template<> void object::test<33>() {
     Grid<bounded_extent> ex{ { 487800, 492800, 5813800, 5818800 }, 100, 100 };
 
     auto g = wkt_reader_.read("POLYGON ((492094.9283999996 5816959.8553, 492374.9335527361 5816811.352641133, 492374.9335527363 5816811.352641133, 492094.9283999996 5816959.8553))");
-    ex = ex.shrink_to_fit(*g->getEnvelopeInternal());
+    ex = ex.shrinkToFit(*g->getEnvelopeInternal());
 
     double total_area = g->getArea();
     double cell_area = ex.dx() * ex.dy();
@@ -534,8 +534,8 @@ template<> template<> void object::test<33>() {
 
     auto result =  GridIntersection::grid_intersection(ex, *g);
 
-    for (std::size_t i = 0; i < result->rows(); i++) {
-        for (std::size_t j = 0; j < result->cols(); j++) {
+    for (std::size_t i = 0; i < result->getNumRows(); i++) {
+        for (std::size_t j = 0; j < result->getNumCols(); j++) {
             auto frac = (*result)(i, j);
             ensure((frac >= 0 && frac <= static_cast<float>(max_possible_frac)));
         }
@@ -549,7 +549,7 @@ template<> template<> void object::test<34>() {
 
     auto g = wkt_reader_.read("POLYGON EMPTY");
 
-    ensure_equals(GridIntersection::processing_region(raster_extent, *g).getArea(), 0);
+    ensure_equals(GridIntersection::processingRegion(raster_extent, *g).getArea(), 0);
 }
 
 template<> template<> void object::test<35>() {
@@ -559,7 +559,7 @@ template<> template<> void object::test<35>() {
 
     auto g = wkt_reader_.read("MULTIPOLYGON (((60 60, 70 60, 70 70, 60 70, 60 60)), ((20 20, 30 20, 30 30, 20 30, 20 20)))");
 
-    ensure_equals(GridIntersection::processing_region(raster_extent, *g).getArea(), 0);
+    ensure_equals(GridIntersection::processingRegion(raster_extent, *g).getArea(), 0);
 }
 
 template<> template<> void object::test<36>() {
@@ -570,7 +570,7 @@ template<> template<> void object::test<36>() {
 
     auto g = wkt_reader_.read("POLYGON ((1 3, 9 5, 8 9, 1 3))") ;
 
-    auto subdivided = GridIntersection::subdivide_polygon(ext, *g, false);
+    auto subdivided = GridIntersection::subdividePolygon(ext, *g, false);
 
     ensure_equals(g->getArea(), subdivided->getArea());
 }
@@ -583,7 +583,7 @@ template<> template<> void object::test<37>() {
 
     auto g = wkt_reader_.read("POLYGON ((8.5 8.7, 12 8, 12 12, 8 12, 8.5 8.7))");
 
-    auto subdivided = GridIntersection::subdivide_polygon(ext, *g, true);
+    auto subdivided = GridIntersection::subdividePolygon(ext, *g, true);
 
     ensure_equals("", subdivided->getArea(), g->getArea(), 1e-8);
 }
@@ -596,7 +596,7 @@ template<> template<> void object::test<38>() {
 
     auto g = wkt_reader_.read("POINT (5 5)")->buffer(20);
 
-    auto subdivided = GridIntersection::subdivide_polygon(ext, *g, true);
+    auto subdivided = GridIntersection::subdividePolygon(ext, *g, true);
 
     ensure_equals("", subdivided->getArea(), g->getArea(), 1e-8);
 }

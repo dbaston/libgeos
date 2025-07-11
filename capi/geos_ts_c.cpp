@@ -1805,7 +1805,7 @@ extern "C" {
             double dy = env.getHeight() / static_cast<double>(ny);
             geos::operation::grid::Grid<geos::operation::grid::bounded_extent> grid(env, dx, dy);
 
-            return geos::operation::grid::GridIntersection::subdivide_polygon(grid, *g, include_exterior).release();
+            return geos::operation::grid::GridIntersection::subdividePolygon(grid, *g, include_exterior).release();
         });
     }
 

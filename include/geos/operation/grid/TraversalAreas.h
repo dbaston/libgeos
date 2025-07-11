@@ -29,7 +29,7 @@ namespace geos::operation::grid {
  * @return total area
  */
 double
-left_hand_area(const geom::Envelope& box, const std::vector<const std::vector<geom::CoordinateXY>*>& coord_lists);
+getLeftHandArea(const geom::Envelope& box, const std::vector<const std::vector<geom::CoordinateXY>*>& coord_lists);
 
 /**
  * @brief Return an areal geometry representing the closed rings formed by this box and the provided Coordinate sequences
@@ -43,6 +43,6 @@ left_hand_area(const geom::Envelope& box, const std::vector<const std::vector<ge
  * @return a Polygon or MultiPolygon geometry
  */
 std::unique_ptr<geom::Geometry>
-left_hand_rings(const geom::GeometryFactory& gfact, const geom::Envelope& box, const std::vector<const std::vector<geom::CoordinateXY>*>& coord_lists);
+getLeftHandRings(const geom::GeometryFactory& gfact, const geom::Envelope& box, const std::vector<const std::vector<geom::CoordinateXY>*>& coord_lists);
 
 }

@@ -35,15 +35,15 @@ class Traversal
     {
     }
 
-    bool is_closed_ring() const;
+    bool isClosedRing() const;
 
-    bool empty() const;
+    bool isEmpty() const;
 
-    bool entered() const;
+    bool isEntered() const;
 
-    bool exited() const;
+    bool isExited() const;
 
-    bool traversed() const;
+    bool isTraversed() const;
 
     bool multiple_unique_coordinates() const;
 
@@ -53,19 +53,19 @@ class Traversal
     /// Complete a Traversal on the specified `Side`
     void exit(const geom::CoordinateXY& c, Side s);
 
-    Side entry_side() const { return m_entry; }
+    Side getEntrySide() const { return m_entry; }
 
-    Side exit_side() const { return m_exit; }
+    Side getExitSide() const { return m_exit; }
 
-    const geom::CoordinateXY& last_coordinate() const;
+    const geom::CoordinateXY& getLastCoordinate() const;
 
-    const geom::CoordinateXY& exit_coordinate() const;
+    const geom::CoordinateXY& getExitCoordinate() const;
 
     void add(const geom::CoordinateXY& c);
 
-    void force_exit(Side s) { m_exit = s; }
+    void forceExit(Side s) { m_exit = s; }
 
-    const std::vector<geom::CoordinateXY>& coords() const { return m_coords; }
+    const std::vector<geom::CoordinateXY>& getCoordinates() const { return m_coords; }
 
   private:
     std::vector<geom::CoordinateXY> m_coords;

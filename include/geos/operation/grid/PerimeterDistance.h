@@ -26,10 +26,10 @@ namespace geos::operation::grid {
  *  lying exactly on the boundary of the Envelope.
  */
 double
-perimeter_distance(const geom::Envelope& env, const geom::CoordinateXY& c);
+getPerimeterDistance(const geom::Envelope& env, const geom::CoordinateXY& c);
 
 double
-perimeter_distance(double xmin, double ymin, double xmax, double ymax, double x, double y);
+getPerimeterDistance(double xmin, double ymin, double xmax, double ymax, double x, double y);
 
 /** Calculates the counter-clockwise distance between two locations on the perimeter
  *  of an Envelope. The locations are specified as clockwise distances from the
@@ -37,6 +37,6 @@ perimeter_distance(double xmin, double ymin, double xmax, double ymax, double x,
  *  function.
  */
 double
-perimeter_distance_ccw(double measure1, double measure2, double perimeter);
+getPerimeterDistanceCCW(double measure1, double measure2, double perimeter);
 
 }

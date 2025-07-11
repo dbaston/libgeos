@@ -58,7 +58,7 @@ class FloodFill
     template<typename T>
     void flood(Matrix<T>& arr) const;
 
-    bool cell_is_inside(size_t i, size_t j) const;
+    bool cellIsInside(size_t i, size_t j) const;
 
   private:
     Grid<bounded_extent> m_extent;
@@ -68,7 +68,7 @@ class FloodFill
 
 template<typename T>
 void
-flood_from_pixel(Matrix<T>& arr, size_t i, size_t j, T fill_value)
+floodFromPixel(Matrix<T>& arr, size_t i, size_t j, T fill_value)
 {
     std::queue<std::pair<size_t, size_t>> locations;
 
@@ -91,7 +91,7 @@ flood_from_pixel(Matrix<T>& arr, size_t i, size_t j, T fill_value)
         auto j0 = j;
 
         // Fill along this row until we hit something
-        for (; j < arr.cols() && arr(i, j) == fill_values<T>::FILLABLE; j++) {
+        for (; j < arr.getNumCols() && arr(i, j) == fill_values<T>::FILLABLE; j++) {
             arr(i, j) = fill_value;
         }
 
@@ -108,7 +108,7 @@ flood_from_pixel(Matrix<T>& arr, size_t i, size_t j, T fill_value)
         }
 
         // Initiate scanlines below our current row
-        if (i < arr.rows() - 1) {
+        if (i < arr.getNumRows() - 1) {
             for (j = j0; j < j1; j++) {
                 // Down
                 if (arr(i + 1, j) == fill_values<T>::FILLABLE) {
@@ -124,17 +124,17 @@ void
 FloodFill::flood(Matrix<T>& arr) const
 {
 
-    for (size_t i = 0; i < arr.rows(); i++) {
-        for (size_t j = 0; j < arr.cols(); j++) {
+    for (size_t i = 0; i < arr.getNumRows(); i++) {
+        for (size_t j = 0; j < arr.getNumCols(); j++) {
             if (arr(i, j) == fill_values<T>::UNKNOWN) {
                 throw std::runtime_error("Cell with unknown position encountered.");
             } else if (arr(i, j) == fill_values<T>::FILLABLE) {
                 // Cell position relative to polygon is unknown but can
                 // be determined from adjacent cells.
-                if (cell_is_inside(i, j)) {
-                    flood_from_pixel(arr, i, j, fill_values<T>::INTERIOR);
+                if (cellIsInside(i, j)) {
+                    floodFromPixel(arr, i, j, fill_values<T>::INTERIOR);
                 } else {
-                    flood_from_pixel(arr, i, j, fill_values<T>::EXTERIOR);
+                    floodFromPixel(arr, i, j, fill_values<T>::EXTERIOR);
                 }
             }
         }

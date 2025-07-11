@@ -52,14 +52,14 @@ struct CoordinateChain
 static double
 exit_to_entry_perimeter_distance_ccw(const CoordinateChain& c1, const CoordinateChain& c2, double perimeter)
 {
-    return perimeter_distance_ccw(c1.stop, c2.start, perimeter);
+    return getPerimeterDistanceCCW(c1.stop, c2.start, perimeter);
 }
 
 static CoordinateChain*
-next_chain(std::vector<CoordinateChain>& chains,
-           const CoordinateChain* chain,
-           const CoordinateChain* kill,
-           double perimeter)
+getNextChain(std::vector<CoordinateChain>& chains,
+             const CoordinateChain* chain,
+             const CoordinateChain* kill,
+             double perimeter)
 {
 
     CoordinateChain* min = nullptr;
@@ -86,7 +86,7 @@ next_chain(std::vector<CoordinateChain>& chains,
 
 template<typename T>
 bool
-has_multiple_unique_coordinates(const T& vec)
+hasMultipleUniqueCoordinates(const T& vec)
 {
     for (std::size_t i = 1; i < vec.size(); i++) {
         if (vec[i] != vec[0]) {
@@ -108,17 +108,17 @@ has_multiple_unique_coordinates(const T& vec)
  */
 template<typename F>
 void
-visit_rings(const Envelope& box, const std::vector<const std::vector<CoordinateXY>*>& coord_lists, F&& visitor)
+visitRings(const Envelope& box, const std::vector<const std::vector<CoordinateXY>*>& coord_lists, F&& visitor)
 {
     std::vector<CoordinateChain> chains;
     chains.reserve(coord_lists.size() + 4);
 
     for (const auto& coords : coord_lists) {
-        if (!has_multiple_unique_coordinates(*coords)) {
+        if (!hasMultipleUniqueCoordinates(*coords)) {
             continue;
         }
 
-        if (coords->front() == coords->back() && has_multiple_unique_coordinates(*coords)) {
+        if (coords->front() == coords->back() && hasMultipleUniqueCoordinates(*coords)) {
             // Closed ring. Check orientation.
 
             // TODO: Remove copy
@@ -127,8 +127,8 @@ visit_rings(const Envelope& box, const std::vector<const std::vector<CoordinateX
             bool is_ccw = algorithm::Orientation::isCCW(&seq);
             visitor(*coords, is_ccw);
         } else {
-            double start = perimeter_distance(box, coords->front());
-            double stop = perimeter_distance(box, coords->back());
+            double start = getPerimeterDistance(box, coords->front());
+            double stop = getPerimeterDistance(box, coords->back());
 
             chains.emplace_back(start, stop, coords);
         }
@@ -163,25 +163,25 @@ visit_rings(const Envelope& box, const std::vector<const std::vector<CoordinateX
         do {
             chain->visited = true;
             coords.insert(coords.end(), chain->coordinates->cbegin(), chain->coordinates->cend());
-            chain = next_chain(chains, chain, first_chain, perimeter);
+            chain = getNextChain(chains, chain, first_chain, perimeter);
         } while (chain != first_chain);
 
         coords.push_back(coords[0]);
 
-        if (has_multiple_unique_coordinates(coords)) {
+        if (hasMultipleUniqueCoordinates(coords)) {
             visitor(coords, true);
         }
     }
 }
 
 double
-left_hand_area(const Envelope& box, const std::vector<const std::vector<CoordinateXY>*>& coord_lists)
+getLeftHandArea(const Envelope& box, const std::vector<const std::vector<CoordinateXY>*>& coord_lists)
 {
     double ccw_sum = 0;
     double cw_sum = 0;
     bool found_a_ring = false;
 
-    visit_rings(box, coord_lists, [&cw_sum, &ccw_sum, &found_a_ring](const std::vector<CoordinateXY>& coords, bool is_ccw) {
+    visitRings(box, coord_lists, [&cw_sum, &ccw_sum, &found_a_ring](const std::vector<CoordinateXY>& coords, bool is_ccw) {
         found_a_ring = true;
 
         if (is_ccw) {
@@ -205,7 +205,7 @@ left_hand_area(const Envelope& box, const std::vector<const std::vector<Coordina
 }
 
 std::unique_ptr<Geometry>
-left_hand_rings(const GeometryFactory& gfact, const Envelope& box, const std::vector<const std::vector<CoordinateXY>*>& coord_lists)
+getLeftHandRings(const GeometryFactory& gfact, const Envelope& box, const std::vector<const std::vector<CoordinateXY>*>& coord_lists)
 {
     using geom::LinearRing;
 
@@ -214,7 +214,7 @@ left_hand_rings(const GeometryFactory& gfact, const Envelope& box, const std::ve
 
     bool found_a_ring = false;
 
-    visit_rings(box, coord_lists, [&gfact, &shells, &holes, &found_a_ring](const std::vector<CoordinateXY>& coords, bool is_ccw) {
+    visitRings(box, coord_lists, [&gfact, &shells, &holes, &found_a_ring](const std::vector<CoordinateXY>& coords, bool is_ccw) {
         found_a_ring = true;
 
         // finding a collapsed ring is sufficient to determine whether the cell interior is inside our outside,

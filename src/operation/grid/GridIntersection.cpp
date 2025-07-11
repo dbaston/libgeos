@@ -37,28 +37,28 @@ std::shared_ptr<Matrix<float>>
 GridIntersection::grid_intersection(const Grid<bounded_extent>& raster_grid, const Geometry& g)
 {
     GridIntersection rci(raster_grid, g);
-    return rci.results();
+    return rci.getResults();
 }
 
 std::shared_ptr<Matrix<float>>
 GridIntersection::grid_intersection(const Grid<bounded_extent>& raster_grid, const Envelope& box)
 {
     GridIntersection rci(raster_grid, box);
-    return rci.results();
+    return rci.getResults();
 }
 
 static Cell*
 get_cell(Matrix<std::unique_ptr<Cell>>& cells, const Grid<infinite_extent>& ex, size_t row, size_t col)
 {
     if (cells(row, col) == nullptr) {
-        cells(row, col) = std::make_unique<Cell>(ex.grid_cell(row, col));
+        cells(row, col) = std::make_unique<Cell>(ex.getCellEnvelope(row, col));
     }
 
     return cells(row, col).get();
 }
 
 Envelope
-GridIntersection::processing_region(const Envelope& raster_extent, const Geometry& g)
+GridIntersection::processingRegion(const Envelope& raster_extent, const Geometry& g)
 {
     Envelope ret;
 
@@ -84,7 +84,7 @@ GridIntersection::processing_region(const Envelope& raster_extent, const Geometr
 
 GridIntersection::GridIntersection(const Grid<bounded_extent>& raster_grid, const Geometry& g, std::shared_ptr<Matrix<float>> cov)
   : m_geometry_grid{ make_infinite(raster_grid, *g.getEnvelopeInternal()) }
-  , m_results{ cov ? cov : std::make_shared<Matrix<float>>(raster_grid.rows(), raster_grid.cols()) }
+  , m_results{ cov ? cov : std::make_shared<Matrix<float>>(raster_grid.getNumRows(), raster_grid.getNumCols()) }
   , m_first_geom{ true }
   , m_areal{ false }
 {
@@ -92,17 +92,17 @@ GridIntersection::GridIntersection(const Grid<bounded_extent>& raster_grid, cons
         throw std::invalid_argument("Unsupported geometry type.");
     }
 
-    if (!m_geometry_grid.empty()) {
+    if (!m_geometry_grid.isEmpty()) {
         process(g);
     }
 }
 
 GridIntersection::GridIntersection(const Grid<bounded_extent>& raster_grid, const Envelope& box, std::shared_ptr<Matrix<float>> cov)
   : m_geometry_grid{ make_infinite(raster_grid, box) }
-  , m_results{ cov ? cov : std::make_shared<Matrix<float>>(raster_grid.rows(), raster_grid.cols()) }
+  , m_results{ cov ? cov : std::make_shared<Matrix<float>>(raster_grid.getNumRows(), raster_grid.getNumCols()) }
 {
-    if (!m_geometry_grid.empty()) {
-        process_rectangular_ring(box, true);
+    if (!m_geometry_grid.isEmpty()) {
+        processRectangularRing(box, true);
     }
 }
 
@@ -112,19 +112,19 @@ GridIntersection::process(const Geometry& g)
     auto type = g.getGeometryTypeId();
 
     if (type == geom::GEOS_POLYGON) {
-        set_areal(true);
+        setAreal(true);
 
         const Polygon& p = static_cast<const Polygon&>(g);
 
-        process_line(*p.getExteriorRing(), true);
+        processLine(*p.getExteriorRing(), true);
         auto nrings = p.getNumInteriorRing();
         for (std::size_t i = 0; i < nrings; i++) {
-            process_line(*p.getInteriorRingN(i), false);
+            processLine(*p.getInteriorRingN(i), false);
         }
     } else if (type == geom::GEOS_LINESTRING || type == geom::GEOS_LINEARRING) {
-        set_areal(false);
+        setAreal(false);
 
-        process_line(static_cast<const LineString&>(g), true);
+        processLine(static_cast<const LineString&>(g), true);
     } else if (type == geom::GEOS_GEOMETRYCOLLECTION || type == geom::GEOS_MULTILINESTRING || type == geom::GEOS_MULTIPOLYGON) {
         auto ngeoms = g.getNumGeometries();
         for (std::size_t i = 0; i < ngeoms; i++) {
@@ -138,8 +138,8 @@ GridIntersection::process(const Geometry& g)
 static Grid<infinite_extent>
 get_box_grid(const Envelope& box, const Grid<infinite_extent>& geometry_grid)
 {
-    Envelope cropped_ring_extent = geometry_grid.extent().intersection(box);
-    return geometry_grid.shrink_to_fit(cropped_ring_extent);
+    Envelope cropped_ring_extent = geometry_grid.getExtent().intersection(box);
+    return geometry_grid.shrinkToFit(cropped_ring_extent);
 }
 
 static Grid<infinite_extent>
@@ -149,49 +149,49 @@ get_ring_grid(const Geometry& ls, const Grid<infinite_extent>& geometry_grid)
 }
 
 void
-GridIntersection::process_rectangular_ring(const Envelope& box, bool exterior_ring)
+GridIntersection::processRectangularRing(const Envelope& box, bool exterior_ring)
 {
-    if (!box.intersects(m_geometry_grid.extent())) {
+    if (!box.intersects(m_geometry_grid.getExtent())) {
         return;
     }
 
     auto ring_grid = get_box_grid(box, m_geometry_grid);
 
-    auto row_min = ring_grid.get_row(box.getMaxY());
-    auto row_max = ring_grid.get_row(box.getMinY());
-    auto col_min = ring_grid.get_column(box.getMinX());
-    auto col_max = ring_grid.get_column(box.getMaxX());
+    auto row_min = ring_grid.getRow(box.getMaxY());
+    auto row_max = ring_grid.getRow(box.getMinY());
+    auto col_min = ring_grid.getColumn(box.getMinX());
+    auto col_max = ring_grid.getColumn(box.getMaxX());
 
-    Matrix<float> areas(ring_grid.rows() - 2, ring_grid.cols() - 2);
+    Matrix<float> areas(ring_grid.getNumRows() - 2, ring_grid.getNumCols() - 2);
 
     // upper-left
     if (row_min > 0 && col_min > 0) {
-        auto ul = ring_grid.grid_cell(row_min, col_min);
+        auto ul = ring_grid.getCellEnvelope(row_min, col_min);
         areas(row_min - 1, col_min - 1) = static_cast<float>(ul.intersection(box).getArea() / ul.getArea());
     }
 
     // upper-right
-    if (row_min > 0 && col_max < ring_grid.cols() - 1) {
-        auto ur = ring_grid.grid_cell( row_min, col_max);
+    if (row_min > 0 && col_max < ring_grid.getNumCols() - 1) {
+        auto ur = ring_grid.getCellEnvelope( row_min, col_max);
         auto frac = ur.intersection(box).getArea() / ur.getArea();
         areas(row_min - 1, col_max - 1) = static_cast<float>(frac);
     }
 
     // lower-left
-    if (row_max < ring_grid.rows() - 1 && col_min > 0) {
-        auto ll = ring_grid.grid_cell(row_max, col_min);
+    if (row_max < ring_grid.getNumRows() - 1 && col_min > 0) {
+        auto ll = ring_grid.getCellEnvelope(row_max, col_min);
         areas(row_max - 1, col_min - 1) = static_cast<float>(ll.intersection(box).getArea() / ll.getArea());
     }
 
     // lower-right
-    if (row_max < ring_grid.rows() - 1 && col_max < ring_grid.cols() - 1) {
-        auto lr = ring_grid.grid_cell(row_max, col_max);
+    if (row_max < ring_grid.getNumRows() - 1 && col_max < ring_grid.getNumCols() - 1) {
+        auto lr = ring_grid.getCellEnvelope(row_max, col_max);
         areas(row_max - 1, col_max - 1) = static_cast<float>(lr.intersection(box).getArea() / lr.getArea());
     }
 
     // left
     if (col_min > 0) {
-        auto left = ring_grid.grid_cell(row_min + 1, col_min);
+        auto left = ring_grid.getCellEnvelope(row_min + 1, col_min);
         auto frac = left.intersection(box).getArea() / left.getArea();
         for (size_t row = row_min + 1; row < row_max; row++) {
             areas(row - 1, col_min - 1) = static_cast<float>(frac);
@@ -199,8 +199,8 @@ GridIntersection::process_rectangular_ring(const Envelope& box, bool exterior_ri
     }
 
     // right
-    if (col_max < ring_grid.cols() - 1) {
-        auto right = ring_grid.grid_cell(row_min + 1, col_max);
+    if (col_max < ring_grid.getNumCols() - 1) {
+        auto right = ring_grid.getCellEnvelope(row_min + 1, col_max);
         auto frac = right.intersection(box).getArea() / right.getArea();
         for (size_t row = row_min + 1; row < row_max; row++) {
             areas(row - 1, col_max - 1) = static_cast<float>(frac);
@@ -209,7 +209,7 @@ GridIntersection::process_rectangular_ring(const Envelope& box, bool exterior_ri
 
     // top
     if (row_min > 0) {
-        auto top = ring_grid.grid_cell(row_min, col_min + 1);
+        auto top = ring_grid.getCellEnvelope(row_min, col_min + 1);
         auto frac = top.intersection(box).getArea() / top.getArea();
         for (size_t col = col_min + 1; col < col_max; col++) {
             areas(row_min - 1, col - 1) = static_cast<float>(frac);
@@ -217,8 +217,8 @@ GridIntersection::process_rectangular_ring(const Envelope& box, bool exterior_ri
     }
 
     // bottom
-    if (row_max < ring_grid.rows() - 1) {
-        auto bottom = ring_grid.grid_cell(row_max, col_min + 1);
+    if (row_max < ring_grid.getNumRows() - 1) {
+        auto bottom = ring_grid.getCellEnvelope(row_max, col_min + 1);
         auto frac = bottom.intersection(box).getArea() / bottom.getArea();
         for (size_t col = col_min + 1; col < col_max; col++) {
             areas(row_max - 1, col - 1) = static_cast<float>(frac);
@@ -233,14 +233,14 @@ GridIntersection::process_rectangular_ring(const Envelope& box, bool exterior_ri
     }
 
     // Transfer these areas to our global set
-    size_t i0 = ring_grid.row_offset(m_geometry_grid);
-    size_t j0 = ring_grid.col_offset(m_geometry_grid);
+    size_t i0 = ring_grid.getRowOffset(m_geometry_grid);
+    size_t j0 = ring_grid.getColOffset(m_geometry_grid);
 
-    add_ring_results(i0, j0, areas, exterior_ring);
+    addRingResults(i0, j0, areas, exterior_ring);
 }
 
 void
-GridIntersection::set_areal(bool areal)
+GridIntersection::setAreal(bool areal)
 {
     if (m_first_geom) {
         m_first_geom = false;
@@ -253,32 +253,32 @@ GridIntersection::set_areal(bool areal)
 }
 
 Matrix<float>
-GridIntersection::collect_areas(const Matrix<std::unique_ptr<Cell>>& cells,
+GridIntersection::collectAreas(const Matrix<std::unique_ptr<Cell>>& cells,
                                       const Grid<bounded_extent>& finite_ring_grid,
                                       const Geometry& g)
 {
 
     // Create a matrix of areas using the FILLABLE placeholder value, which means that
     // a known state (interior/exterior) can be propated from an adjacent cell.
-    Matrix<float> areas(cells.rows() - 2,
-                        cells.cols() - 2,
+    Matrix<float> areas(cells.getNumRows() - 2,
+                        cells.getNumCols() - 2,
                         fill_values<float>::FILLABLE);
 
     FloodFill ff(g, finite_ring_grid);
 
     // Mark all cells that have been traversed as being either INTERIOR or EXTERIOR.
-    for (size_t i = 1; i <= areas.rows(); i++) {
-        for (size_t j = 1; j <= areas.cols(); j++) {
+    for (size_t i = 1; i <= areas.getNumRows(); i++) {
+        for (size_t j = 1; j <= areas.getNumCols(); j++) {
             if (cells(i, j) != nullptr) {
                 // When we encounter a cell that has been processed (ie, it is not nullptr)
                 // but whose traversals contains no linear segments, we have no way to know
                 // if it is inside of the polygon. So we perform point-in-polygon test and set
                 // the covered fraction to 1.0 if needed.
 
-                if (!cells(i, j)->determined()) {
-                    areas(i - 1, j - 1) = ff.cell_is_inside(i - 1, j - 1) ? fill_values<float>::INTERIOR : fill_values<float>::EXTERIOR;
+                if (!cells(i, j)->isDetermined()) {
+                    areas(i - 1, j - 1) = ff.cellIsInside(i - 1, j - 1) ? fill_values<float>::INTERIOR : fill_values<float>::EXTERIOR;
                 } else {
-                    areas(i - 1, j - 1) = static_cast<float>(cells(i, j)->covered_fraction());
+                    areas(i - 1, j - 1) = static_cast<float>(cells(i, j)->getCoveredFraction());
                 }
             }
         }
@@ -293,14 +293,14 @@ GridIntersection::collect_areas(const Matrix<std::unique_ptr<Cell>>& cells,
 Matrix<float>
 collect_lengths(const Matrix<std::unique_ptr<Cell>>& cells)
 {
-    Matrix<float> lengths(cells.rows() - 2,
-                          cells.cols() - 2,
+    Matrix<float> lengths(cells.getNumRows() - 2,
+                          cells.getNumCols() - 2,
                           fill_values<float>::EXTERIOR);
 
-    for (size_t i = 1; i <= lengths.rows(); i++) {
-        for (size_t j = 1; j <= lengths.cols(); j++) {
+    for (size_t i = 1; i <= lengths.getNumRows(); i++) {
+        for (size_t j = 1; j <= lengths.getNumCols(); j++) {
             if (cells(i, j) != nullptr) {
-                lengths(i - 1, j - 1) = static_cast<float>(cells(i, j)->traversal_length());
+                lengths(i - 1, j - 1) = static_cast<float>(cells(i, j)->getTraversalLength());
             }
         }
     }
@@ -312,8 +312,8 @@ void
 traverse_cells(Matrix<std::unique_ptr<Cell>>& cells, std::vector<CoordinateXY>& coords, const Grid<infinite_extent>& ring_grid, bool areal)
 {
     size_t pos = 0;
-    size_t row = ring_grid.get_row(coords.front().y);
-    size_t col = ring_grid.get_column(coords.front().x);
+    size_t row = ring_grid.getRow(coords.front().y);
+    size_t col = ring_grid.getColumn(coords.front().x);
     const CoordinateXY* last_exit = nullptr;
 
     while (pos < coords.size()) {
@@ -325,12 +325,12 @@ traverse_cells(Matrix<std::unique_ptr<Cell>>& cells, std::vector<CoordinateXY>& 
 
             cell.take(*next_coord, prev_coord);
 
-            if (cell.last_traversal().exited()) {
+            if (cell.getLastTraversal().isExited()) {
                 // Only push our exit coordinate if it's not same as the
                 // coordinate we just took. This covers the case where
                 // the next coordinate in the stack falls exactly on
                 // the cell boundary.
-                const CoordinateXY& exc = cell.last_traversal().exit_coordinate();
+                const CoordinateXY& exc = cell.getLastTraversal().getExitCoordinate();
                 if (exc != *next_coord) {
                     last_exit = &exc;
                 }
@@ -344,20 +344,20 @@ traverse_cells(Matrix<std::unique_ptr<Cell>>& cells, std::vector<CoordinateXY>& 
             }
         }
 
-        cell.force_exit();
+        cell.forceExit();
 
-        if (cell.last_traversal().exited()) {
+        if (cell.getLastTraversal().isExited()) {
             // When we start in the middle of a cell, for a polygon (areal) calculation,
             // we need to save the coordinates from our incomplete traversal and reprocess
             // them at the end of the line. The effect is just to restructure the polygon
             // so that the start/end coordinate falls on a cell boundary.
-            if (areal && !cell.last_traversal().traversed()) {
-                for (const auto& coord : cell.last_traversal().coords()) {
+            if (areal && !cell.getLastTraversal().isTraversed()) {
+                for (const auto& coord : cell.getLastTraversal().getCoordinates()) {
                     coords.push_back(coord);
                 }
             }
 
-            switch (cell.last_traversal().exit_side()) {
+            switch (cell.getLastTraversal().getExitSide()) {
                 case Side::TOP:
                     row--;
                     break;
@@ -378,11 +378,11 @@ traverse_cells(Matrix<std::unique_ptr<Cell>>& cells, std::vector<CoordinateXY>& 
 }
 
 void
-GridIntersection::process_line(const LineString& ls, bool exterior_ring)
+GridIntersection::processLine(const LineString& ls, bool exterior_ring)
 {
     const Envelope& geom_box = *ls.getEnvelopeInternal();
 
-    const Envelope intersection = geom_box.intersection(m_geometry_grid.extent());
+    const Envelope intersection = geom_box.intersection(m_geometry_grid.getExtent());
     if (intersection.getArea() == 0) {
         return;
     }
@@ -396,26 +396,26 @@ GridIntersection::process_line(const LineString& ls, bool exterior_ring)
         }
 
         if (coords.size() == 5 && algorithm::Area::ofRing(&coords) == geom_box.getArea()) {
-            process_rectangular_ring(geom_box, exterior_ring);
+            processRectangularRing(geom_box, exterior_ring);
             return;
         }
     }
 
     Grid<infinite_extent> ring_grid = get_ring_grid(ls, m_geometry_grid);
 
-    size_t rows = ring_grid.rows();
-    size_t cols = ring_grid.cols();
+    size_t rows = ring_grid.getNumRows();
+    size_t cols = ring_grid.getNumCols();
 
     // Short circuit for small geometries that are entirely contained within a single grid cell.
     if (rows == (1 + 2 * infinite_extent::padding) &&
         cols == (1 + 2 * infinite_extent::padding) &&
-        ring_grid.grid_cell(1, 1).contains(geom_box)) {
+        ring_grid.getCellEnvelope(1, 1).contains(geom_box)) {
 
-        size_t i0 = ring_grid.row_offset(m_geometry_grid);
-        size_t j0 = ring_grid.col_offset(m_geometry_grid);
+        size_t i0 = ring_grid.getRowOffset(m_geometry_grid);
+        size_t j0 = ring_grid.getColOffset(m_geometry_grid);
 
         if (m_areal) {
-            auto ring_area = static_cast<float>(algorithm::Area::ofRing(&coords) / ring_grid.grid_cell(1, 1).getArea());
+            auto ring_area = static_cast<float>(algorithm::Area::ofRing(&coords) / ring_grid.getCellEnvelope(1, 1).getArea());
 
             if (exterior_ring) {
                 m_results->increment(i0, j0, ring_area);
@@ -436,28 +436,28 @@ GridIntersection::process_line(const LineString& ls, bool exterior_ring)
         std::reverse(coordsVec.begin(), coordsVec.end());
     }
 
-    Matrix<std::unique_ptr<Cell>> cells(ring_grid.rows(), ring_grid.cols());
+    Matrix<std::unique_ptr<Cell>> cells(ring_grid.getNumRows(), ring_grid.getNumCols());
     traverse_cells(cells, coordsVec, ring_grid, m_areal);
 
     // Compute the fraction covered for all cells and assign it to
     // the area matrix
     // TODO avoid copying matrix when geometry has only one polygon, and polygon has only one ring
-    Matrix<float> areas = m_areal ? collect_areas(cells, make_finite(ring_grid), ls) : collect_lengths(cells);
+    Matrix<float> areas = m_areal ? collectAreas(cells, make_finite(ring_grid), ls) : collect_lengths(cells);
 
     // Transfer these areas to our global set
-    size_t i0 = ring_grid.row_offset(m_geometry_grid);
-    size_t j0 = ring_grid.col_offset(m_geometry_grid);
+    size_t i0 = ring_grid.getRowOffset(m_geometry_grid);
+    size_t j0 = ring_grid.getColOffset(m_geometry_grid);
 
-    add_ring_results(i0, j0, areas, exterior_ring || !m_areal);
+    addRingResults(i0, j0, areas, exterior_ring || !m_areal);
 }
 
 void
-GridIntersection::add_ring_results(size_t i0, size_t j0, const Matrix<float>& areas, bool exterior_ring)
+GridIntersection::addRingResults(size_t i0, size_t j0, const Matrix<float>& areas, bool exterior_ring)
 {
     float factor = exterior_ring ? 1.0f : -1.0f;
 
-    for (size_t i = 0; i < areas.rows(); i++) {
-        for (size_t j = 0; j < areas.cols(); j++) {
+    for (size_t i = 0; i < areas.getNumRows(); i++) {
+        for (size_t j = 0; j < areas.getNumCols(); j++) {
             m_results->increment(i0 + i, j0 + j, factor * areas(i, j));
         }
     }
@@ -478,12 +478,12 @@ traverse_ring(Matrix<std::unique_ptr<Cell>>& cells, const Grid<infinite_extent>&
 }
 
 std::unique_ptr<Geometry>
-GridIntersection::subdivide_polygon(const Grid<bounded_extent>& p_grid, const Geometry& g, bool includeExterior)
+GridIntersection::subdividePolygon(const Grid<bounded_extent>& p_grid, const Geometry& g, bool includeExterior)
 {
      const geom::GeometryFactory& gfact = *g.getFactory();
 
     Grid<infinite_extent> grid = make_infinite(p_grid, *g.getEnvelopeInternal());
-    Matrix<std::unique_ptr<Cell>> cells(grid.rows(), grid.cols());
+    Matrix<std::unique_ptr<Cell>> cells(grid.getNumRows(), grid.getNumCols());
 
     std::size_t ngeoms = g.getNumGeometries();
     for (std::size_t i = 0; i < ngeoms; i++) {
@@ -497,21 +497,21 @@ GridIntersection::subdivide_polygon(const Grid<bounded_extent>& p_grid, const Ge
         }
     }
 
-    auto areas = collect_areas(cells, p_grid, g);
+    auto areas = collectAreas(cells, p_grid, g);
 
     std::vector<std::unique_ptr<Geometry>> geoms;
     std::vector<std::unique_ptr<Geometry>> edge_geoms;
 
-    for (std::size_t i = 0; i < cells.rows(); i++) {
-        bool row_edge = i == 0 || i == (cells.rows() - 1);
+    for (std::size_t i = 0; i < cells.getNumRows(); i++) {
+        bool row_edge = i == 0 || i == (cells.getNumRows() - 1);
 
-        for (std::size_t j = 0; j < cells.cols(); j++) {
-            bool edge = row_edge || (j == 0 || j == (cells.cols() - 1));
+        for (std::size_t j = 0; j < cells.getNumCols(); j++) {
+            bool edge = row_edge || (j == 0 || j == (cells.getNumCols() - 1));
 
             if (cells(i, j) != nullptr) {
                 if (edge) {
                     if (includeExterior) {
-                        edge_geoms.push_back(cells(i, j)->covered_polygons(gfact));
+                        edge_geoms.push_back(cells(i, j)->getCoveredPolygons(gfact));
                     }
                 } else if (areas(i - 1, j - 1) == fill_values<float>::INTERIOR) {
                     // Cell is completely covered by polygon
@@ -519,11 +519,11 @@ GridIntersection::subdivide_polygon(const Grid<bounded_extent>& p_grid, const Ge
                     geoms.push_back(gfact.toGeometry(&env));
                 } else if (areas(i - 1, j - 1) != fill_values<float>::EXTERIOR) {
                     // Cell is partly covered by polygon
-                    geoms.push_back(cells(i, j)->covered_polygons(gfact));
+                    geoms.push_back(cells(i, j)->getCoveredPolygons(gfact));
                 }
             } else if (!edge && areas(i - 1, j - 1) == fill_values<float>::INTERIOR) {
                 // Cell is entirely covered by polygon
-                Envelope env = grid.grid_cell(i, j);
+                Envelope env = grid.getCellEnvelope(i, j);
                 geoms.push_back(gfact.toGeometry(&env));
             }
         }

@@ -34,12 +34,12 @@ class Crossing
     {
     }
 
-    const Side& side() const
+    const Side& getSide() const
     {
         return m_side;
     }
 
-    const geom::CoordinateXY& coord() const
+    const geom::CoordinateXY& getCoord() const
     {
         return m_coord;
     }

@@ -21,7 +21,7 @@
 namespace geos::operation::grid {
 
 double
-perimeter_distance(double xmin, double ymin, double xmax, double ymax, double x, double y)
+getPerimeterDistance(double xmin, double ymin, double xmax, double ymax, double x, double y)
 {
     if (x == xmin) {
         // Left
@@ -47,13 +47,13 @@ perimeter_distance(double xmin, double ymin, double xmax, double ymax, double x,
 }
 
 double
-perimeter_distance(const geom::Envelope& b, const geom::CoordinateXY& c)
+getPerimeterDistance(const geom::Envelope& b, const geom::CoordinateXY& c)
 {
-    return perimeter_distance(b.getMinX(), b.getMinY(), b.getMaxX(), b.getMaxY(), c.x, c.y);
+    return getPerimeterDistance(b.getMinX(), b.getMinY(), b.getMaxX(), b.getMaxY(), c.x, c.y);
 }
 
 double
-perimeter_distance_ccw(double measure1, double measure2, double perimeter)
+getPerimeterDistanceCCW(double measure1, double measure2, double perimeter)
 {
     if (measure2 <= measure1) {
         return measure1 - measure2;

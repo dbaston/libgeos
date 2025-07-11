@@ -70,8 +70,8 @@ class Matrix
     }
 
     Matrix(Matrix<T>&& m) noexcept
-      : m_rows{ m.rows() }
-      , m_cols{ m.cols() }
+      : m_rows{ m.getNumRows() }
+      , m_cols{ m.getNumCols() }
     {
         m_data = std::move(m.m_data);
     }
@@ -110,8 +110,8 @@ class Matrix
         m_data.get()[row * m_cols + col] += val;
     }
 
-    size_t rows() const { return m_rows; }
-    size_t cols() const { return m_cols; }
+    size_t getNumRows() const { return m_rows; }
+    size_t getNumCols() const { return m_cols; }
 
     T* row(size_t row)
     {
@@ -160,8 +160,8 @@ template<typename T>
 std::ostream&
 operator<<(std::ostream& os, const Matrix<T>& m)
 {
-    for (size_t i = 0; i < m.rows(); i++) {
-        for (size_t j = 0; j < m.cols(); j++) {
+    for (size_t i = 0; i < m.getNumRows(); i++) {
+        for (size_t j = 0; j < m.getNumCols(); j++) {
             if (m(i, j) != 0) {
                 os << std::right << std::fixed << std::setw(10) << std::setprecision(6) << m(i, j) << " ";
             } else {

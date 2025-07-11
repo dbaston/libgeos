@@ -56,12 +56,12 @@ class GEOS_DLL GridIntersection
     /**
      * @brief Return the intersection result matrix
      */
-    std::shared_ptr<Matrix<float>> results() { return m_results; }
+    std::shared_ptr<Matrix<float>> getResults() { return m_results; }
 
     /**
      * @brief Partition a polygonal geometry by a grid
      */
-    static std::unique_ptr<geom::Geometry> subdivide_polygon(const Grid<bounded_extent>& p_grid, const geom::Geometry& g, bool includeExterior);
+    static std::unique_ptr<geom::Geometry> subdividePolygon(const Grid<bounded_extent>& p_grid, const geom::Geometry& g, bool includeExterior);
 
     static std::shared_ptr<Matrix<float>>
     grid_intersection(const Grid<bounded_extent>& raster_grid, const geom::Geometry& g);
@@ -80,22 +80,22 @@ class GEOS_DLL GridIntersection
      * @return the portion of `raster_extent` that intersects one or more `component_boxes`
      */
     static geom::Envelope
-    processing_region(const geom::Envelope& raster_extent, const geom::Geometry& geometry);
+    processingRegion(const geom::Envelope& raster_extent, const geom::Geometry& geometry);
 
   private:
     void process(const geom::Geometry& g);
 
-    void process_line(const geom::LineString& ls, bool exterior_ring);
+    void processLine(const geom::LineString& ls, bool exterior_ring);
 
-    void process_rectangular_ring(const geom::Envelope& box, bool exterior_ring);
+    void processRectangularRing(const geom::Envelope& box, bool exterior_ring);
 
-    void add_ring_results(size_t i0, size_t j0, const Matrix<float>& areas, bool exterior_ring);
+    void addRingResults(size_t i0, size_t j0, const Matrix<float>& areas, bool exterior_ring);
 
-    void set_areal(bool areal);
+    void setAreal(bool areal);
 
-    static Matrix<float> collect_areas(const Matrix<std::unique_ptr<Cell>>& cells,
-                                       const Grid<bounded_extent>& finite_ring_grid,
-                                       const geom::Geometry& g);
+    static Matrix<float> collectAreas(const Matrix<std::unique_ptr<Cell>>& cells,
+                                      const Grid<bounded_extent>& finite_ring_grid,
+                                      const geom::Geometry& g);
 
     Grid<infinite_extent> m_geometry_grid;
     std::shared_ptr<Matrix<float>> m_results;

@@ -109,19 +109,19 @@ crossing(const geom::Envelope& e, const CoordinateXY& c1, const CoordinateXY& c2
 
 
 double
-Cell::height() const
+Cell::getHeight() const
 {
     return m_box.getHeight();
 }
 
 double
-Cell::width() const
+Cell::getWidth() const
 {
     return m_box.getWidth();
 }
 
 double
-Cell::area() const
+Cell::getArea() const
 {
     return m_box.getArea();
 }
@@ -143,16 +143,16 @@ Cell::side(const CoordinateXY& c) const
 }
 
 void
-Cell::force_exit()
+Cell::forceExit()
 {
-    if (last_traversal().exited()) {
+    if (getLastTraversal().isExited()) {
         return;
     }
 
-    const CoordinateXY& last = last_traversal().last_coordinate();
+    const CoordinateXY& last = getLastTraversal().getLastCoordinate();
 
     if (location(last) == Location::BOUNDARY) {
-        last_traversal().force_exit(side(last));
+        getLastTraversal().forceExit(side(last));
     }
 }
 
@@ -173,7 +173,7 @@ Cell::location(const CoordinateXY& c) const
 Traversal&
 Cell::traversal_in_progress()
 {
-    if (m_traversals.empty() || m_traversals.back().exited() || m_traversals.back().is_closed_ring()) {
+    if (m_traversals.empty() || m_traversals.back().isExited() || m_traversals.back().isClosedRing()) {
         m_traversals.emplace_back();
     }
 
@@ -181,7 +181,7 @@ Cell::traversal_in_progress()
 }
 
 Traversal&
-Cell::last_traversal()
+Cell::getLastTraversal()
 {
     return m_traversals.at(m_traversals.size() - 1);
 }
@@ -191,7 +191,7 @@ Cell::take(const CoordinateXY& c, const CoordinateXY* prev_original)
 {
     Traversal& t = traversal_in_progress();
 
-    if (t.empty()) {
+    if (t.isEmpty()) {
         // std::cout << "Entering " << m_box << " from " << side(c) << " at " << c << std::endl;
 
         t.enter(c, side(c));
@@ -203,8 +203,8 @@ Cell::take(const CoordinateXY& c, const CoordinateXY* prev_original)
 
         t.add(c);
 
-        if (t.is_closed_ring()) {
-            t.force_exit(Side::NONE);
+        if (t.isClosedRing()) {
+            t.forceExit(Side::NONE);
         }
 
         return true;
@@ -214,8 +214,8 @@ Cell::take(const CoordinateXY& c, const CoordinateXY* prev_original)
     // (The previous point in the traversal may be an interpolated coordinate.) If an interpolated coordinate
     // is used, it can cause an error in the relative position two traversals, inverting the fraction of
     // the cell that is considered covered. (See robustness regression test #7).
-    Crossing x = prev_original ? crossing(m_box, *prev_original, c) : crossing(m_box, t.last_coordinate(), c);
-    t.exit(x.coord(), x.side());
+    Crossing x = prev_original ? crossing(m_box, *prev_original, c) : crossing(m_box, t.getLastCoordinate(), c);
+    t.exit(x.getCoord(), x.getSide());
 
     // std::cout << "Leaving " << m_box << " from " << x.side() << " at " << x.coord();
     // std::cout << " on the way to " << c << std::endl;
@@ -224,18 +224,18 @@ Cell::take(const CoordinateXY& c, const CoordinateXY* prev_original)
 }
 
 double
-Cell::traversal_length() const
+Cell::getTraversalLength() const
 {
     return std::accumulate(m_traversals.begin(), m_traversals.end(), 0.0, [](double tot, const Traversal& t) {
-        return tot + algorithm::Length::ofLine(t.coords());
+        return tot + algorithm::Length::ofLine(t.getCoordinates());
     });
 }
 
 bool
-Cell::determined() const
+Cell::isDetermined() const
 {
     for (const auto& t : m_traversals) {
-        if (!t.traversed() && !t.is_closed_ring()) {
+        if (!t.isTraversed() && !t.isClosedRing()) {
             continue;
         }
 
@@ -248,14 +248,14 @@ Cell::determined() const
 }
 
 std::vector<const std::vector<CoordinateXY>*>
-Cell::get_coord_lists() const
+Cell::getCoordLists() const
 {
     std::vector<const std::vector<CoordinateXY>*> coord_lists;
     coord_lists.reserve(m_traversals.size());
 
     for (const auto& t : m_traversals) {
-        if (t.traversed() || t.is_closed_ring()) {
-            coord_lists.push_back(&t.coords());
+        if (t.isTraversed() || t.isClosedRing()) {
+            coord_lists.push_back(&t.getCoordinates());
         }
     }
 
@@ -263,17 +263,17 @@ Cell::get_coord_lists() const
 }
 
 double
-Cell::covered_fraction() const
+Cell::getCoveredFraction() const
 {
-    auto coord_lists = get_coord_lists();
-    return left_hand_area(m_box, coord_lists) / area();
+    auto coord_lists = getCoordLists();
+    return getLeftHandArea(m_box, coord_lists) / getArea();
 }
 
 std::unique_ptr<Geometry>
-Cell::covered_polygons(const GeometryFactory& gfact) const
+Cell::getCoveredPolygons(const GeometryFactory& gfact) const
 {
-    auto coord_lists = get_coord_lists();
-    return left_hand_rings(gfact, m_box, coord_lists);
+    auto coord_lists = getCoordLists();
+    return getLeftHandRings(gfact, m_box, coord_lists);
 }
 
 }

@@ -69,7 +69,7 @@ class Grid
         }
     }
 
-    size_t get_column(double x) const
+    size_t getColumn(double x) const
     {
         if (extent_tag::padding) {
             if (x < m_extent.getMinX())
@@ -91,10 +91,10 @@ class Grid
         // associated with xmax.
         return std::min(
           extent_tag::padding + static_cast<size_t>(std::floor((x - m_extent.getMinX()) / m_dx)),
-          get_column(m_extent.getMaxX()));
+          getColumn(m_extent.getMaxX()));
     }
 
-    size_t get_row(double y) const
+    size_t getRow(double y) const
     {
         if (extent_tag::padding) {
             if (y > m_extent.getMaxY())
@@ -116,21 +116,21 @@ class Grid
         // associated with ymin.
         return std::min(
           extent_tag::padding + static_cast<size_t>(std::floor((m_extent.getMaxY() - y) / m_dy)),
-          get_row(m_extent.getMinY()));
+          getRow(m_extent.getMinY()));
     }
 
     std::size_t get_cell(double x, double y) const
     {
-        return get_row(y) * cols() + get_column(x);
+        return getRow(y) * getNumCols() + getColumn(x);
     }
 
-    bool empty() const { return m_num_rows <= 2 * extent_tag::padding && m_num_cols <= 2 * extent_tag::padding; }
+    bool isEmpty() const { return m_num_rows <= 2 * extent_tag::padding && m_num_cols <= 2 * extent_tag::padding; }
 
-    size_t rows() const { return m_num_rows; }
+    size_t getNumRows() const { return m_num_rows; }
 
-    size_t cols() const { return m_num_cols; }
+    size_t getNumCols() const { return m_num_cols; }
 
-    size_t size() const { return rows() * cols(); }
+    size_t getSize() const { return getNumRows() * getNumCols(); }
 
     double xmin() const { return m_extent.getMinX(); }
 
@@ -144,17 +144,17 @@ class Grid
 
     double dy() const { return m_dy; }
 
-    const geom::Envelope& extent() const { return m_extent; }
+    const geom::Envelope& getExtent() const { return m_extent; }
 
-    size_t row_offset(const Grid& other) const { return static_cast<size_t>(std::round(std::abs(other.m_extent.getMaxY() - m_extent.getMaxY()) / m_dy)); }
+    size_t getRowOffset(const Grid& other) const { return static_cast<size_t>(std::round(std::abs(other.m_extent.getMaxY() - m_extent.getMaxY()) / m_dy)); }
 
-    size_t col_offset(const Grid& other) const { return static_cast<size_t>(std::round(std::abs(m_extent.getMinX() - other.m_extent.getMinX()) / m_dx)); }
+    size_t getColOffset(const Grid& other) const { return static_cast<size_t>(std::round(std::abs(m_extent.getMinX() - other.m_extent.getMinX()) / m_dx)); }
 
-    double x_for_col(size_t col) const { return m_extent.getMinX() + (static_cast<double>(col - extent_tag::padding) + 0.5) * m_dx; }
+    double getColX(size_t col) const { return m_extent.getMinX() + (static_cast<double>(col - extent_tag::padding) + 0.5) * m_dx; }
 
-    double y_for_row(size_t row) const { return m_extent.getMaxY() - (static_cast<double>(row - extent_tag::padding) + 0.5) * m_dy; }
+    double getRowY(size_t row) const { return m_extent.getMaxY() - (static_cast<double>(row - extent_tag::padding) + 0.5) * m_dy; }
 
-    Grid<extent_tag> shrink_to_fit(const geom::Envelope& b) const
+    Grid<extent_tag> shrinkToFit(const geom::Envelope& b) const
     {
         if (b.getArea() == 0) {
             return make_empty();
@@ -164,8 +164,8 @@ class Grid
             throw std::range_error("Cannot shrink extent to bounds larger than original.");
         }
 
-        size_t col0 = get_column(b.getMinX());
-        size_t row1 = get_row(b.getMaxY());
+        size_t col0 = getColumn(b.getMinX());
+        size_t row1 = getRow(b.getMaxY());
 
         // Shrink xmin and ymax to fit the upper-left corner of the supplied extent
         double snapped_xmin = m_extent.getMinX() + static_cast<double>(col0 - extent_tag::padding) * m_dx;
@@ -183,8 +183,8 @@ class Grid
             row1--;
         }
 
-        size_t col1 = get_column(b.getMaxX());
-        size_t row0 = get_row(b.getMinY());
+        size_t col1 = getColumn(b.getMaxX());
+        size_t row0 = getRow(b.getMinY());
 
         size_t num_rows = 1 + (row0 - row1);
         size_t num_cols = 1 + (col1 - col0);
@@ -263,7 +263,7 @@ class Grid
         return !(*this == b);
     }
 
-    geom::Envelope grid_cell(size_t row, size_t col) const;
+    geom::Envelope getCellEnvelope(size_t row, size_t col) const;
 
   private:
     geom::Envelope m_extent;

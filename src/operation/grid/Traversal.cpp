@@ -28,7 +28,7 @@ Traversal::add(const CoordinateXY& c)
 }
 
 bool
-Traversal::empty() const
+Traversal::isEmpty() const
 {
     return m_coords.empty();
 }
@@ -52,19 +52,19 @@ Traversal::exit(const CoordinateXY& c, Side s)
 }
 
 bool
-Traversal::is_closed_ring() const
+Traversal::isClosedRing() const
 {
     return m_coords.size() >= 3 && m_coords[0] == m_coords[m_coords.size() - 1];
 }
 
 bool
-Traversal::entered() const
+Traversal::isEntered() const
 {
     return m_entry != Side::NONE;
 }
 
 bool
-Traversal::exited() const
+Traversal::isExited() const
 {
     return m_exit != Side::NONE;
 }
@@ -82,25 +82,25 @@ Traversal::multiple_unique_coordinates() const
 }
 
 bool
-Traversal::traversed() const
+Traversal::isTraversed() const
 {
-    return entered() && exited();
+    return isEntered() && isExited();
 }
 
 const CoordinateXY&
-Traversal::last_coordinate() const
+Traversal::getLastCoordinate() const
 {
     return m_coords.at(m_coords.size() - 1);
 }
 
 const CoordinateXY&
-Traversal::exit_coordinate() const
+Traversal::getExitCoordinate() const
 {
-    if (!exited()) {
+    if (!isExited()) {
         throw std::runtime_error("Can't get exit coordinate from incomplete traversal.");
     }
 
-    return last_coordinate();
+    return getLastCoordinate();
 }
 
 }

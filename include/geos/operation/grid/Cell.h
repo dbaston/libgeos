@@ -42,33 +42,33 @@ class Cell
 
     const geom::Envelope& box() const { return m_box; }
 
-    double width() const;
+    double getWidth() const;
 
-    double height() const;
+    double getHeight() const;
 
-    double area() const;
+    double getArea() const;
 
     /// Force the last Coordinate processed (via `take`) to be considered as an
     /// exit point, provided that it lies on the boundary of this Cell.
-    void force_exit();
+    void forceExit();
 
     /// Returns whether the cell can be determined to be wholly or partially
     /// covered by a polygon.
-    bool determined() const;
+    bool isDetermined() const;
 
     /// Return the total length of a linear geometry within this Cell
-    double traversal_length() const;
+    double getTraversalLength() const;
 
     /// Return the fraction of this Cell that is covered by a polygon
-    double covered_fraction() const;
+    double getCoveredFraction() const;
 
     /// Return a newly constructed geometry representing the portion of this Cell
     /// that is covered by a polygon
-    std::unique_ptr<geom::Geometry> covered_polygons(const geom::GeometryFactory&) const;
+    std::unique_ptr<geom::Geometry> getCoveredPolygons(const geom::GeometryFactory&) const;
 
     /// Return the last (most recent) traversal to which a coordinate has been
     /// added. The traversal may or may not be completed.
-    Traversal& last_traversal();
+    Traversal& getLastTraversal();
 
     /**
      * Attempt to take a coordinate and add it to a Traversal in progress, or start a new Traversal
@@ -82,7 +82,7 @@ class Cell
     bool take(const geom::CoordinateXY& c, const geom::CoordinateXY* prev_original = nullptr);
 
   private:
-    std::vector<const std::vector<geom::CoordinateXY>*> get_coord_lists() const;
+    std::vector<const std::vector<geom::CoordinateXY>*> getCoordLists() const;
 
     enum class Location
     {
