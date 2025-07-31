@@ -245,6 +245,8 @@ typedef struct GEOSContextHandle_HS {
     GEOSMessageHandler_r errorMessageNew;
     GEOSContextInterruptCallback* interrupt_cb;
     void* interrupt_cb_data;
+    GEOSProgressCallback* progress_cb;
+    void* progress_cb_data;
     void* errorData;
     uint8_t WKBOutputDims;
     int WKBByteOrder;
@@ -261,6 +263,8 @@ typedef struct GEOSContextHandle_HS {
         errorMessageNew(nullptr),
         interrupt_cb(nullptr),
         interrupt_cb_data(nullptr),
+        progress_cb(nullptr),
+        progress_cb_data(nullptr),
         errorData(nullptr),
         point2d(nullptr)
     {
@@ -324,6 +328,15 @@ typedef struct GEOSContextHandle_HS {
         auto old = interrupt_cb;
         interrupt_cb = cb;
         interrupt_cb_data = userData;
+        return old;
+    }
+
+    GEOSProgressCallback*
+    setProgressCallback(GEOSProgressCallback* cb, void* userData)
+    {
+        auto old = progress_cb;
+        progress_cb = cb;
+        progress_cb_data = userData;
         return old;
     }
 
@@ -466,12 +479,35 @@ struct NotInterruptible {
     }
 };
 
+using Interruptible = InterruptManager;
+
+struct DefaultProgress {
+    DefaultProgress(GEOSContextHandle_t handle) : cb(handle->progress_cb), cb_data(handle->progress_cb_data) {}
+
+    ~DefaultProgress() {
+        if (cb) {
+            (*cb)(1.0, "", cb_data);
+        }
+    }
+
+    GEOSProgressCallback* cb;
+    void* cb_data;
+};
+
+struct ReportsProgress {
+    ReportsProgress(GEOSContextHandle_t handle) {
+        (void) handle;
+    }
+};
+
+using NoProgress = ReportsProgress;
+
 } // namespace anonymous
 
 // Execute a lambda, using the given context handle to process errors.
 // Return errval on error.
 // Errval should be of the type returned by f, unless f returns a bool in which case we promote to char.
-template<typename InterruptManagerType=InterruptManager, typename F>
+template<typename InterruptManagerType=InterruptManager, typename ProgressManagerType=NoProgress, typename F>
 inline auto execute(
         GEOSContextHandle_t extHandle,
         typename std::conditional<std::is_same<decltype(std::declval<F>()()),bool>::value,
@@ -488,6 +524,7 @@ inline auto execute(
     }
 
     InterruptManagerType ic(handle);
+    ProgressManagerType pc(handle);
 
     try {
         return f();
@@ -502,7 +539,7 @@ inline auto execute(
 
 // Execute a lambda, using the given context handle to process errors.
 // Return nullptr on error.
-template<typename InterruptManagerType=InterruptManager, typename F, typename std::enable_if<!std::is_void<decltype(std::declval<F>()())>::value, std::nullptr_t>::type = nullptr>
+template<typename InterruptManagerType=InterruptManager, typename ProgressManagerType=NoProgress, typename F, typename std::enable_if<!std::is_void<decltype(std::declval<F>()())>::value, std::nullptr_t>::type = nullptr>
 inline auto execute(GEOSContextHandle_t extHandle, F&& f) -> decltype(f()) {
     if (extHandle == nullptr) {
         throw std::runtime_error("context handle is uninitialized, call initGEOS");
@@ -514,6 +551,7 @@ inline auto execute(GEOSContextHandle_t extHandle, F&& f) -> decltype(f()) {
     }
 
     InterruptManagerType ic(handle);
+    ProgressManagerType pc(handle);
 
     try {
         return f();
@@ -528,7 +566,7 @@ inline auto execute(GEOSContextHandle_t extHandle, F&& f) -> decltype(f()) {
 
 // Execute a lambda, using the given context handle to process errors.
 // No return value.
-template<typename InterruptManagerType=InterruptManager, typename F, typename std::enable_if<std::is_void<decltype(std::declval<F>()())>::value, std::nullptr_t>::type = nullptr>
+template<typename InterruptManagerType=InterruptManager, typename ProgressManagerType=NoProgress, typename F, typename std::enable_if<std::is_void<decltype(std::declval<F>()())>::value, std::nullptr_t>::type = nullptr>
 inline void execute(GEOSContextHandle_t extHandle, F&& f) {
     GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
 
@@ -623,6 +661,16 @@ extern "C" {
         }
 
         return handle->setInterruptHandler(cb, userData);
+    }
+
+    GEOSProgressCallback*
+    GEOSContext_setProgressCallback_r(GEOSContextHandle_t extHandle, GEOSProgressCallback* cb, void* userData)
+    {
+        if(0 == extHandle->initialized) {
+            return nullptr;
+        }
+
+        return extHandle->setProgressCallback(cb, userData);
     }
 
     void
@@ -1718,7 +1766,7 @@ extern "C" {
     Geometry*
     GEOSUnaryUnion_r(GEOSContextHandle_t extHandle, const Geometry* g)
     {
-        return execute(extHandle, [&]() {
+        return execute<Interruptible, DefaultProgress>(extHandle, [&]() {
             std::unique_ptr<Geometry> g3(g->Union());
             g3->setSRID(g->getSRID());
             return g3.release();
@@ -1728,7 +1776,7 @@ extern "C" {
     Geometry*
     GEOSUnaryUnionPrec_r(GEOSContextHandle_t extHandle, const Geometry* g1, double gridSize)
     {
-        return execute(extHandle, [&]() {
+        return execute<Interruptible, DefaultProgress>(extHandle, [&]() {
 
             std::unique_ptr<PrecisionModel> pm;
             if(gridSize != 0) {
@@ -4579,25 +4627,13 @@ extern "C" {
     GEOSCoverageSimplifyVW_r(GEOSContextHandle_t extHandle,
         const Geometry* input,
         double tolerance,
-        int preserveBoundary)
-    {
-        return GEOSCoverageSimplifyVWWithProgress_r(extHandle, input, tolerance,
-                                                    preserveBoundary,
-                                                    nullptr, nullptr);
-    }
+        int preserveBoundary) {
 
-    Geometry*
-    GEOSCoverageSimplifyVWWithProgress_r(GEOSContextHandle_t extHandle,
-        const Geometry* input,
-        double tolerance,
-        int preserveBoundary,
-        GEOSProgressCallback_r progressFunc,
-        void* progressUserData)
-    {
         geos::util::ProgressFunction progressFunction =
-            [progressFunc, progressUserData](double progress, const char* message)
+            [extHandle](double progress, const char* message)
         {
-            progressFunc(progress, message, progressUserData);
+            if (extHandle->progress_cb)
+                (*extHandle->progress_cb)(progress, message, extHandle->progress_cb_data);
         };
 
         using geos::coverage::CoverageSimplifier;
@@ -4614,10 +4650,10 @@ extern "C" {
             CoverageSimplifier cov(coverage);
             std::vector<std::unique_ptr<Geometry>> simple;
             if (preserveBoundary == 1) {
-                simple = cov.simplifyInner(tolerance, progressFunc ? &progressFunction : nullptr);
+                simple = cov.simplifyInner(tolerance, extHandle->progress_cb ? &progressFunction : nullptr);
             }
             else if (preserveBoundary == 0) {
-                simple = cov.simplify(tolerance, progressFunc ? &progressFunction : nullptr);
+                simple = cov.simplify(tolerance, extHandle->progress_cb ? &progressFunction : nullptr);
             }
             else return nullptr;
 

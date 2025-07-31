@@ -97,10 +97,14 @@ template<> void object::test<3>
     };
 
     Cbk cbk;
-    result_ = GEOSCoverageSimplifyVWWithProgress(input_, 1.0, 0, &Cbk::Func, &cbk);
-    ensure("cbk.lastRatio == 1.0", cbk.lastRatio == 1.0);
+    auto context = initGEOS_r(nullptr, nullptr);
+    GEOSContext_setProgressCallback_r(context, &Cbk::Func, &cbk);
+    result_ = GEOSCoverageSimplifyVW_r(context, input_, 1.0, 0);
+    finishGEOS_r(context);
+
+    ensure_equals("cbk.lastRatio == 1.0", cbk.lastRatio, 1.0);
     ensure( result_ != nullptr );
-    ensure( GEOSGeomTypeId(result_) == GEOS_GEOMETRYCOLLECTION );
+    ensure_equals( GEOSGeomTypeId(result_), GEOS_GEOMETRYCOLLECTION );
 
     const char* expectedWKT = "GEOMETRYCOLLECTION(POLYGON((0 0,10 0,10 10,0 10,0 0)),POLYGON((10 0,20 0,20 10,10 10,10 0)))";
 
