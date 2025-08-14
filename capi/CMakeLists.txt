@@ -9,9 +9,11 @@
 # See the COPYING file for more information.
 ################################################################################
 
-file(GLOB_RECURSE _headers ${CMAKE_CURRENT_LIST_DIR}/*.cpp  CONFIGURE_DEPEND)
-target_sources(geos_c PRIVATE ${_headers})
-unset(_headers)
+target_sources(geos_c PUBLIC
+                      FILE_SET HEADERS 
+                      BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
+                      FILES ${CMAKE_CURRENT_BINARY_DIR}/geos_c.h)
+target_sources(geos_c PRIVATE geos_c.cpp geos_ts_c.cpp)
 
 target_include_directories(geos_c
   PUBLIC
