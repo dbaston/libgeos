@@ -17,6 +17,7 @@
 
 #include <geos/export.h>
 #include <geos/noding/Noder.h>
+#include <geos/noding/SegmentString.h>
 
 #include <memory> // for unique_ptr
 
