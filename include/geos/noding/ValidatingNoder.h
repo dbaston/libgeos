@@ -61,9 +61,11 @@ public:
         : noder(noderArg)
         {}
 
+    ~ValidatingNoder() override;
+
     void computeNodes(const std::vector<SegmentString*>& segStrings) override;
 
-    void validate();
+    void validate() const;
 
     std::vector<std::unique_ptr<SegmentString>> getNodedSubstrings() override;
 
