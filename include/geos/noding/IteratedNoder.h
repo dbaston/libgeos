@@ -113,6 +113,10 @@ public:
      * @throws TopologyException if the iterated noding fails to converge.
      */
     void computeNodes(const std::vector<SegmentString*>& inputSegmentStrings) override; // throw(GEOSException);
+
+    // Declare type as noncopyable
+    IteratedNoder(IteratedNoder const&) = delete;
+    IteratedNoder& operator=(IteratedNoder const&) = delete;
 };
 
 } // namespace geos::noding

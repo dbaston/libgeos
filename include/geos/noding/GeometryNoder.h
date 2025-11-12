@@ -45,6 +45,10 @@ public:
 
     std::unique_ptr<geom::Geometry> getNoded();
 
+    // Declare type as noncopyable
+    GeometryNoder(GeometryNoder const&) = delete;
+    GeometryNoder& operator=(GeometryNoder const&) = delete;
+
 private:
 
     const geom::Geometry& argGeom;
@@ -60,8 +64,6 @@ private:
 
     std::unique_ptr<geom::Geometry> toGeometry(std::vector<std::unique_ptr<SegmentString>>& noded);
 
-    GeometryNoder(GeometryNoder const&); /*= delete*/
-    GeometryNoder& operator=(GeometryNoder const&); /*= delete*/
 };
 
 } // namespace geos.noding

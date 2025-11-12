@@ -236,8 +236,9 @@ public:
     */
     std::vector<Edge*> build(const Geometry* geom0, const Geometry* geom1);
 
-
-
+    // Declare type as noncopyable
+    EdgeNodingBuilder(const EdgeNodingBuilder& other) = delete;
+    EdgeNodingBuilder& operator=(const EdgeNodingBuilder& rhs) = delete;
 };
 
 
