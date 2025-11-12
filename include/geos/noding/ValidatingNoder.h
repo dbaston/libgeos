@@ -69,6 +69,10 @@ public:
 
     std::vector<std::unique_ptr<SegmentString>> getNodedSubstrings() override;
 
+    // Declare type as noncopyable
+    ValidatingNoder(ValidatingNoder const&) = delete;
+    ValidatingNoder& operator=(ValidatingNoder const&) = delete;
+
 };
 
 } // namespace geos.noding
