@@ -79,6 +79,9 @@ public:
     */
     std::vector<std::unique_ptr<SegmentString>> getNodedSubstrings() override;
 
+    // Declare type as noncopyable
+    SegmentExtractingNoder(SegmentExtractingNoder const&) = delete;
+    SegmentExtractingNoder& operator=(SegmentExtractingNoder const&) = delete;
 
 };
 
