@@ -57,7 +57,7 @@ private:
 
     const geom::PrecisionModel* pm;
     algorithm::LineIntersector li;
-    std::vector<SegmentString*> nodedSegStrings;
+    std::vector<std::unique_ptr<SegmentString>> nodedSegStrings;
     int maxIter;
 
     /**
@@ -96,7 +96,7 @@ public:
         maxIter = n;
     }
 
-    std::vector<SegmentString*>
+    std::vector<std::unique_ptr<SegmentString>>
     getNodedSubstrings() override
     {
         return std::move(nodedSegStrings);

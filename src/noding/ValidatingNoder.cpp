@@ -41,15 +41,11 @@ ValidatingNoder::validate()
         nv.checkValid();
     }
     catch (const std::exception &) {
-        for (SegmentString* ss: nodedSS) {
-            delete ss;
-        }
-
         throw;
     }
 }
 
-std::vector<SegmentString*>
+std::vector<std::unique_ptr<SegmentString>>
 ValidatingNoder::getNodedSubstrings()
 {
     return std::move(nodedSS);

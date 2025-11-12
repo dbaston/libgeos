@@ -178,7 +178,7 @@ private:
     * (and is then discarded).
     */
     std::vector<Edge*> node(const std::vector<noding::SegmentString*>& segStrings);
-    std::vector<Edge*> createEdges(std::vector<noding::SegmentString*>* segStrings);
+    std::vector<Edge*> createEdges(std::vector<std::unique_ptr<noding::SegmentString>> &segStrings);
 
 
 public:

@@ -16,6 +16,7 @@
 
 #include <geos/export.h>
 
+#include <memory>
 #include <vector>
 
 // Forward declarations
@@ -62,7 +63,7 @@ public:
      *         Caller is responsible to delete elements of container.
      *         This method may only be called once.
      */
-    virtual std::vector<SegmentString*> getNodedSubstrings() = 0;
+    virtual std::vector<std::unique_ptr<SegmentString>> getNodedSubstrings() = 0;
 
     virtual
     ~Noder() {}
