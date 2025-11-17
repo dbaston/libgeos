@@ -56,6 +56,8 @@ public:
         return m_arcs.end();
     }
 
+    std::unique_ptr<geom::CoordinateSequence> getCoordinates() const;
+
 protected:
     std::vector<geom::CircularArc> m_arcs;
 };

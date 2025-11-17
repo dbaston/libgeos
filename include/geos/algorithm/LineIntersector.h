@@ -111,7 +111,7 @@ public:
      * @return <code>true</code> if either intersection point is in
      * the interior of the input segment
      */
-    bool isInteriorIntersection(std::size_t inputLineIndex)
+    bool isInteriorIntersection(std::size_t inputLineIndex) const
     {
         for(std::size_t i = 0; i < result; ++i) {
             if(!(intPt[i].equals2D(*inputLines[inputLineIndex][0])

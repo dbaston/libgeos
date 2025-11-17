@@ -53,6 +53,8 @@ MCIndexNoder::computeNodes(const std::vector<SegmentString*>& inputSegStrings)
             index.insert(mc.getEnvelope(overlapTolerance), &mc);
         }
         indexBuilt = true;
+    } else {
+        std::cout << "XX";
     }
 
     intersectChains();

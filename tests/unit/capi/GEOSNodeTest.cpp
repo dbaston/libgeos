@@ -1,6 +1,7 @@
 //
 // Test Suite for C-API GEOSNode
 
+#include <iostream>
 #include <tut/tut.hpp>
 // geos
 #include <geos_c.h>
@@ -200,12 +201,19 @@ template<>
 template<>
 void object::test<9>()
 {
+    set_test_name("two arcs with two intersection points");
+
     input_ = fromWKT("MULTICURVE (CIRCULARSTRING (0 0, 1 1, 2 0), CIRCULARSTRING (0 1, 1 0, 2 1))");
     ensure(input_);
 
     result_ = GEOSNode(input_);
+    ensure(result_ != nullptr);
 
-    ensure("curved geometries not supported", result_ == nullptr);
+    expected_ = fromWKT("MULTICURVE ("
+                        "CIRCULARSTRING (0 0, 0.0340741737 0.2588190451, 0.1339745962 0.5, 1 1, 1.8660254038 0.5, 1.9659258263 0.2588190451, 2 0),"
+                        "CIRCULARSTRING (0 1, 0.0340741737 0.7411809549, 0.1339745962 0.5, 1 0, 1.8660254038 0.5, 1.9659258263 0.7411809549, 2 1))");
+
+    ensure_geometry_equals_identical(result_, expected_);
 }
 
 } // namespace tut
