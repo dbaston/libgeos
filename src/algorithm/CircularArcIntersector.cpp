@@ -16,6 +16,8 @@
 #include <geos/algorithm/CircularArcIntersector.h>
 #include <geos/algorithm/LineIntersector.h>
 
+#include <iomanip>
+
 namespace geos::algorithm {
 
 static double
@@ -95,7 +97,7 @@ void
 CircularArcIntersector::intersects(const CircularArc& arc, const CoordinateXY& p0, const CoordinateXY& p1)
 {
     if (arc.isLinear()) {
-        intersects(arc.p0, arc.p2, p0, p1);
+        intersects(arc.p0(), arc.p2(), p0, p1);
         return;
     }
 
@@ -156,14 +158,14 @@ CircularArcIntersector::intersects(const CircularArc& arc1, const CircularArc& a
     // Handle cases where one or both arcs are degenerate
     if (arc1.isLinear()) {
         if (arc2.isLinear()) {
-            intersects(arc1.p0, arc1.p2, arc2.p0, arc2.p2);
+            intersects(arc1.p0(), arc1.p2(), arc2.p0(), arc2.p2());
             return;
         } else {
-            intersects(arc2, arc1.p0, arc1.p2);
+            intersects(arc2, arc1.p0(), arc1.p2());
             return;
         }
     } else if (arc2.isLinear()) {
-        intersects(arc1, arc2.p0, arc2.p2);
+        intersects(arc1, arc2.p0(), arc2.p2());
         return;
     }
 
@@ -311,6 +313,23 @@ CircularArcIntersector::intersects(const CircularArc& arc1, const CircularArc& a
             }
         }
 #endif
+
+        // Add endpoint intersections missed due to precision issues.
+        // TODO: Add some logic to prevent double-counting of endpoints. Ideally, the endpoint test would happen before
+        // computing intersection points, so if there is an endpoint intersection we get the exact intersection point
+        // instead of a computed one.
+        if (nPt < 2 && arc1.p0().equals2D(arc2.p0()) && (nPt == 0 || !intPt[0].equals2D(arc1.p0()))) {
+            intPt[nPt++] = arc1.p0();
+        }
+        if (nPt < 2 && arc1.p0().equals2D(arc2.p2()) && (nPt == 0 || !intPt[0].equals2D(arc1.p0()))) {
+            intPt[nPt++] = arc1.p0();
+        }
+        if (nPt < 2 && arc1.p2().equals2D(arc2.p0()) && (nPt == 0 || !intPt[0].equals2D(arc1.p2()))) {
+            intPt[nPt++] = arc1.p2();
+        }
+        if (nPt < 2 && arc1.p2().equals2D(arc2.p2()) && (nPt == 0 || !intPt[0].equals2D(arc1.p2()))) {
+            intPt[nPt++] = arc1.p2();
+        }
     }
 
     if (nArc) {

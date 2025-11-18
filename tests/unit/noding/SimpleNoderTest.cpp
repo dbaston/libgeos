@@ -76,11 +76,11 @@ struct test_simplenoder_data {
                 for (const auto& arc : *arcString) {
                     if (first) {
                         first = false;
-                        std::cout << arc.p0 << ", ";
+                        std::cout << arc.p0() << ", ";
                     } else {
                         std::cout << ", ";
                     }
-                    std::cout << arc.p1 << ", " << arc.p2;
+                    std::cout << arc.p1() << ", " << arc.p2();
                 }
                 std::cout << ")";
             }
@@ -128,11 +128,14 @@ void object::test<2>()
 {
     set_test_name("arc-arc intersection");
 
-    CircularArc arc0({-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE);
-    CircularArc arc1({-1, 1}, {1, 1}, {0, 1}, 1, Orientation::COUNTERCLOCKWISE);
+    std::vector<CircularArc> arcs0;
+    arcs0.push_back(CircularArc({-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE));
 
-    NodableArcString as0({arc0});
-    NodableArcString as1({arc1});
+    std::vector<CircularArc> arcs1;
+    arcs1.push_back(CircularArc({-1, 1}, {1, 1}, {0, 1}, 1, Orientation::COUNTERCLOCKWISE));
+
+    NodableArcString as0(std::move(arcs0));
+    NodableArcString as1(std::move(arcs1));
 
     std::vector<PathString*> ss{&as0, &as1};
 
@@ -158,8 +161,9 @@ void object::test<3>()
 {
     set_test_name("arc-segment intersection");
 
-    CircularArc arc0({-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE);
-    NodableArcString as0({arc0});
+    std::vector<CircularArc> arcs0;
+    arcs0.push_back(CircularArc({-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE));
+    NodableArcString as0(std::move(arcs0));
 
     auto seq1 = std::make_unique<CoordinateSequence>();
     seq1->add(CoordinateXY{-1, 0.5});

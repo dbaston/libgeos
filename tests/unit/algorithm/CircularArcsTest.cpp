@@ -39,21 +39,14 @@ struct test_circulararcs_data {
         }
     }
 
-    static std::string toWKT(const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& p2)
-    {
-        std::stringstream ss;
-        ss << "CIRCULARSTRING (" << p0 << ", " << p1 << ", " << p2 << ")";
-        return ss.str();
-    }
-
-    void checkArc(std::string message,
+    void checkArc(const std::string& message,
                   const CoordinateXY& center, double radius, bool ccw, double from, double to,
                   const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& p2) const
     {
         CircularArc arc(from, to, center, radius, ccw);
 
-        if (arc.p0.distance(p0) > eps || arc.p1.distance(p1) > eps || arc.p2.distance(p2) > eps) {
-            ensure_equals(message, toWKT(arc.p0, arc.p1, arc.p2), toWKT(p0, p1, p2));
+        if (arc.p0().distance(p0) > eps || arc.p1().distance(p1) > eps || arc.p2().distance(p2) > eps) {
+            ensure_equals(message, arc.toString(), CircularArc(p0, p1, p2).toString());
         }
     }
 
@@ -279,13 +272,13 @@ void object::test<16>()
     CircularArc cwArc({-1, 0}, {0, 1}, {1, 0});
     auto [arc1, arc2] = cwArc.splitAtPoint({std::sqrt(2)/2, std::sqrt(2)/2});
 
-    ensure_equals(arc1.p0, CoordinateXY{-1, 0});
-    ensure_equals(arc1.p2, CoordinateXY{std::sqrt(2)/2, std::sqrt(2)/2});
+    ensure_equals(arc1.p0(), CoordinateXY{-1, 0});
+    ensure_equals(arc1.p2(), CoordinateXY{std::sqrt(2)/2, std::sqrt(2)/2});
     ensure_equals(arc1.getCenter(), cwArc.getCenter());
     ensure_equals(arc1.getRadius(), cwArc.getRadius());
 
-    ensure_equals(arc2.p0, CoordinateXY{std::sqrt(2)/2, std::sqrt(2)/2});
-    ensure_equals(arc2.p2, CoordinateXY{1, 0});
+    ensure_equals(arc2.p0(), CoordinateXY{std::sqrt(2)/2, std::sqrt(2)/2});
+    ensure_equals(arc2.p2(), CoordinateXY{1, 0});
     ensure_equals(arc2.getCenter(), cwArc.getCenter());
     ensure_equals(arc2.getRadius(), cwArc.getRadius());
 

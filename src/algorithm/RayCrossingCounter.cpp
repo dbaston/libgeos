@@ -197,9 +197,9 @@ RayCrossingCounter::shouldCountCrossing(const geom::CircularArc& arc, const geom
     // a) is in the interior of the arc
     // b) is at the starting point of the arc, and the arc is directed upward at that point
     // c) is at the ending point of the arc is directed downward at that point
-    if (q.equals2D(arc.p0)) {
+    if (q.equals2D(arc.p0())) {
         return arc.isUpwardAtPoint(q);
-    } else if (q.equals2D(arc.p2)) {
+    } else if (q.equals2D(arc.p2())) {
         return !arc.isUpwardAtPoint(q);
     } else {
         return true;

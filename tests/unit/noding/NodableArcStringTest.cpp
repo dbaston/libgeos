@@ -45,8 +45,8 @@ struct test_nodablearcstring_data {
     }
 
     static void ensure_arc_equals(const CircularArc& actual, const CircularArc& expected) {
-        ensure_equals_xy(actual.p0, expected.p0);
-        ensure_equals_xy(actual.p2, expected.p2);
+        ensure_equals_xy(actual.p0(), expected.p0());
+        ensure_equals_xy(actual.p2(), expected.p2());
         ensure_equals_xy(actual.getCenter(), expected.getCenter());
         ensure_equals(actual.getRadius(), expected.getRadius());
         ensure_equals(actual.getOrientation(), expected.getOrientation());

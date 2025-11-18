@@ -36,10 +36,10 @@ ArcString::getCoordinates() const
  std::size_t i = 0;
  for (const auto& arc : m_arcs) {
   if (i == 0) {
-   seq->setAt(arc.p0, i++);
+   seq->setAt(arc.p0(), i++);
   }
-  seq->setAt(arc.p1, i++);
-  seq->setAt(arc.p2, i++);
+  seq->setAt(arc.p1(), i++);
+  seq->setAt(arc.p2(), i++);
  }
 
  return seq;
