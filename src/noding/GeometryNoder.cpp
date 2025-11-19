@@ -121,7 +121,7 @@ GeometryNoder::toGeometry(std::vector<std::unique_ptr<PathString>>& nodedEdges) 
     std::vector<std::unique_ptr<geom::Geometry>> lines;
     lines.reserve(nodedEdges.size());
     bool resultArcs = false;
-    for(const auto& path :  nodedEdges) {
+    for(auto& path :  nodedEdges) {
         if (const auto* ss = dynamic_cast<SegmentString*>(path.get())) {
             const geom::CoordinateSequence* coords = ss->getCoordinates();
 
@@ -132,9 +132,9 @@ GeometryNoder::toGeometry(std::vector<std::unique_ptr<PathString>>& nodedEdges) 
             }
         } else {
             resultArcs = true;
-            const auto* as = dynamic_cast<ArcString*>(path.get());
+            auto* as = dynamic_cast<ArcString*>(path.get());
             // FIXME: check for duplicates
-            lines.push_back(geomFact->createCircularString(as->getCoordinates()));
+            lines.push_back(geomFact->createCircularString(as->releaseCoordinates()));
         }
     }
 

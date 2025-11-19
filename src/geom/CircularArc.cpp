@@ -19,6 +19,7 @@ namespace geos::geom {
 
 CircularArc::CircularArc(const CoordinateXY& q0, const CoordinateXY& q1, const CoordinateXY& q2)
 : m_seq(new CoordinateSequence(3, false, false))
+, m_pos(0)
 , m_own_coordinates(true)
 {
     m_seq->setAt(q0, 0);
@@ -28,6 +29,7 @@ CircularArc::CircularArc(const CoordinateXY& q0, const CoordinateXY& q1, const C
 
 CircularArc::CircularArc(double theta0, double theta2, const CoordinateXY& center, double radius, int orientation)
         : m_seq(new CoordinateSequence(3, false, false)),
+          m_pos(0),
           m_center(center),
           m_radius(radius),
           m_orientation(orientation),
@@ -43,6 +45,7 @@ CircularArc::CircularArc(double theta0, double theta2, const CoordinateXY& cente
 
 CircularArc::CircularArc(const CoordinateXY& q0, const CoordinateXY& q2, const CoordinateXY& center, double radius, int orientation)
     : m_seq(new CoordinateSequence(3, false, false)),
+      m_pos(0),
       m_center(center),
       m_radius(radius),
       m_orientation(orientation),
@@ -58,7 +61,20 @@ CircularArc::CircularArc(const CoordinateXY& q0, const CoordinateXY& q2, const C
 
 CircularArc::CircularArc(CoordinateSequence& seq, std::size_t pos) :
     m_seq(&seq),
-    m_pos(pos) {}
+    m_pos(pos),
+    m_own_coordinates(false) {}
+
+CircularArc::CircularArc(CoordinateSequence& seq, std::size_t pos, const CoordinateXY& center, double radius, int orientation) :
+    m_seq(&seq),
+    m_pos(pos),
+    m_center(center),
+    m_radius(radius),
+    m_orientation(orientation),
+    m_center_known(true),
+    m_radius_known(true),
+    m_orientation_known(true),
+    m_own_coordinates(false)
+{}
 
 CircularArc::~CircularArc()
 {

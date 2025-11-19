@@ -27,20 +27,23 @@ pseudoAngleDiffCCW(double paStart, double pa) {
     return diff;
 }
 
-std::unique_ptr<ArcString> clone() const {
-
-}
+//std::unique_ptr<ArcString> clone() const {
+//
+//}
 
 std::unique_ptr<ArcString>
 NodableArcString::getNoded() {
 
-    // leak for now
     // FIXME Z, M
-    auto dstSeq = std::make_unique<geom::CoordinateSequence>();
 
-        if (m_adds.empty()) {
-            return clone();
-        }
+    constexpr bool constructZ = true;
+    constexpr bool constructM = true;
+
+    auto dstSeq = std::make_unique<geom::CoordinateSequence>(0, constructZ, constructM);
+
+        //if (m_adds.empty()) {
+        //    return clone();
+        //}
 
         std::vector<geom::CircularArc> arcs;
         for (size_t i = 0; i < m_arcs.size(); i++) {
@@ -59,7 +62,8 @@ NodableArcString::getNoded() {
                 const geom::CircularArc& toSplit = m_arcs[i];
                 const geom::CoordinateXY& center = toSplit.getCenter();
                 const double radius = toSplit.getRadius();
-                const bool isCCW = toSplit.getOrientation() == algorithm::Orientation::COUNTERCLOCKWISE;
+                const int orientation = toSplit.getOrientation();
+                const bool isCCW = orientation == algorithm::Orientation::COUNTERCLOCKWISE;
                 const double paStart = geom::Quadrant::pseudoAngle(center, toSplit.p0());
 
                 std::sort(splitPoints.begin(), splitPoints.end(), [&center, paStart, isCCW](const auto& p0, const auto& p1) {
@@ -76,7 +80,7 @@ NodableArcString::getNoded() {
                 // Add first point of split arc
                 std::size_t dstPos = dstSeq->getSize();
                 dstSeq->add(*toSplit.getCoordinateSequence(), toSplit.getCoordinatePosition(), toSplit.getCoordinatePosition());
-                geom::CoordinateXYZM p0;
+                geom::CoordinateXYZM p0, p2;
                 dstSeq->getAt(dstPos, p0);
 
                 // Add intermediate points of split arc
@@ -94,17 +98,24 @@ NodableArcString::getNoded() {
 
                     p0 = splitPoint;
 
-                    // FIXME ctor with center, radius, orientation
-                    arcs.emplace_back(*dstSeq, dstPos);
-                    dstPos = dstSeq->getSize();
+                    arcs.emplace_back(*dstSeq, dstPos, center, radius, orientation);
+                    dstPos = dstSeq->getSize() - 1;
                 }
 
                 // Add last point of split arc
+                toSplit.getCoordinateSequence()->getAt(toSplit.getCoordinatePosition() + 2, p2);
 
+                geom::CoordinateXYZM midpoint(algorithm::CircularArcs::getMidpoint(p0, p2, center, radius, isCCW));
+                midpoint.z = (p0.z + p2.z) / 2;
+                midpoint.m = (p0.m + p2.m) / 2;
+
+                dstSeq->add(midpoint);
+                dstSeq->add(p2);
+                arcs.emplace_back(*dstSeq, dstPos, center, radius, orientation);
             }
         }
 
-        return std::make_unique<ArcString>(std::move(arcs));
+        return std::make_unique<ArcString>(std::move(arcs), std::move(dstSeq));
     }
 
 }

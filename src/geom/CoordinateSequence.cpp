@@ -614,9 +614,9 @@ CoordinateSequence::swap(std::size_t i, std::size_t j)
     using difference_type = decltype(m_vect)::difference_type;
 
     if (i != j) {
-        std::swap_ranges(std::next(m_vect.begin(), static_cast<difference_type>(i)),
-                         std::next(m_vect.begin(), static_cast<difference_type>(i) + stride()),
-                         std::next(m_vect.begin(), static_cast<difference_type>(j)));
+        std::swap_ranges(std::next(m_vect.begin(), static_cast<difference_type>(i*stride())),
+                         std::next(m_vect.begin(), static_cast<difference_type>(i+1) * stride()),
+                         std::next(m_vect.begin(), static_cast<difference_type>(j*stride())));
     }
 }
 

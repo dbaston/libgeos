@@ -15,34 +15,8 @@
 #include <geos/noding/ArcString.h>
 
 namespace geos::noding {
-
-std::unique_ptr<geom::CoordinateSequence>
-ArcString::getCoordinates() const
-{
- // FIXME Z/M?
-
- if (m_arcs.empty()) {
-  return std::make_unique<geom::CoordinateSequence>();
+ std::unique_ptr<geom::CoordinateSequence>
+ ArcString::releaseCoordinates() {
+  return std::move(m_seq);
  }
-
- const std::size_t seqSize = m_arcs.size() * 2 + 1;
-
- // fixme
- constexpr bool hasZ = false;
- constexpr bool hasM = false;
- constexpr bool initialize = false;
-
- auto seq = std::make_unique<geom::CoordinateSequence>(seqSize, hasZ, hasM, initialize);
- std::size_t i = 0;
- for (const auto& arc : m_arcs) {
-  if (i == 0) {
-   seq->setAt(arc.p0(), i++);
-  }
-  seq->setAt(arc.p1(), i++);
-  seq->setAt(arc.p2(), i++);
- }
-
- return seq;
-}
-
 }

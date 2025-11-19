@@ -42,10 +42,13 @@ public:
 
     CircularArc(CoordinateSequence&, std::size_t pos);
 
+    CircularArc(CoordinateSequence&, std::size_t pos, const CoordinateXY& center, double radius, int orientation);
+
     ~CircularArc();
 
     CircularArc(const CircularArc& other) :
         m_seq(new CoordinateSequence(0, other.getCoordinateSequence()->hasZ(), other.getCoordinateSequence()->hasM())),
+        m_pos(0),
         m_center(other.m_center),
         m_radius(other.m_radius),
         m_orientation(other.m_orientation),
@@ -60,8 +63,9 @@ public:
 
 
 
-    CircularArc(CircularArc&& other) :
+    CircularArc(CircularArc&& other) noexcept :
         m_seq(other.m_seq),
+        m_pos(other.m_pos),
         m_center(other.m_center),
         m_radius(other.m_radius),
         m_orientation(other.m_orientation),
@@ -75,9 +79,10 @@ public:
         }
     }
 
-    CircularArc& operator=(CircularArc&& other)
+    CircularArc& operator=(CircularArc&& other) noexcept
     {
         m_seq = other.m_seq;
+        m_pos = other.m_pos;
         m_own_coordinates = other.m_own_coordinates;
         m_orientation = other.m_orientation;
         m_orientation_known = other.m_orientation_known;
