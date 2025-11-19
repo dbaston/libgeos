@@ -94,6 +94,10 @@ IteratedNoder::node(const std::vector<PathString*>& pathStrings,
         arcNoder->computePathNodes(pathStrings);
         nodedPaths = arcNoder->getNodedPaths();
 
+        // FIXME use actual number!
+        numInteriorIntersections = 0;
+
+
         // numInteriorIntersections?
         // intesectionPoint?
     }

@@ -69,16 +69,14 @@ public:
             auto ss = std::make_unique<NodedSegmentString>(coord.release(), _constructZ, _constructM, nullptr);
             _to.push_back(std::move(ss));
         } else if (const auto* cs = dynamic_cast<const geom::CircularString*>(g)) {
-            auto coord = cs->getCoordinates();
+            auto coords = cs->getCoordinates();
 
             std::vector<geom::CircularArc> arcs;
-            for (std::size_t i = 0; i < coord->getSize() - 2; i += 2) {
-                arcs.emplace_back(coord->getAt<geom::CoordinateXY>(i),
-                                  coord->getAt<geom::CoordinateXY>(i+1),
-                                  coord->getAt<geom::CoordinateXY>(i+2));
+            for (std::size_t i = 0; i < coords->getSize() - 2; i += 2) {
+                arcs.emplace_back(*coords, i);
             }
 
-            auto as = std::make_unique<NodableArcString>(std::move(arcs));
+            auto as = std::make_unique<NodableArcString>(std::move(arcs), std::move(coords), _constructZ, _constructM, nullptr);
             _to.push_back(std::move(as));
         }
     }

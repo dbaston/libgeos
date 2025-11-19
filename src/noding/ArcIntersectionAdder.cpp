@@ -27,7 +27,7 @@ ArcIntersectionAdder::processIntersections(ArcString& e0, std::size_t segIndex0,
     }
 
     const geom::CircularArc& arc0 = e0.getArc(segIndex0);
-    const geom::CircularArc& arc1 = e1.getArc(segIndex0);
+    const geom::CircularArc& arc1 = e1.getArc(segIndex1);
 
     m_intersector.intersects(arc0, arc1);
 

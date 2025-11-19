@@ -27,6 +27,14 @@ pseudoAngleDiffCCW(double paStart, double pa) {
     return diff;
 }
 
+NodableArcString::NodableArcString(std::vector<geom::CircularArc> arcs, std::unique_ptr<geom::CoordinateSequence> coords, bool constructZ, bool constructM, void* context) :
+    ArcString(std::move(arcs), std::move(coords), context),
+    m_constructZ(constructZ),
+    m_constructM(constructM)
+{
+}
+
+
 //std::unique_ptr<ArcString> clone() const {
 //
 //}
@@ -34,12 +42,7 @@ pseudoAngleDiffCCW(double paStart, double pa) {
 std::unique_ptr<ArcString>
 NodableArcString::getNoded() {
 
-    // FIXME Z, M
-
-    constexpr bool constructZ = true;
-    constexpr bool constructM = true;
-
-    auto dstSeq = std::make_unique<geom::CoordinateSequence>(0, constructZ, constructM);
+    auto dstSeq = std::make_unique<geom::CoordinateSequence>(0, m_constructZ, m_constructM);
 
         //if (m_adds.empty()) {
         //    return clone();
@@ -115,7 +118,7 @@ NodableArcString::getNoded() {
             }
         }
 
-        return std::make_unique<ArcString>(std::move(arcs), std::move(dstSeq));
+        return std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), nullptr);
     }
 
 }
