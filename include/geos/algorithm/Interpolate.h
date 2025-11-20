@@ -176,6 +176,21 @@ public:
         return getOrInterpolate<geom::Ordinate::M>(p, p1, p2);
     }
 
+    static double
+    getOrAverage(double a, double b)
+    {
+        if (std::isnan(a)) {
+            return b;
+        }
+
+        if (std::isnan(b)) {
+            return a;
+        }
+
+        return 0.5*(a+b);
+    }
+
+
 };
 
 }

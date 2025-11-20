@@ -243,16 +243,19 @@ public:
         return Iterator(*this, 3);
     }
 
-    const CoordinateXY& p0() const {
-        return m_seq->getAt<CoordinateXY>(m_pos);
+    template<typename T=CoordinateXY>
+    const T& p0() const {
+        return m_seq->getAt<T>(m_pos);
     }
 
-    const CoordinateXY& p1() const {
-        return m_seq->getAt<CoordinateXY>(m_pos + 1);
+    template<typename T=CoordinateXY>
+    const T& p1() const {
+        return m_seq->getAt<T>(m_pos + 1);
     }
 
-    const CoordinateXY& p2() const {
-        return m_seq->getAt<CoordinateXY>(m_pos + 2);
+    template<typename T=CoordinateXY>
+    const T& p2() const {
+        return m_seq->getAt<T>(m_pos + 2);
     }
 
     std::string toString() const;

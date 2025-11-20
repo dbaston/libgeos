@@ -17,7 +17,7 @@ struct test_nodablearcstring_data {
                                 const std::vector<CircularArc>& expected, bool reversed=false) {
         std::vector<CircularArc> arcs;
         arcs.push_back(arc);
-        NodableArcString nas(arcs);
+        NodableArcString nas(arcs, nullptr, false, false, nullptr);
 
         for (const auto& coord : coords) {
             nas.addInt(coord, 0);
@@ -142,7 +142,7 @@ void object::test<4>()
     CoordinateXYZM intPt{4, 3, 13, 5};
 
     std::vector<CircularArc> in { arc };
-    NodableArcString nas(std::move(in));
+    NodableArcString nas(std::move(in), nullptr, true, true, nullptr);
 
     nas.addIntersection( intPt, 0);
 

@@ -91,7 +91,14 @@ struct test_circulararcintersector_data {
                                   const ArcOrPoint& p1 = CoordinateXY::getNull())
     {
         CircularArcIntersector cai;
-        cai.intersects(a0, a1);
+        if constexpr (std::is_same_v<CircularArcOrLineSegment, CircularArc>) {
+            cai.intersects(a0, a1);
+        } else {
+            geos::geom::CoordinateSequence seq;
+            seq.add(a1.p0);
+            seq.add(a1.p1);
+            cai.intersects(a0, seq, 0, 1);
+        }
 
         ensure_equals("incorrect intersection type between " + toWKT(a0) + " and " + toWKT(a1), to_string(cai.getResult()), to_string(result));
 

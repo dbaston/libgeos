@@ -134,8 +134,8 @@ void object::test<2>()
     std::vector<CircularArc> arcs1;
     arcs1.push_back(CircularArc({-1, 1}, {1, 1}, {0, 1}, 1, Orientation::COUNTERCLOCKWISE));
 
-    NodableArcString as0(std::move(arcs0));
-    NodableArcString as1(std::move(arcs1));
+    NodableArcString as0(std::move(arcs0), nullptr, false, false, nullptr);
+    NodableArcString as1(std::move(arcs1), nullptr, false, false, nullptr);
 
     std::vector<PathString*> ss{&as0, &as1};
 
@@ -163,7 +163,7 @@ void object::test<3>()
 
     std::vector<CircularArc> arcs0;
     arcs0.push_back(CircularArc({-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE));
-    NodableArcString as0(std::move(arcs0));
+    NodableArcString as0(std::move(arcs0), nullptr, false, false, nullptr);
 
     auto seq1 = std::make_unique<CoordinateSequence>();
     seq1->add(CoordinateXY{-1, 0.5});

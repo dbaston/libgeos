@@ -20,7 +20,7 @@ static double
 pseudoAngleDiffCCW(double paStart, double pa) {
     double diff = pa - paStart;
 
-    if (diff < 0) {
+    if (diff <= 0) {
         diff += 4;
     }
 
@@ -80,6 +80,15 @@ NodableArcString::getNoded() {
                     }
                 });
 
+#if 0
+                std::cout << "Splitting " << toSplit.toString() << " " << (isCCW ? "CCW" : "CW") << " paStart " << paStart << " paStop " << geom::Quadrant::pseudoAngle(center, toSplit.p2()) << std::endl;
+                for (const auto& splitPt : splitPoints)
+                {
+                    const double pa = geom::Quadrant::pseudoAngle(center, splitPt);
+                    std::cout << "  " << splitPt.toString() << "  (pa " << pa << " diff " << pseudoAngleDiffCCW(paStart, pa) << ")" << std::endl;
+                }
+#endif
+
                 // Add first point of split arc
                 std::size_t dstPos = dstSeq->getSize();
                 dstSeq->add(*toSplit.getCoordinateSequence(), toSplit.getCoordinatePosition(), toSplit.getCoordinatePosition());
@@ -118,7 +127,7 @@ NodableArcString::getNoded() {
             }
         }
 
-        return std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), nullptr);
+        return std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, nullptr);
     }
 
 }

@@ -23,7 +23,7 @@ namespace geos::noding {
 class GEOS_DLL NodableArcString : public ArcString, public NodablePath {
 
 public:
-    using ArcString::ArcString;
+    //using ArcString::ArcString;
 
     NodableArcString(std::vector<geom::CircularArc> arcs, std::unique_ptr<geom::CoordinateSequence> coords, bool constructZ, bool constructM, void* context);
 
@@ -37,8 +37,8 @@ public:
 
 private:
     std::map<size_t, std::vector<geom::CoordinateXYZM>> m_adds;
-    bool m_constructZ;
-    bool m_constructM;
+    bool m_constructZ = false;
+    bool m_constructM = false;
 };
 
 }
