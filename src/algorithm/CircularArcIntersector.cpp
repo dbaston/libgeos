@@ -3,7 +3,7 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2024 ISciences, LLC
+ * Copyright (C) 2024-2025 ISciences, LLC
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
@@ -37,7 +37,7 @@ nextAngleCCW(double from, double a, double b)
 }
 
 static double
-angleFractionCCW(double a, double b, double x)
+angleFractionCCW(double x, double a, double b)
 {
     if (x < a) {
         x += 2*MATH_PI;
@@ -46,6 +46,18 @@ angleFractionCCW(double a, double b, double x)
         b += 2*MATH_PI;
     }
     return (x - a) / (b - a);
+}
+
+static double
+interpolateValue(double a1, double a2, double frac)
+{
+    if (std::isnan(a1)) {
+        return a2;
+    }
+    if (std::isnan(a2)) {
+        return a1;
+    }
+    return frac * (a1 + a2);
 }
 
 static void interpolateZM(const CircularArc& arc,
@@ -76,6 +88,19 @@ static void interpolateZM(const CircularArc& arc,
         return;
     }
 
+    double z1, m1;
+    seq.applyAt(i0 + 1, [&z1, &m1](const auto& arcPt) {
+        z1 = arcPt.template get<Ordinate::Z>();
+        m1 = arcPt.template get<Ordinate::M>();
+    });
+
+    if (arc.p1().equals2D(pt)) {
+        z = z1;
+        m = m1;
+        return;
+    }
+
+
     double z2, m2;
     seq.applyAt(i0 + 2, [&z2, &m2](const auto& arcPt) {
         z2 = arcPt.template get<Ordinate::Z>();
@@ -88,30 +113,59 @@ static void interpolateZM(const CircularArc& arc,
         return;
     }
 
-    // FIXME should probably interpolate between pt0/pt1 or pt1/pt2 rather than pt0/pt2
-    const double theta0 = arc.theta0();
-    const double theta2 = arc.theta2();
+    double theta0 = arc.theta0();
+    const double theta1 = arc.theta1();
+    double theta2 = arc.theta2();
     const double theta = CircularArcs::getAngle(pt, arc.getCenter());
 
-    const double frac = arc.isCCW() ? angleFractionCCW(theta0, theta2, theta) : angleFractionCCW(theta2, theta0, theta);
+    if (!arc.isCCW()) {
+        std::swap(theta0, theta2);
+        std::swap(z0, z2);
+        std::swap(m0, m2);
+    }
 
-    z = frac*(z0 + z2);
-    m = frac*(m0 + m2);
+    if (std::isnan(z1)) {
+        // Interpolate between p0 /  p2
+        const double frac = angleFractionCCW(theta, theta0, theta2);
+        z = interpolateValue(z0, z2, frac);
+    } else if (Angle::isWithinCCW(theta, theta0, theta1)) {
+        // Interpolate between p0 / p1
+        const double frac = angleFractionCCW(theta, theta0, theta1);
+        z = interpolateValue(z0, z1, frac);
+    } else {
+        // Interpolate between p1 / p2
+        const double frac = angleFractionCCW(theta, theta1, theta2);
+        z = interpolateValue(z1, z2, frac);
+    }
+
+    if (std::isnan(m1)) {
+        // Interpolate between p0 /  p2
+        const double frac = angleFractionCCW(theta, theta0, theta2);
+        m = interpolateValue(m0, m2, frac);
+    } else if (Angle::isWithinCCW(theta, theta0, theta1)) {
+        // Interpolate between p0 / p1
+        const double frac = angleFractionCCW(theta, theta0, theta1);
+        m = interpolateValue(m0, m1, frac);
+    } else {
+        // Interpolate between p1 / p2
+        const double frac = angleFractionCCW(theta, theta1, theta2);
+        m = interpolateValue(m1, m2, frac);
+    }
+
 }
 
-static void interpolateZM(const CoordinateSequence& seq,
+static void interpolateSegmentZM(const CoordinateSequence& seq,
                               std::size_t ind0, std::size_t ind1,
                               geom::CoordinateXY& pt, double& z, double& m)
 {
     seq.applyAt(ind0, [&seq, &pt, ind1, &z, &m](const auto& p0) {
-        // FIXME should probably interpolate between pt0/pt1 or pt1/pt2 rather than pt0/pt2
-        const auto& p1 = seq.getAt<std::decay_t<decltype(p0)>>(ind1);
+        using CoordinateType = std::decay_t<decltype(p0)>;
 
+        const auto& p1 = seq.getAt<CoordinateType>(ind1);
         z = Interpolate::zGetOrInterpolate(pt, p0, p1);
         m = Interpolate::mGetOrInterpolate(pt, p0, p1);
     });
 }
-
 
 static void interpolateZM(const CircularArc& arc0,
                    const CircularArc& arc1,
@@ -122,7 +176,6 @@ static void interpolateZM(const CircularArc& arc0,
     interpolateZM(arc0, pt, z0, m0);
     interpolateZM(arc1, pt, z1, m1);
 
-    // FIXME are these semantics (getOrAverage) what we use for linear intersections?
     pt.z = Interpolate::getOrAverage(z0, z1);
     pt.m = Interpolate::getOrAverage(m0, m1);
 }
@@ -135,9 +188,8 @@ static void interpolateZM(const CircularArc& arc0,
     double z0, m0;
     double z1, m1;
     interpolateZM(arc0, pt, z0, m0);
-    interpolateZM(seq, ind0, ind1, pt, z1, m1);
+    interpolateSegmentZM(seq, ind0, ind1, pt, z1, m1);
 
-    // FIXME are these semantics (getOrAverage) what we use for linear intersections?
     pt.z = Interpolate::getOrAverage(z0, z1);
     pt.m = Interpolate::getOrAverage(m0, m1);
 }

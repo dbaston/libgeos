@@ -15,6 +15,8 @@ namespace tut {
 struct test_circulararcs_data {
     const double eps = 1e-8;
 
+    using XY = CoordinateXY;
+
     void checkEnvelope(const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& p2,
                        double xmin, double ymin, double xmax, double ymax)
     {
@@ -269,7 +271,7 @@ void object::test<16>()
 {
     set_test_name("splitAtPoint");
 
-    CircularArc cwArc({-1, 0}, {0, 1}, {1, 0});
+    CircularArc cwArc(XY{-1, 0}, XY{0, 1}, XY{1, 0});
     auto [arc1, arc2] = cwArc.splitAtPoint({std::sqrt(2)/2, std::sqrt(2)/2});
 
     ensure_equals(arc1.p0(), CoordinateXY{-1, 0});
@@ -290,10 +292,10 @@ template<>
 void object::test<17>() {
     set_test_name("getSagitta");
 
-    CircularArc halfCircle({-1, 0}, {0, 1}, {1, 0});
+    CircularArc halfCircle(XY{-1, 0}, XY{0, 1}, XY{1, 0});
     ensure_equals(halfCircle.getSagitta(), 1);
 
-    CircularArc quarterCircle({0, 1}, {std::sqrt(2)/2, std::sqrt(2)/2}, {1, 0});
+    CircularArc quarterCircle(XY{0, 1}, XY{std::sqrt(2)/2, std::sqrt(2)/2}, {1, 0});
     ensure_equals(quarterCircle.getSagitta(),
         CoordinateXY{std::sqrt(2)/2, std::sqrt(2)/2}.distance(CoordinateXY{0.5, 0.5}));
 }

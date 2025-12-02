@@ -30,11 +30,12 @@ namespace geom {
 class GEOS_DLL CircularArc {
 public:
 
-    using CoordinateXY = geom::CoordinateXY;
-
-    CircularArc() : CircularArc({0, 0}, {0, 0}, {0, 0}) {}
+    CircularArc() : CircularArc(CoordinateXY{0, 0}, CoordinateXY{0, 0}, CoordinateXY{0, 0}) {}
 
     CircularArc(const CoordinateXY& q0, const CoordinateXY& q1, const CoordinateXY& q2);
+    //CircularArc(const Coordinate& q0, const Coordinate& q1, const Coordinate& q2);
+    //CircularArc(const CoordinateXYZM& q0, const CoordinateXYZM& q1, const CoordinateXYZM& q2);
+    //CircularArc(const CoordinateXYM& q0, const CoordinateXYM& q1, const CoordinateXYM& q2);
 
     CircularArc(double theta0, double theta2, const CoordinateXY& center, double radius, int orientation);
 
@@ -163,6 +164,11 @@ public:
     /// Return the angle of p0
     double theta0() const {
         return algorithm::CircularArcs::getAngle(p0(), getCenter());
+    }
+
+    /// Return the angle of p1
+    double theta1() const {
+        return algorithm::CircularArcs::getAngle(p1(), getCenter());
     }
 
     /// Return the angle of p2

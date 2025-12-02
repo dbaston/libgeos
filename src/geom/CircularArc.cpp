@@ -27,6 +27,36 @@ CircularArc::CircularArc(const CoordinateXY& q0, const CoordinateXY& q1, const C
     m_seq->setAt(q2, 2);
 }
 
+#if 0
+CircularArc::CircularArc(const Coordinate& q0, const Coordinate& q1, const Coordinate& q2)
+    : m_seq(new CoordinateSequence(3, true, false))
+    , m_pos(0)
+    , m_own_coordinates(true)
+{
+    m_seq->setAt(q0, 0);
+    m_seq->setAt(q1, 1);
+    m_seq->setAt(q2, 2);
+}
+
+CircularArc::CircularArc(const CoordinateXYM& q0, const CoordinateXYM& q1, const CoordinateXYM& q2)
+    : m_seq(new CoordinateSequence(3, false, true))
+    , m_pos(0)
+    , m_own_coordinates(true) {
+    m_seq->setAt(q0, 0);
+    m_seq->setAt(q1, 1);
+    m_seq->setAt(q2, 2);
+}
+
+CircularArc::CircularArc(const CoordinateXYZM& q0, const CoordinateXYZM& q1, const CoordinateXYZM& q2)
+        : m_seq(new CoordinateSequence(3, true, true))
+        , m_pos(0)
+        , m_own_coordinates(true) {
+    m_seq->setAt(q0, 0);
+    m_seq->setAt(q1, 1);
+    m_seq->setAt(q2, 2);
+}
+#endif
+
 CircularArc::CircularArc(double theta0, double theta2, const CoordinateXY& center, double radius, int orientation)
         : m_seq(new CoordinateSequence(3, false, false)),
           m_pos(0),
@@ -214,7 +244,21 @@ CircularArc::splitAtPoint(const CoordinateXY& q) const {
 std::string
 CircularArc::toString() const {
     std::stringstream ss;
-    ss << "CIRCULARSTRING (" << p0() << ", " << p1() << ", " << p2() << ")";
+    ss << "CIRCULARSTRING ";
+    if (m_seq->hasZ()) {
+        ss << "Z";
+    }
+    if (m_seq->hasM()) {
+        ss << "M";
+    }
+    if (m_seq->hasZ() || m_seq->hasM()) {
+        ss << " ";
+    }
+    ss << "(";
+    m_seq->applyAt(m_pos, [&ss](const auto& pt) {
+        ss << pt << ", " << *(&pt + 1) << ", " << *(&pt + 2);
+    });
+    ss << ")";
     return ss.str();
 }
 
