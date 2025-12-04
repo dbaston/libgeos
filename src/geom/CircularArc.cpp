@@ -94,6 +94,13 @@ CircularArc::CircularArc(CoordinateSequence& seq, std::size_t pos) :
     m_pos(pos),
     m_own_coordinates(false) {}
 
+CircularArc::CircularArc(std::unique_ptr<CoordinateSequence> seq, std::size_t pos) :
+    CircularArc(*seq, pos)
+{
+    m_own_coordinates = true;
+    seq.release();
+}
+
 CircularArc::CircularArc(CoordinateSequence& seq, std::size_t pos, const CoordinateXY& center, double radius, int orientation) :
     m_seq(&seq),
     m_pos(pos),
@@ -105,6 +112,91 @@ CircularArc::CircularArc(CoordinateSequence& seq, std::size_t pos, const Coordin
     m_orientation_known(true),
     m_own_coordinates(false)
 {}
+
+CircularArc::CircularArc(std::unique_ptr<CoordinateSequence> seq, std::size_t pos, const CoordinateXY& center, double radius, int orientation) :
+    CircularArc(*seq, pos, center, radius, orientation)
+{
+    m_own_coordinates = true;
+    seq.release();
+}
+
+CircularArc::CircularArc(const CircularArc& other) :
+    m_seq(new CoordinateSequence(0, other.getCoordinateSequence()->hasZ(), other.getCoordinateSequence()->hasM())),
+    m_pos(0),
+    m_center(other.m_center),
+    m_radius(other.m_radius),
+    m_orientation(other.m_orientation),
+    m_center_known(other.m_center_known),
+    m_radius_known(other.m_radius_known),
+    m_orientation_known(other.m_orientation_known),
+    m_own_coordinates(true)
+{
+    m_seq->reserve(3);
+    m_seq->add(*other.getCoordinateSequence(), other.getCoordinatePosition(), other.getCoordinatePosition() + 2);
+}
+
+CircularArc::CircularArc(CircularArc&& other) noexcept {
+    m_seq = other.m_seq;
+    m_pos = other.m_pos;
+    m_center = other.m_center;
+    m_radius = other.m_radius;
+    m_orientation = other.m_orientation;
+    m_center_known = other.m_center_known;
+    m_radius_known = other.m_radius_known;
+    m_orientation_known = other.m_orientation_known;
+    m_own_coordinates = other.m_own_coordinates;
+
+    if (other.m_own_coordinates) {
+        other.m_own_coordinates = false;
+    }
+}
+
+CircularArc&
+CircularArc::operator=(const CircularArc& other)
+{
+    if (m_own_coordinates) {
+        delete m_seq;
+    }
+
+    m_seq = new CoordinateSequence(0, other.getCoordinateSequence()->hasZ(), other.getCoordinateSequence()->hasM());
+    m_pos = other.m_pos;
+    m_own_coordinates = true;
+    m_orientation = other.m_orientation;
+    m_orientation_known = other.m_orientation_known;
+    m_center = other.m_center;
+    m_center_known = other.m_center_known;
+    m_radius = other.m_radius;
+    m_radius_known = other.m_radius_known;
+
+    m_seq->reserve(3);
+    m_seq->add(*other.getCoordinateSequence(), other.getCoordinatePosition(), other.getCoordinatePosition() + 2);
+
+    return *this;
+}
+
+CircularArc&
+CircularArc::operator=(CircularArc&& other) noexcept
+{
+    if (m_own_coordinates) {
+        delete m_seq;
+    }
+
+    m_seq = other.m_seq;
+    m_pos = other.m_pos;
+    m_own_coordinates = other.m_own_coordinates;
+    m_orientation = other.m_orientation;
+    m_orientation_known = other.m_orientation_known;
+    m_center = other.m_center;
+    m_center_known = other.m_center_known;
+    m_radius = other.m_radius;
+    m_radius_known = other.m_radius_known;
+
+    if (m_own_coordinates) {
+        other.m_own_coordinates = false;
+    }
+
+    return *this;
+}
 
 CircularArc::~CircularArc()
 {

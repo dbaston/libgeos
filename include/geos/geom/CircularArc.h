@@ -30,6 +30,7 @@ namespace geom {
 class GEOS_DLL CircularArc {
 public:
 
+    // FIXME: Avoid heap allocations in default ctor
     CircularArc() : CircularArc(CoordinateXY{0, 0}, CoordinateXY{0, 0}, CoordinateXY{0, 0}) {}
 
     CircularArc(const CoordinateXY& q0, const CoordinateXY& q1, const CoordinateXY& q2);
@@ -43,62 +44,20 @@ public:
 
     CircularArc(CoordinateSequence&, std::size_t pos);
 
+    CircularArc(std::unique_ptr<CoordinateSequence>, std::size_t pos);
+
     CircularArc(CoordinateSequence&, std::size_t pos, const CoordinateXY& center, double radius, int orientation);
 
+    CircularArc(std::unique_ptr<CoordinateSequence>, std::size_t pos, const CoordinateXY& center, double radius, int orientation);
+
+    CircularArc(const CircularArc& other);
+
+    CircularArc(CircularArc&&) noexcept;
+
+    CircularArc& operator=(const CircularArc& other);
+    CircularArc& operator=(CircularArc&&) noexcept;
+
     ~CircularArc();
-
-    CircularArc(const CircularArc& other) :
-        m_seq(new CoordinateSequence(0, other.getCoordinateSequence()->hasZ(), other.getCoordinateSequence()->hasM())),
-        m_pos(0),
-        m_center(other.m_center),
-        m_radius(other.m_radius),
-        m_orientation(other.m_orientation),
-        m_center_known(other.m_center_known),
-        m_radius_known(other.m_radius_known),
-        m_orientation_known(other.m_orientation_known),
-        m_own_coordinates(true)
-    {
-        m_seq->reserve(3);
-        m_seq->add(*other.getCoordinateSequence(), other.getCoordinatePosition(), other.getCoordinatePosition() + 2);
-    }
-
-
-
-    CircularArc(CircularArc&& other) noexcept :
-        m_seq(other.m_seq),
-        m_pos(other.m_pos),
-        m_center(other.m_center),
-        m_radius(other.m_radius),
-        m_orientation(other.m_orientation),
-        m_center_known(other.m_center_known),
-        m_radius_known(other.m_radius_known),
-        m_orientation_known(other.m_orientation_known),
-        m_own_coordinates(other.m_own_coordinates)
-    {
-        if (m_own_coordinates) {
-            other.m_own_coordinates = false;
-        }
-    }
-
-    CircularArc& operator=(CircularArc&& other) noexcept
-    {
-        m_seq = other.m_seq;
-        m_pos = other.m_pos;
-        m_own_coordinates = other.m_own_coordinates;
-        m_orientation = other.m_orientation;
-        m_orientation_known = other.m_orientation_known;
-        m_center = other.m_center;
-        m_center_known = other.m_center_known;
-        m_radius = other.m_radius;
-        m_radius_known = other.m_radius_known;
-
-        if (m_own_coordinates) {
-            other.m_own_coordinates = false;
-        }
-
-        return *this;
-    }
-
 
     /// Return the orientation of the arc as one of:
     /// - algorithm::Orientation::CLOCKWISE,
@@ -272,6 +231,11 @@ public:
 
     std::size_t getCoordinatePosition() const {
         return m_pos;
+    }
+
+    template<typename F>
+    auto applyAt(std::size_t i, F&& f) const {
+        return m_seq->applyAt(m_pos + i, f);
     }
 
 private:

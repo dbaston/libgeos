@@ -27,6 +27,8 @@ struct test_circulararcintersector_data {
 
     static constexpr double NaN = geos::DoubleNotANumber;
 
+    std::vector<std::unique_ptr<CoordinateSequence>> seqStore_;
+
     template<typename CoordType>
     static constexpr bool hasOrdinate(Ordinate ord) {
         switch (ord) {
@@ -39,6 +41,21 @@ struct test_circulararcintersector_data {
                 return std::is_same_v<CoordType, CoordinateXYM> || std::is_same_v<CoordType, CoordinateXYZM>;
         }
         assert(0);
+    }
+
+    template<typename T>
+    CircularArc makeArc(T p0, T p1, T p2)
+    {
+        auto seq = std::make_unique<CoordinateSequence>(3, hasOrdinate<T>(Ordinate::Z), hasOrdinate<T>(Ordinate::M));
+        seq->setAt(p0, 0);
+        seq->setAt(p1, 1);
+        seq->setAt(p2, 2);
+
+        CircularArc ret(*seq, 0);
+
+        seqStore_.push_back(std::move(seq));
+
+        return ret;
     }
 
     using ArcOrPoint = std::variant<XY, XYZ, XYM, XYZM, CircularArc>;
@@ -130,11 +147,11 @@ struct test_circulararcintersector_data {
     }
 
     template<typename C1, typename C2>
-    static void checkIntersection(C1 p0, C1 p1, C1 p2,
-                                  C2 q0, C2 q1,
-                                  CircularArcIntersector::intersection_type result,
-                                  const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
-                                  const ArcOrPoint& i1 = CoordinateXYZM::getNull())
+    static void checkIntersectionArcSeg(C1 p0, C1 p1, C1 p2,
+                                        C2 q0, C2 q1,
+                                        CircularArcIntersector::intersection_type result,
+                                        const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
+                                        const ArcOrPoint& i1 = CoordinateXYZM::getNull())
     {
         CoordinateSequence cs1(3, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
         cs1.setAt(p0, 0);
@@ -143,11 +160,32 @@ struct test_circulararcintersector_data {
 
         const CircularArc arc(cs1, 0);
 
-        CoordinateSequence seg(3, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
+        CoordinateSequence seg(2, hasOrdinate<C2>(Ordinate::Z), hasOrdinate<C2>(Ordinate::M));
         seg.setAt(q0, 0);
         seg.setAt(q1, 1);
 
         checkIntersection(arc, seg, result, i0, i1);
+    }
+
+    template<typename C1, typename C2>
+    static void checkIntersectionSegArc(C1 p0, C1 p1,
+                                        C2 q0, C2 q1, C2 q2,
+                                        CircularArcIntersector::intersection_type result,
+                                        const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
+                                        const ArcOrPoint& i1 = CoordinateXYZM::getNull())
+    {
+        CoordinateSequence seg(2, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
+        seg.setAt(p0, 0);
+        seg.setAt(p1, 1);
+
+
+        CoordinateSequence arcSeq(3, hasOrdinate<C2>(Ordinate::Z), hasOrdinate<C2>(Ordinate::M));
+        arcSeq.setAt(q0, 0);
+        arcSeq.setAt(q1, 1);
+        arcSeq.setAt(q2, 2);
+        const CircularArc arc(arcSeq, 0);
+
+        checkIntersection(arc, seg, result, i0, i1, true);
     }
 
     static bool pointWithinTolerance(const CoordinateXYZM& actual, const CoordinateXYZM& expected, double tol)
@@ -188,14 +226,15 @@ struct test_circulararcintersector_data {
                                   const CircularArcOrLineSegment& a1,
                                   CircularArcIntersector::intersection_type result,
                                   const ArcOrPoint& p0 = CoordinateXYZM::getNull(),
-                                  const ArcOrPoint& p1 = CoordinateXYZM::getNull())
+                                  const ArcOrPoint& p1 = CoordinateXYZM::getNull(),
+                                  bool useSegEndpoints=false)
     {
         CircularArcIntersector cai;
         if constexpr (std::is_same_v<CircularArcOrLineSegment, CircularArc>) {
             cai.intersects(a0, a1);
         } else {
             static_assert(std::is_same_v<CircularArcOrLineSegment, CoordinateSequence>);
-            cai.intersects(a0, a1, 0, 1);
+            cai.intersects(a0, a1, 0, 1, useSegEndpoints);
         }
 
         ensure_equals("incorrect intersection type between " + toWKT(a0) + " and " + toWKT(a1), to_string(cai.getResult()), to_string(result));
@@ -563,7 +602,7 @@ void object::test<30>()
 {
     set_test_name("arc-segment with single interior intersection");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XY{0, 0}, XY{2, 2}, XY{4, 0},
         XY{1, 0}, XY{3, 4},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -577,7 +616,7 @@ void object::test<31>()
 {
     set_test_name("arc-vertical segment with single interior intersection");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XY{-2, 0}, XY{0, 2}, XY{2, 0},
         XY{0, 0}, XY{0, 4},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -591,7 +630,7 @@ void object::test<32>()
 {
     set_test_name("arc-segment with two interior intersections");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         W_, E_, SW_,
         XY{-10, 10}, XY{10, -10},
         CircularArcIntersector::TWO_POINT_INTERSECTION,
@@ -605,7 +644,7 @@ void object::test<33>()
 {
     set_test_name("arc-vertical segment with two interior intersections");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         W_, E_, SW_,
         XY{0, -2}, XY{0, 2},
         CircularArcIntersector::TWO_POINT_INTERSECTION,
@@ -619,7 +658,7 @@ void object::test<34>()
 {
     set_test_name("arc-segment disjoint with bbox containment");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         W_, N_, E_,
         XY{0, 0}, XY{0.2, 0.2},
         CircularArcIntersector::NO_INTERSECTION
@@ -632,7 +671,7 @@ void object::test<35>()
 {
     set_test_name("degenerate arc-segment with interior intersection");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XY{-5, -5}, XY{0, 0}, XY{5, 5},
         XY{-5, 5},  XY{5, -5},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -646,7 +685,7 @@ void object::test<36>()
 {
     set_test_name("intersection between a segment and a degenerate arc (radius = Infinity)");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XY{-5, -5}, XY{0, 0}, XY{5, 5 + 1e-14},
         XY{-5, 5}, XY{5, -5},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -660,7 +699,7 @@ void object::test<37>()
 {
     set_test_name("intersection between a segment and a nearly-degenerate arc (radius ~= 1e5)");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XY{-5, -5}, XY{0, 0}, XY{5, 5 + 1e-4},
         XY{-5, 5}, XY{5, -5},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -676,59 +715,59 @@ void object::test<38>()
     // https://github.com/claeis/iox-ili/blob/master/jtsext/src/test/java/ch/interlis/iom_j/itf/impl/hrg/ISCILRTest.java
 
     // test_1a
-    checkIntersection(XY{0, 5},  XY{5, 0}, XY{0, -5},
-                      XY{20, 5}, XY{20, -5},
-                      CircularArcIntersector::NO_INTERSECTION),
+    checkIntersectionArcSeg(XY{0, 5},  XY{5, 0}, XY{0, -5},
+                          XY{20, 5}, XY{20, -5},
+                          CircularArcIntersector::NO_INTERSECTION),
 
     // test_2a
-    checkIntersection(XY{0, 5}, XY{5, 0}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5}, XY{5, 0}, XY{0, -5},
                       XY{5, 5}, XY{5, 0},
                       CircularArcIntersector::ONE_POINT_INTERSECTION,
                       XY{5, 0});
 
     // test_2b
-    checkIntersection(XY{0, 5}, XY{5, 0}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5}, XY{5, 0}, XY{0, -5},
                       XY{5, 5}, XY{5, -5},
                       CircularArcIntersector::ONE_POINT_INTERSECTION,
                       XY{5, 0});
 
     // test_2c
-    checkIntersection(XY{0, 5}, XY{4, 3}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5}, XY{4, 3}, XY{0, -5},
                       XY{5, 5}, XY{5, 0},
                       CircularArcIntersector::ONE_POINT_INTERSECTION,
                       XY{5, 0});
 
     // test_2d
-    checkIntersection(XY{0, 5}, XY{4, 3}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5}, XY{4, 3}, XY{0, -5},
                       XY{5, 5}, XY{5, -5},
                       CircularArcIntersector::ONE_POINT_INTERSECTION,
                       XY{5, 0});
 
     // test_3a
-    checkIntersection(XY{0, 5}, XY{5, 0}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5}, XY{5, 0}, XY{0, -5},
                       XY{4, 5}, XY{4, -5},
                       CircularArcIntersector::TWO_POINT_INTERSECTION,
                       XY{4, 3}, XY{4, -3});
 
     // test_3b
-    checkIntersection(XY{0, 5},  XY{5, 0}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5},  XY{5, 0}, XY{0, -5},
                       XY{-4, 5}, XY{-4, -5},
                       CircularArcIntersector::NO_INTERSECTION);
 
     // test_3c
-    checkIntersection(XY{0, 5},  XY{5, 0}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5},  XY{5, 0}, XY{0, -5},
                       XY{4, 10}, XY{4, 5},
                       CircularArcIntersector::NO_INTERSECTION);
 
 
     // test_3d
-    checkIntersection(XY{0, 5}, XY{3, 4}, XY{5, 0},
+    checkIntersectionArcSeg(XY{0, 5}, XY{3, 4}, XY{5, 0},
                       XY{4, 5}, XY{4, -5},
                       CircularArcIntersector::ONE_POINT_INTERSECTION,
                       XY{4, 3});
 
     // test_3e
-    checkIntersection(XY{0, 5}, XY{5, 0}, XY{0, -5},
+    checkIntersectionArcSeg(XY{0, 5}, XY{5, 0}, XY{0, -5},
                       XY{4, 5}, XY{4, 0},
                       CircularArcIntersector::ONE_POINT_INTERSECTION,
                       XY{4, 3});
@@ -813,7 +852,7 @@ void object::test<41>()
 {
     set_test_name("IOX-ILI: testFastGerade");
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XY{611770.424, 234251.322}, XY{611770.171, 234250.059}, XY{611769.918, 234248.796},
         XY{611613.84, 233467.819},  XY{611610.392, 233468.995},
         CircularArcIntersector::NO_INTERSECTION
@@ -1066,7 +1105,7 @@ void object::test<57>()
     set_test_name("arc XYZ / segment XYZ interior intersection");
     // Z value at the intersection point is the average of the interpolated values from the arc and segment
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XYZ{-5, 0, 1}, XYZ{-4, 3, 41}, XYZ{4, 3, 53},
         XYZ{0, 0, 7}, XYZ{0, 10, 13},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -1168,7 +1207,7 @@ void object::test<63>()
     // Z value at the intersection point is the average of the interpolated values from the arc and the segment
     // Because the control point Z is NaN, interpolation is done from the arc endpoints
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XYZ{-5, 0, 41}, XYZ{-4, 3, NaN}, XYZ{5, 0, 53},
         XYZ{0, 0, 7}, XYZ{0, 10, 13},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -1183,7 +1222,7 @@ void object::test<64>()
     set_test_name("arc XYZ / segment XYZ interior intersection, segment endpoint Z = NaN");
     // Z value at the intersection point is the average of the interpolated values from the arc and the other segment endpoint
 
-    checkIntersection(
+    checkIntersectionArcSeg(
         XYZ{-5, 0, 7}, XYZ{-3, 4, 41}, XYZ{3, 4, 53},
         XYZ{0, 0, NaN}, XYZ{0, 10, 13},
         CircularArcIntersector::ONE_POINT_INTERSECTION,
@@ -1196,7 +1235,7 @@ template<>
 void object::test<65>()
 {
     set_test_name("arc XYZ / arc XYZ endpoint intersection");
-    // Result Z value at intersection poinbt is taken from the first input
+    // Result Z value at intersection point is taken from the first input
 
     checkIntersection(
         XYZ{0, 0, 0}, XYZ{1, 1, 1}, XYZ{2, 0, 2},
@@ -1206,5 +1245,361 @@ void object::test<65>()
     );
 }
 
+template<>
+template<>
+void object::test<66>()
+{
+    set_test_name("arc XYZ / segment XYZ endpoint intersection");
+    // Result Z value at intersection point is taken from the first input
+    // Related: RobustLineIntersectorZTest::testEndpoint
+
+    checkIntersectionArcSeg(
+        XYZ{0, 0, 0},   XYZ{1, 1, 1}, XYZ{2, 0, 2},
+        XYZ{2, 0, 500}, XYZ{4, 0, 502},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{2, 0, 2}
+    );
+
+    // Same inputs as above but with order reversed
+    checkIntersectionSegArc(
+        XYZ{2, 0, 500}, XYZ{4, 0, 502},
+        XYZ{0, 0, 0},   XYZ{1, 1, 1}, XYZ{2, 0, 2},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{2, 0, 500}
+    );
+}
+
+#if 0
+// Fails because computed intersection point is not exactly equal to endpoint, so special handling doesn't apply.
+template<>
+template<>
+void object::test<67>() {
+    set_test_name("arc XYZ / arc XYZ interior / endpoint intersection");
+    // Result Z is taken from the endpoint
+    // Related: RobustLineIntersectorZTest::testInteriorEndpoint
+
+    checkIntersection(
+        XYZ{-1, 0, 1}, XYZ{0, 1, 2}, XYZ{1, 0, 3},
+        XYZ{-2, 1, 7}, XYZ{-1, 2, 8}, XYZ{0, 1, 9},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{0, 1, 9}
+    );
+}
+#endif
+
+template<>
+template<>
+void object::test<68>() {
+    set_test_name("arc XYZ / seg XYZ interior / endpoint intersection");
+    // Result Z is taken from the endpoint
+    // Related: RobustLineIntersectorZTest::testInteriorEndpoint
+
+    checkIntersectionArcSeg(
+        XYZ{-1, 0, 1}, XYZ{0, 1, 2}, XYZ{1, 0, 3},
+        XYZ{0, 0, 5}, {0, 1, 9},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{0, 1, 9}
+    );
+
+    // Same inputs as above but with order reversed
+    checkIntersectionSegArc(
+        XYZ{0, 0, 5}, {0, 1, 9},
+        XYZ{-1, 0, 1}, XYZ{0, 1, 2}, XYZ{1, 0, 3},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{0, 1, 9}
+    );
+
+}
+
+template<>
+template<>
+void object::test<69>() {
+    set_test_name("arc XYZ / arc XY interior / endpoint intersection");
+    // Intersection is at interior of XYZ arc, endpoint of XY arc
+    // Result Z is interpolated
+    // Related: RobustLineIntersectorZTest::testInteriorEndpoint3D2D
+
+    checkIntersection(
+        XYZ{-5, 0, 1}, XYZ{-4, 3, 2}, XYZ{4, 3, 3},
+        XY{-10, 5}, XY{-5, 10}, XY{0, 5},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{0, 5, 2.5}
+    );
+}
+
+template<>
+template<>
+void object::test<70>() {
+    set_test_name("arc XYZ / segment XY interior / endpoint intersection");
+    // Intersection is at interior of XYZ arc, endpoint of XY segment
+    // Result Z is interpolated
+    // Related: RobustLineIntersectorZTest::testInteriorEndpoint3D2D
+
+    checkIntersectionArcSeg(
+        XYZ{-5, 0, 1}, XYZ{-4, 3, 2}, XYZ{4, 3, 3},
+        XY{0, 0}, XY{0, 5},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{0, 5, 2.5}
+    );
+}
+
+#if 0
+// Fails because computed intersection point is not exactly equal to endpoint, so special handling doesn't apply.
+template<>
+template<>
+void object::test<71>() {
+    set_test_name("arc XY / arc XYZ interior / endpoint intersection");
+    // Intersection is at interior of XY arc, endpoint of XYZ arc
+    // Result Z is from 3D endpoint
+    // Related: RobustLineIntersectorZTest::testInteriorEndpoint2D3D
+
+    checkIntersection(
+        XY{-5, 0}, XY{-4, 3}, XY{4, 3},
+        XYZ{-10, 5, 8}, XYZ{-5, 10, 11}, XYZ{0, 5, 17},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{0, 5, 17}
+    );
+}
+#endif
+
+template<>
+template<>
+void object::test<72>() {
+    set_test_name("arc XY / segment XYZ interior / endpoint intersection");
+    // Intersection is at interior of XY arc, endpoint of XYZ segment
+    // Result Z is from 3D endpoint
+    // Related: RobustLineIntersectorZTest::testInteriorEndpoint2D3D
+
+    checkIntersectionArcSeg(
+        XY{-5, 0}, XY{-4, 3}, XY{4, 3},
+        XYZ{0, 0, 3}, XYZ{0, 5, 17},
+        CircularArcIntersector::ONE_POINT_INTERSECTION,
+        XYZ{0, 5, 17}
+    );
+}
+
+template<>
+template<>
+void object::test<73>() {
+    set_test_name("XYZ arc intersected with itself");
+    // Related:: RobustLineIntersectorTest::testCollinearEqual
+
+    // clockwise inputs
+    checkIntersection(
+        XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
+        XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
+        CircularArcIntersector::COCIRCULAR_INTERSECTION,
+        makeArc(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
+    );
+
+    // counter-clockwise inputs
+    checkIntersection(
+        XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
+        XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
+        CircularArcIntersector::COCIRCULAR_INTERSECTION,
+        makeArc(XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0})
+    );
+
+    // mixed-orientation inputs
+    checkIntersection(
+        XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
+        XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
+        CircularArcIntersector::COCIRCULAR_INTERSECTION,
+        makeArc(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
+    );
+}
+
+template<>
+template<>
+void object::test<74>() {
+    set_test_name("XYZ arc intersected with 2D version of same arc");
+    // Related:: RobustLineIntersectorTest::testCollinearEqual3D2D
+
+    // clockwise inputs
+    checkIntersection(
+        XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
+        XY{-5, 0}, XY{0, 5}, XY{5, 0},
+        CircularArcIntersector::COCIRCULAR_INTERSECTION,
+        makeArc(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
+    );
+
+    // counter-clockwise input
+    checkIntersection(
+        XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
+        XY{5, 0}, XY{0, 5}, XY{-5, 0},
+        CircularArcIntersector::COCIRCULAR_INTERSECTION,
+        makeArc(XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0})
+    );
+}
+
+template<>
+template<>
+void object::test<75>() {
+    set_test_name("Two cocircular XYZ arcs with endpoint intersections");
+    // Z values of inputs are the same and are copied to output
+    // Related:: RobustLineIntersectorTest::testCollinearEndpoint
+
+    checkIntersection(
+        XYZ{-5, 0, 3}, XYZ{0, 5, 11}, XYZ{5, 0, 15},
+        XYZ{-5, 0, 3}, XYZ{0, -5, 11}, XYZ{5, 0, 15},
+        CircularArcIntersector::TWO_POINT_INTERSECTION,
+        XYZ{-5, 0, 3},
+        XYZ{5, 0, 15}
+    );
+
+    // Same arguments as above, order reversed
+    checkIntersection(
+        XYZ{-5, 0, 3}, XYZ{0, -5, 11}, XYZ{5, 0, 15},
+        XYZ{-5, 0, 3}, XYZ{0, 5, 11}, XYZ{5, 0, 15},
+        CircularArcIntersector::TWO_POINT_INTERSECTION,
+        XYZ{-5, 0, 3},
+        XYZ{5, 0, 15}
+    );
+}
+
+template<>
+template<>
+void object::test<76>() {
+    set_test_name("Cocircular XYZ and XY arcs with endpoint intersections");
+    // Z values of result is taken from the XYZ input
+    // Related:: RobustLineIntersectorTest::testCollinearEndpoint3D2D
+
+    // clockwise inputs
+    checkIntersection(
+        XYZ{-5, 0, 3}, XYZ{0, 5, 11}, XYZ{5, 0, 15},
+        XY{-5, 0}, XY{0, -5}, XY{5, 0},
+        CircularArcIntersector::TWO_POINT_INTERSECTION,
+        XYZ{-5, 0, 3},
+        XYZ{5, 0, 15}
+    );
+
+    // Same arguments as above, order reversed
+    checkIntersection(
+        XY{-5, 0}, XY{0, -5}, XY{5, 0},
+        XYZ{-5, 0, 3}, XYZ{0, 5, 11}, XYZ{5, 0, 15},
+        CircularArcIntersector::TWO_POINT_INTERSECTION,
+        XYZ{-5, 0, 3},
+        XYZ{5, 0, 15}
+    );
+
+    // counter-clockwise inputs
+    checkIntersection(
+        XYZ{5, 0, 15}, XYZ{0, 5, 11}, XYZ{-5, 0, 3},
+        XY{5, 0}, XY{0, -5}, XY{-5, 0},
+        CircularArcIntersector::TWO_POINT_INTERSECTION,
+        XYZ{-5, 0, 3},
+        XYZ{5, 0, 15}
+    );
+
+    // Same arguments as above, order reversed
+    checkIntersection(
+        XY{5, 0}, XY{0, -5}, XY{-5, 0},
+        XYZ{5, 0, 15}, XYZ{0, 5, 11}, XYZ{-5, 0, 3},
+        CircularArcIntersector::TWO_POINT_INTERSECTION,
+        XYZ{-5, 0, 3},
+        XYZ{5, 0, 15}
+    );
+}
+
+template<>
+template<>
+void object::test<77>() {
+    set_test_name("XYZ arc intersected with a subset of itself");
+    // Related:: RobustLineIntersectorTest::testCollinearContained
+
+    const double theta = std::atan(3.0 / 4.0);
+    const double frac = theta / MATH_PI;
+
+    // Clockwise inputs
+    checkIntersection(
+        XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
+        XYZ{-4, 3, frac*15}, XYZ{0, 5, 7.5}, XYZ{4, 3, (1-frac)*15},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{-4, 3, frac*15}, XYZ{0, 5, 0}, XYZ{4, 3, (1-frac)*15})
+    );
+
+    // Counter-clockwise inputs
+    checkIntersection(
+        XYZ{5, 0, 15}, XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
+        XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 7.5}, XYZ{-4, 3, frac*15},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 0}, XYZ{-4, 3, frac*15})
+    );
+}
+
+template<>
+template<>
+void object::test<78>() {
+    set_test_name("XYZ arc intersected with a 2D subset of itself");
+    // Related:: RobustLineIntersectorTest::testCollinearContained3D2D
+
+    const double theta = std::atan(3.0 / 4.0);
+    const double frac = theta / MATH_PI;
+
+    // clockwise inputs
+    checkIntersection(
+        XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
+        XY{-4, 3}, XY{0, 5}, XY{4, 3},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{-4, 3, frac*15}, XYZ{0, 5, 7.5}, XYZ{4, 3, (1-frac)*15})
+    );
+
+    // counter-clockwise inputs
+    checkIntersection(
+        XYZ{5, 0, 15}, XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
+        XY{4, 3}, XY{0, 5}, XY{-4, 3},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 7.5}, XYZ{-4, 3, frac*15})
+    );
+}
+
+template<>
+template<>
+void object::test<79>() {
+    set_test_name("XYZ arc intersected with a subset of itself that has different Z values");
+    // Related:: RobustLineIntersectorTest::testCollinearContainedDifferentZ
+
+    // clockwise inputs
+    checkIntersection(
+        XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
+        XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200})
+    );
+
+    // counter-clockwise inputs
+    checkIntersection(
+        XYZ{5, 0, 15}, XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
+        XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100})
+    );
+}
+
+template<>
+template<>
+void object::test<80>() {
+    set_test_name("XYZ arc intersected with a superset of itself that has different Z values");
+
+    // clockwise inputs
+    checkIntersection(
+        XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200},
+        XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200})
+    );
+
+    // counter-clockwise inputs
+    checkIntersection(
+        XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100}, 
+        XYZ{5, 0, 15},  XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
+           CircularArcIntersector::COCIRCULAR_INTERSECTION,
+                makeArc(XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100})
+    );
+
+}
+
+// TODO: check Z values of arc result centerpoints
+// TODO: add tests for seg/seg
 
 }

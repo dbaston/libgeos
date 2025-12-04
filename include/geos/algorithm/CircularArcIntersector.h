@@ -3,7 +3,7 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2024 ISciences, LLC
+ * Copyright (C) 2024-2025 ISciences, LLC
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
@@ -74,7 +74,7 @@ public:
     /// Sets the appropriate value of intersection_type and stores the intersection
     /// points, if any.
     //void intersects(const CircularArc& arc, const CoordinateXY& p0, const CoordinateXY& p1);
-    void intersects(const CircularArc& arc, const geom::CoordinateSequence& seq, std::size_t pos0, std::size_t pos1);
+    void intersects(const CircularArc& arc, const geom::CoordinateSequence& seq, std::size_t pos0, std::size_t pos1, bool useSegEndpoints);
 
 #if 0
     template<typename C1, typename C2>
@@ -128,6 +128,12 @@ private:
         nPt = 0;
         nArc = 0;
     }
+
+    void addArcIntersection(double startAngle, double endAngle, int orientation, const CircularArc& arc1, const CircularArc& arc2);
+
+    void addIntersection(const CoordinateXY& computedIntPt, const CircularArc& lhs, const CircularArc& rhs);
+
+    void addIntersection(const CoordinateXY& computedIntPt, const CircularArc& lhs, const geom::CoordinateSequence& seq, std::size_t pos0, std::size_t pos1, bool useSegEndpoints);
 
     std::array<CoordinateXYZM, 2> intPt;
     std::array<CircularArc, 2> intArc;

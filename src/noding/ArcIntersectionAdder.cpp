@@ -50,7 +50,9 @@ ArcIntersectionAdder::processIntersections(ArcString& e0, std::size_t segIndex0,
 
     const geom::CircularArc& arc = e0.getArc(segIndex0);
 
-    m_intersector.intersects(arc, *e1.getCoordinates(), segIndex1, segIndex1 + 1);
+    // FIXME get useSegEndpoints from somewhere
+    constexpr bool useSegEndpoints = false;
+    m_intersector.intersects(arc, *e1.getCoordinates(), segIndex1, segIndex1 + 1, useSegEndpoints);
 
     if (m_intersector.getResult() == algorithm::CircularArcIntersector::NO_INTERSECTION) {
         return;
