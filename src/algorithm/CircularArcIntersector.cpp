@@ -210,54 +210,6 @@ static void interpolateZM(const CircularArc& arc0,
     }
 }
 
-#if 0
-class DoIntersectArcArc {
-public:
-    DoIntersectArcArc(CircularArcIntersector& cai,
-                const CircularArc& arc0,
-                const CircularArc& arc1) :
-        m_cai(cai),
-        m_arc0(arc0),
-        m_arc1(arc1)
-    {}
-
-    template<typename C1, typename C2>
-    void operator()()
-    {
-        const CoordinateSequence& seq0 = *m_arc0.getCoordinateSequence();
-        const auto pos0 = m_arc0.getCoordinatePosition();
-
-        const CoordinateSequence& seq1 = *m_arc1.getCoordinateSequence();
-        const auto pos1 = m_arc1.getCoordinatePosition();
-
-
-        const C1& p0 = seq0.getAt<C1>(pos0);
-        const C1& p2 = seq0.getAt<C1>(pos0 + 2);
-
-        const C2& q0 = seq1.getAt<C2>(pos1);
-        const C2& q2 = seq1.getAt<C2>(pos1 + 2);
-
-        m_cai.computeIntersectionArcArc(p0, p2, m_arc0.getCenter(), m_arc0.getRadius(), m_arc0.getOrientation(),
-                                        q0, q2, m_arc1.getCenter(), m_arc0.getRadius(), m_arc0.getOrientation());
-    }
-private:
-    CircularArcIntersector& m_cai;
-    const CircularArc& m_arc0;
-    const CircularArc& m_arc1;
-};
-
-void computeIntersection(const CircularArc& arc0, const CircularArc& arc1)
-{
-
-    const geom::CoordinateSequence& seq0 = *arc0.getCoordinateSequence();
-    const geom::CoordinateSequence& seq1 = *arc1.getCoordinateSequence();
-
-    DoIntersectArcArc di;
-    geom::CoordinateSequences::binaryDispatch(seq0, seq1, di);
-
-}
-#endif
-
 int
 CircularArcIntersector::circleIntersects(const CoordinateXY& center,
                                          double r,
@@ -597,8 +549,9 @@ CircularArcIntersector::intersects(const CircularArc& arc1, const CircularArc& a
     }
 }
 
-void CircularArcIntersector::intersects(const CoordinateSequence &p, std::size_t p0, std::size_t p1,
-                                        const CoordinateSequence &q, std::size_t q0, std::size_t q1)
+void
+CircularArcIntersector::intersects(const CoordinateSequence &p, std::size_t p0, std::size_t p1,
+                                   const CoordinateSequence &q, std::size_t q0, std::size_t q1)
 {
     LineIntersector li;
     li.computeIntersection(p, p0, p1, q, q0, q1);

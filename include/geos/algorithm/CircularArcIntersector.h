@@ -76,39 +76,20 @@ public:
      */
     void intersects(const CircularArc& arc, const geom::CoordinateSequence& seq, std::size_t pos0, std::size_t pos1, bool useSegEndpoints);
 
-
-    /// Determines whether and where two circular arcs intersect.
-    ///
-    ///	Sets the appropriate value of intersection_type and stores the intersection
-    /// points and/or arcs, if any.
+    /** Determines whether and where two ciruclar arcs intersect.
+     *
+     * 	Sets the appropriate value of intersection_type and stores the intersection
+     *  points and/or arcs, if any.
+     */
     void intersects(const CircularArc& arc1, const CircularArc& arc2);
 
-    /// Compute the intersection between two segments, given a sequence and indices of each point
+    /** Determines whether and where two line segments intersect
+     *
+     * 	Sets the appropriate value of intersection_type and stores the intersection
+     *  points, if any.
+     */
     void intersects(const geom::CoordinateSequence& p, std::size_t p0, std::size_t p1,
                     const geom::CoordinateSequence& q, std::size_t q0, std::size_t q1);
-
-#if 0
-    template<typename C1, typename C2>
-    void intersects(const C1& p0, const C1& p1, const C2& q0, const C2& q1)
-    {
-        reset();
-
-        LineIntersector li;
-        li.computeIntersection(p0, p1, q0, q1);
-        if (li.getIntersectionNum() == 2) {
-            // FIXME this means a collinear intersection, so we should report as cocircular?
-            intPt[0] = li.getIntersection(0);
-            intPt[1] = li.getIntersection(1);
-            result = TWO_POINT_INTERSECTION;
-        } else if (li.getIntersectionNum() == 1) {
-            intPt[0] = li.getIntersection(0);
-            nPt = 1;
-            result = ONE_POINT_INTERSECTION;
-        } else {
-            result = NO_INTERSECTION;
-        }
-    }
-#endif
 
 private:
     void reset() {
