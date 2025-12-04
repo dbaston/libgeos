@@ -21,7 +21,6 @@
 #include <geos/algorithm/LineIntersector.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CircularArc.h>
-#include <geos/geom/LineSegment.h>
 
 namespace geos::algorithm {
 
@@ -64,33 +63,19 @@ public:
         return nArc;
     }
 
-#if 0
-    void computeIntersection(const geom::CoordinateSequence& p, std::size_t p0, const CoordinateXY& centerP, double radiusP,
-                             const geom::CoordinateSequence& q, std::size_t q0, const CoordinateXY& centerQ, double radiusQ);
-#endif
-
-    /// Determines whether and where a circular arc intersects a line segment.
-    ///
-    /// Sets the appropriate value of intersection_type and stores the intersection
-    /// points, if any.
-    //void intersects(const CircularArc& arc, const CoordinateXY& p0, const CoordinateXY& p1);
+    /** Determines whether and where a circular arc intersects a line segment.
+     *
+     * Sets the appropriate value of intersection_type and stores the intersection points, if any.
+     *
+     * @param arc The circular arc
+     * @param seq A CoordinateSequence containing the points of the line segment
+     * @param pos0 The index of the first point in the line segment
+     * @param pos1 The index of the second point in the line segment
+     * @param useSegEndpoints Whether to preferentially take Z/M values from
+     *        the endpoints of the line segment rather than the arc.
+     */
     void intersects(const CircularArc& arc, const geom::CoordinateSequence& seq, std::size_t pos0, std::size_t pos1, bool useSegEndpoints);
 
-#if 0
-    template<typename C1, typename C2>
-    void computeIntersectionArcArc(const CircularArc& arc0, const CircularArc& arc1);
-    //void computeIntersectionArcArc(const C1& p0, const C1& p2, const CoordinateXY& centerP, double radiusP, int orientationP,
-    //                               const C2& q0, const C2& q2, const CoordinateXY& centerQ, double radiusQ, int orientationQ);
-
-    template<typename C1, typename C2>
-    void computeIntersectArcSegment(const C1& p0, const C1& p1, const C1& p2, const CoordinateXY& center, double radius,
-                                    const C2& q0, const C2& q1);
-#endif
-
-    //void intersects(const CircularArc& arc, const geom::LineSegment& seg)
-    //{
-    //    intersects(arc, seg.p0, seg.p1);
-    //}
 
     /// Determines whether and where two circular arcs intersect.
     ///
@@ -98,10 +83,11 @@ public:
     /// points and/or arcs, if any.
     void intersects(const CircularArc& arc1, const CircularArc& arc2);
 
-    static int
-    circleIntersects(const CoordinateXY& center, double r, const CoordinateXY& p0, const CoordinateXY& p1, CoordinateXY& isect0, CoordinateXY& isect1);
+    /// Compute the intersection between two segments, given a sequence and indices of each point
+    void intersects(const geom::CoordinateSequence& p, std::size_t p0, std::size_t p1,
+                    const geom::CoordinateSequence& q, std::size_t q0, std::size_t q1);
 
-
+#if 0
     template<typename C1, typename C2>
     void intersects(const C1& p0, const C1& p1, const C2& q0, const C2& q1)
     {
@@ -122,6 +108,7 @@ public:
             result = NO_INTERSECTION;
         }
     }
+#endif
 
 private:
     void reset() {
@@ -129,20 +116,52 @@ private:
         nArc = 0;
     }
 
+    /** Add an arc intersection of two cocircular arcs between the specified angles.
+     *
+     * The input arcs are provided so that Z/M values can be assigned to the created arc.
+     * When the endpoints of the new arc correspond with those of the inputs, Z/M values
+     * will be preferentially taken from arc1.
+     */
     void addArcIntersection(double startAngle, double endAngle, int orientation, const CircularArc& arc1, const CircularArc& arc2);
 
-    void addIntersection(const CoordinateXY& computedIntPt, const CircularArc& lhs, const CircularArc& rhs);
+    /** Add a point intersection between two arcs.
+     *
+     * The input arcs are provided so that Z/M values can be assigned to the intersection point.
+     * When the intersection point corresponds matches one of the input arc endpoints,
+     * Z/M values will be taken from that endpoint, with arc1 having priority over arc2.
+     * If the intersection point does not equal the endpoint of either arc, its Z/M values
+     * will be interpolated.
+     */
+    void addIntersection(const CoordinateXY& computedIntPt, const CircularArc& arc1, const CircularArc& arc2);
 
+    /** Add a point intersection between an arc and a segment.
+     *
+     * The input arc and segment are provided so that Z/M values can be assigned to the intersection point.
+     * When the intersection point corresponds to the arc or segment endpoints, Z/M values
+     * will be taken from that endpoint. Priority will be given to the arc endpoints unless
+     * `useSegEndpoint` is true. If the intersection point does not equal the endpoint of the arc
+     * or the segment, its Z/M values will be interpolated.
+     */
     void addIntersection(const CoordinateXY& computedIntPt, const CircularArc& lhs, const geom::CoordinateSequence& seq, std::size_t pos0, std::size_t pos1, bool useSegEndpoints);
+
+    /** Determines whether and where two circles intersect a line segment.
+     *
+     * @param center The center point of the circle
+     * @param r The radius of the circle
+     * @param p0 The first point of the line segment
+     * @param p1 The second point of the line segment
+     * @param isect0 Set to the first intersection point, if it exists
+     * @param isect1 Set to the second intersection point, if it exists
+     * @return The number of intersection points
+     */
+    static int
+    circleIntersects(const CoordinateXY& center, double r, const CoordinateXY& p0, const CoordinateXY& p1, CoordinateXY& isect0, CoordinateXY& isect1);
 
     std::array<CoordinateXYZM, 2> intPt;
     std::array<CircularArc, 2> intArc;
     intersection_type result = NO_INTERSECTION;
     std::uint8_t nPt = 0;
     std::uint8_t nArc = 0;
-
 };
-
-//template CircularArcIntersector::computeIntersectionArcArc<geom::CoordinateXY, geom::CoordinateXY>(const geom::CoordinateXY& p,);
 
 }

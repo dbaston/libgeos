@@ -76,12 +76,17 @@ ArcIntersectionAdder::processIntersections(SegmentString& e0, std::size_t segInd
         return;
     }
 
+    m_intersector.intersects(*e0.getCoordinates(), segIndex0, segIndex0 + 1,
+                             *e1.getCoordinates(), segIndex1, segIndex1 + 1);
+
+#if 0
     const CoordinateXY& p0 = e0.getCoordinate(segIndex0);
     const CoordinateXY& p1 = e0.getCoordinate(segIndex0 + 1);
     const CoordinateXY& q0 = e1.getCoordinate(segIndex1);
     const CoordinateXY& q1 = e1.getCoordinate(segIndex1 + 1);
 
     m_intersector.intersects(p0, p1, q0, q1);
+#endif
 
     if (m_intersector.getResult() == algorithm::CircularArcIntersector::NO_INTERSECTION) {
         return;

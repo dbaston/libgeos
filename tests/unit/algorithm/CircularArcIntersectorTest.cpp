@@ -188,6 +188,25 @@ struct test_circulararcintersector_data {
         checkIntersection(arc, seg, result, i0, i1, true);
     }
 
+    template<typename C1, typename C2>
+    static void checkIntersectionSegSeg(C1 p0, C1 p1,
+                                        C2 q0, C2 q1,
+                                        CircularArcIntersector::intersection_type result,
+                                        const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
+                                        const ArcOrPoint& i1 = CoordinateXYZM::getNull())
+    {
+        CoordinateSequence seg0(2, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
+        seg0.setAt(p0, 0);
+        seg0.setAt(p1, 1);
+
+        CoordinateSequence seg1(2, hasOrdinate<C2>(Ordinate::Z), hasOrdinate<C2>(Ordinate::M));
+        seg1.setAt(q0, 0);
+        seg1.setAt(q1, 1);
+
+        checkIntersection(seg0, seg1, result, i0, i1, true);
+    }
+
+
     static bool pointWithinTolerance(const CoordinateXYZM& actual, const CoordinateXYZM& expected, double tol)
     {
         if (std::isnan(actual.z) != std::isnan(expected.z)) {
@@ -221,20 +240,23 @@ struct test_circulararcintersector_data {
         return true;
     }
 
-    template<typename CircularArcOrLineSegment>
-    static void checkIntersection(const CircularArc& a0,
-                                  const CircularArcOrLineSegment& a1,
+    template<typename T1, typename T2>
+    static void checkIntersection(const T1& a0,
+                                  const T2& a1,
                                   CircularArcIntersector::intersection_type result,
                                   const ArcOrPoint& p0 = CoordinateXYZM::getNull(),
                                   const ArcOrPoint& p1 = CoordinateXYZM::getNull(),
                                   bool useSegEndpoints=false)
     {
         CircularArcIntersector cai;
-        if constexpr (std::is_same_v<CircularArcOrLineSegment, CircularArc>) {
-            cai.intersects(a0, a1);
+        if constexpr (std::is_same_v<T1, CircularArc>)
+            if constexpr (std::is_same_v<T2, CircularArc>) {
+                cai.intersects(a0, a1);
+            } else {
+                cai.intersects(a0, a1, 0, 1, useSegEndpoints);
         } else {
-            static_assert(std::is_same_v<CircularArcOrLineSegment, CoordinateSequence>);
-            cai.intersects(a0, a1, 0, 1, useSegEndpoints);
+            static_assert(std::is_same_v<T1, CoordinateSequence>);
+            cai.intersects(a0, 0, 1, a1, 0, 1);
         }
 
         ensure_equals("incorrect intersection type between " + toWKT(a0) + " and " + toWKT(a1), to_string(cai.getResult()), to_string(result));
@@ -1597,6 +1619,24 @@ void object::test<80>() {
                 makeArc(XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100})
     );
 
+}
+
+template<>
+template<>
+void object::test<81>
+()
+{
+    // Interior intersection of two XYZM lines.
+    // Result Z and M are the average of the interpolated coordinate values.
+    set_test_name("XYZM segment and XYZM segment with interior intesection");
+    // Related:: RobustLineIntersectorTest::testInteriorXYZM-XYZM
+
+    checkIntersectionSegSeg(
+            XYZM{1, 1, 1, -1}, XYZM{3, 3, 3, -3},
+            XYZM{1, 3, 10, -10}, XYZM{3, 1, 30, -30},
+            CircularArcIntersector::ONE_POINT_INTERSECTION,
+            XYZM{2, 2, 11, -11}
+    );
 }
 
 // TODO: check Z values of arc result centerpoints

@@ -161,6 +161,10 @@ public:
     void computeIntersection(const geom::CoordinateSequence& p, std::size_t p0,
                              const geom::CoordinateSequence& q, std::size_t q0);
 
+    /// Compute the intersection between two segments, given a sequence and indices of each endpoint
+    void computeIntersection(const geom::CoordinateSequence& p, std::size_t p0, std::size_t p1,
+                             const geom::CoordinateSequence& q, std::size_t q0, std::size_t q1);
+
     std::string toString() const;
 
     /**

@@ -329,10 +329,9 @@ void
 CircularArcIntersector::intersects(const CircularArc& arc, const CoordinateSequence& seq, std::size_t segPos0, std::size_t segPos1, bool useSegEndpoints)
 {
     if (arc.isLinear()) {
-        seq.applyAt(segPos0, [this, &seq, &arc, segPos1](const auto& p0) {
-            const auto& p1 = seq.getAt<std::decay_t<decltype(p0)>>(segPos1);
-            intersects(arc.p0(), arc.p2(), p0, p1);
-        });
+        std::size_t arcPos0 = arc.getCoordinatePosition();
+        intersects(*arc.getCoordinateSequence(), arcPos0, arcPos0 + 2,
+                   seq, segPos0, segPos1);
         return;
     }
 
@@ -365,21 +364,20 @@ CircularArcIntersector::intersects(const CircularArc& arc, const CoordinateSeque
     }
 }
 
-#if 0
 void
-CircularArcIntersector::intersects(const CoordinateXY& p0, const CoordinateXY& p1,
-                                   const CoordinateXY& q0, const CoordinateXY& q1)
-{
-}
-#endif
-
-void CircularArcIntersector::intersects(const CircularArc& arc1, const CircularArc& arc2)
+CircularArcIntersector::intersects(const CircularArc& arc1, const CircularArc& arc2)
 {
     // Handle cases where one or both arcs are degenerate
     if (arc1.isLinear()) {
         if (arc2.isLinear()) {
             // FIXME Z/M
-            intersects(arc1.p0(), arc1.p2(), arc2.p0(), arc2.p2());
+            const auto arc1pos = arc1.getCoordinatePosition();
+            const auto arc2pos = arc2.getCoordinatePosition();
+
+            intersects(*arc1.getCoordinateSequence(), arc1pos, arc1pos + 2,
+                       *arc2.getCoordinateSequence(), arc2pos, arc2pos + 2);
+
+            //intersects(arc1.p0(), arc1.p2(), arc2.p0(), arc2.p2());
             return;
         } else {
             intersects(arc2, *arc1.getCoordinateSequence(), arc1.getCoordinatePosition(), arc1.getCoordinatePosition() + 2, true);
@@ -596,6 +594,26 @@ void CircularArcIntersector::intersects(const CircularArc& arc1, const CircularA
             result = NO_INTERSECTION;
             break;
         }
+    }
+}
+
+void CircularArcIntersector::intersects(const CoordinateSequence &p, std::size_t p0, std::size_t p1,
+                                        const CoordinateSequence &q, std::size_t q0, std::size_t q1)
+{
+    LineIntersector li;
+    li.computeIntersection(p, p0, p1, q, q0, q1);
+
+    if (li.getIntersectionNum() == 2) {
+        // FIXME this means a collinear intersection, so we should report as cocircular?
+        intPt[0] = li.getIntersection(0);
+        intPt[1] = li.getIntersection(1);
+        result = TWO_POINT_INTERSECTION;
+    } else if (li.getIntersectionNum() == 1) {
+        intPt[0] = li.getIntersection(0);
+        nPt = 1;
+        result = ONE_POINT_INTERSECTION;
+    } else {
+        result = NO_INTERSECTION;
     }
 }
 
