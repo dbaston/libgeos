@@ -34,7 +34,7 @@ struct test_nodablearcstring_data {
         ensure_equals(noded->getSize(), expected.size());
 
         for (std::size_t i = 0; i < expected.size(); i++) {
-            ensure_arc_equals(noded->getArc(i), expected[i]);
+            ensure_arc_equals(noded->getArc(i), expected[i], 1e-8);
         }
 
         if (!reversed) {
@@ -50,13 +50,8 @@ struct test_nodablearcstring_data {
         }
     }
 
-    static void ensure_arc_equals(const CircularArc& actual, const CircularArc& expected) {
-        // FIXME check Z and M
-        ensure_equals_xy(actual.p0(), expected.p0());
-        ensure_equals_xy(actual.p2(), expected.p2());
-        ensure_equals_xy(actual.getCenter(), expected.getCenter());
-        ensure_equals(actual.getRadius(), expected.getRadius());
-        ensure_equals(actual.getOrientation(), expected.getOrientation());
+    static void ensure_arc_equals(const CircularArc& actual, const CircularArc& expected, double tol) {
+        ensure(actual.toString() + " does not equal expected " + expected.toString() ,actual.equals(expected, tol));
     }
 };
 
@@ -132,7 +127,7 @@ template<>
 template<>
 void object::test<4>()
 {
-    set_test_name("Z/M interpolated");
+    set_test_name("Center point Z/M in constructed arcs interpolated from endpoints");
 
     CoordinateSequence seq = CoordinateSequence::XYZM(3);
     CoordinateXYZM p0{0, 5, 6, 2};
@@ -154,23 +149,16 @@ void object::test<4>()
 
     auto noded = nas.getNoded();
 
-    auto nodedCoords = noded->releaseCoordinates();
+    ensure_equals(noded->getSize(), 2u);
+    const CircularArc& arc0 = noded->getArc(0);
+    ensure_arc_equals(arc0, CircularArc::create(p0, intPt, arc.getCenter(), arc.getRadius(), arc.getOrientation()), 1e-8);
+    ensure_equals(arc0.p1<CoordinateXYZM>().z, (p0.z + intPt.z) / 2);
+    ensure_equals(arc0.p1<CoordinateXYZM>().m, (p0.m + intPt.m) / 2);
 
-    ensure_equals(nodedCoords->getSize(), 5u);
-
-    ensure_equals_xyzm(nodedCoords->getAt<CoordinateXYZM>(0), p0);
-
-    CoordinateXYZM midpoint0 = nodedCoords->getAt<CoordinateXYZM>(1);
-    ensure_equals(midpoint0.z, (p0.z + intPt.z) / 2);
-    ensure_equals(midpoint0.m, (p0.m + intPt.m) / 2);
-
-    ensure_equals_xyzm(nodedCoords->getAt<CoordinateXYZM>(2), intPt);
-
-    CoordinateXYZM midpoint1 = nodedCoords->getAt<CoordinateXYZM>(3);
-    ensure_equals(midpoint1.z, (intPt.z + p2.z) / 2);
-    ensure_equals(midpoint1.m, (intPt.m + p2.m) / 2);
-
-    ensure_equals_xyzm(nodedCoords->getAt<CoordinateXYZM>(4), p2);
+    const CircularArc& arc1 = noded->getArc(1);
+    ensure_arc_equals(arc1, CircularArc::create(intPt, p2, arc.getCenter(), arc.getRadius(), arc.getOrientation()), 1e-8);
+    ensure_equals(arc1.p1<CoordinateXYZM>().z, (intPt.z + p2.z) / 2);
+    ensure_equals(arc1.p1<CoordinateXYZM>().m, (intPt.m + p2.m) / 2);
 }
 
 }

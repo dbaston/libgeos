@@ -62,7 +62,7 @@ public:
     template<typename CoordType>
     static CircularArc create(const CoordType& p0, const CoordType& p1, const CoordType& p2)
     {
-        auto seq = std::make_unique<CoordinateSequence>(3, CoordType::template has<Ordinate::Z>, CoordType::template has<Ordinate::M>());
+        auto seq = std::make_unique<CoordinateSequence>(3, CoordType::template has<Ordinate::Z>(), CoordType::template has<Ordinate::M>());
         seq->setAt(p0, 0);
         seq->setAt(p1, 1);
         seq->setAt(p2, 2);
@@ -185,6 +185,8 @@ public:
     // Split an arc at a specified point.
     // The point is assumed to be on the arc.
     //std::pair<CircularArc, CircularArc> splitAtPoint(const CoordinateXY& q) const;
+
+    bool equals(const CircularArc& other, double tol) const;
 
     class Iterator {
     public:

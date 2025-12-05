@@ -31,9 +31,21 @@ static CircularArc createFromPoints(const CoordType& p0, const CoordType& p2, co
 {
     static_assert(std::is_base_of_v<CoordinateXY, CoordType>);
 
-    auto seq = std::make_unique<CoordinateSequence>(3, CoordType::template has<Ordinate::Z>(), CoordType::template has<Ordinate::M>());
+    constexpr bool hasZ = CoordType::template has<Ordinate::Z>();
+    constexpr bool hasM = CoordType::template has<Ordinate::M>();
+
+    auto seq = std::make_unique<CoordinateSequence>(3, hasZ, hasM);
+
+    CoordType p1(geos::algorithm::CircularArcs::getMidpoint(p0, p2, center, radius, orientation == algorithm::Orientation::COUNTERCLOCKWISE));
+    if constexpr (hasZ) {
+        p1.z = 0.5*(p0.z + p2.z);
+    }
+    if constexpr (hasM) {
+        p1.m = 0.5*(p0.m + p2.m);
+    }
+
     seq->setAt(p0, 0);
-    seq->setAt(geos::algorithm::CircularArcs::getMidpoint(p0, p2, center, radius, orientation == algorithm::Orientation::COUNTERCLOCKWISE), 1);
+    seq->setAt(p1, 1);
     seq->setAt(p2, 2);
 
     CircularArc ret(std::move(seq), 0);
@@ -326,6 +338,49 @@ CircularArc::reverse() const
 
     return ret;
 }
+
+bool
+CircularArc::equals(const CircularArc &other, double tol) const
+{
+    if (getCoordinateSequence()->hasZ() != other.getCoordinateSequence()->hasZ()) {
+        return false;
+    }
+
+    if (getCoordinateSequence()->hasM() != other.getCoordinateSequence()->hasM()) {
+        return false;
+    }
+
+    if (getCenter().distance(other.getCenter()) > tol) {
+        return false;
+    }
+
+    if (std::abs(getRadius() - other.getRadius()) > tol) {
+        return false;
+    }
+
+    if (getOrientation() != other.getOrientation()) {
+        return false;
+    }
+
+    CoordinateXYZM a, b;
+    getCoordinateSequence()->getAt(getCoordinatePosition(), a);
+    other.getCoordinateSequence()->getAt(other.getCoordinatePosition(), b);
+
+    if (a.distance(b) > tol) {
+        return false;
+    }
+
+    if ((!std::isnan(a.z) || !std::isnan(b.z)) && !(std::abs(a.z - b.z) <= tol)) {
+        return false;
+    }
+
+    if ((!std::isnan(a.m) || !std::isnan(b.m)) && !(std::abs(a.m - b.m) <= tol)) {
+        return false;
+    }
+
+    return true;
+}
+
 
 #if 0
 std::pair<CircularArc, CircularArc>
