@@ -577,14 +577,12 @@ CircularArcIntersector::addArcIntersection(double startAngle, double endAngle, i
     const CoordinateXY& center = arc1.getCenter();
     const double radius = arc1.getRadius();
 
-    auto seq = std::make_unique<CoordinateSequence>(3, true, true);
-    seq->setAt(CircularArcs::createPoint(center, radius, startAngle), 0);
-    seq->setAt(CircularArcs::createPoint(center, radius, theta1), 1);
-    seq->setAt(CircularArcs::createPoint(center, radius, endAngle), 2);
+    const bool constructZ = arc1.getCoordinateSequence()->hasZ() || arc2.getCoordinateSequence()->hasZ();
+    const bool constructM = arc1.getCoordinateSequence()->hasM() || arc2.getCoordinateSequence()->hasM();
 
-    CoordinateXYZM& computedStartPt = seq->getAt<CoordinateXYZM>(0);
-    CoordinateXYZM& computedMidPt = seq->getAt<CoordinateXYZM>(1);
-    CoordinateXYZM& computedEndPt = seq->getAt<CoordinateXYZM>(2);
+    CoordinateXYZM computedStartPt(CircularArcs::createPoint(center, radius, startAngle));
+    CoordinateXYZM computedMidPt(CircularArcs::createPoint(center, radius, theta1));
+    CoordinateXYZM computedEndPt(CircularArcs::createPoint(center, radius, endAngle));
 
     if (computedStartPt.equals2D(arc1.p0())) {
         arc1.applyAt(0, [&computedStartPt](const auto& endpoint) {
@@ -634,8 +632,12 @@ CircularArcIntersector::addArcIntersection(double startAngle, double endAngle, i
     interpolateZM(arc1, arc2, computedMidPt);
     interpolateZM(arc1, arc2, computedEndPt);
 
-    intArc[nArc] = CircularArc(std::move(seq), 0, center, radius, orientation);
-    nArc++;
+    auto seq = std::make_unique<CoordinateSequence>(3, constructZ, constructM);
+    seq->setAt(computedStartPt, 0);
+    seq->setAt(computedMidPt, 1);
+    seq->setAt(computedEndPt, 2);
+
+    intArc[nArc++] = CircularArc(std::move(seq), 0, center, radius, orientation);
 }
 
 void

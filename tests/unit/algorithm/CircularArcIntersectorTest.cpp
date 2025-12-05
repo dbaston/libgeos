@@ -27,37 +27,6 @@ struct test_circulararcintersector_data {
 
     static constexpr double NaN = geos::DoubleNotANumber;
 
-    std::vector<std::unique_ptr<CoordinateSequence>> seqStore_;
-
-    template<typename CoordType>
-    static constexpr bool hasOrdinate(Ordinate ord) {
-        switch (ord) {
-            case Ordinate::X:
-            case Ordinate::Y:
-                return true;
-            case Ordinate::Z:
-                return std::is_same_v<CoordType, Coordinate> || std::is_same_v<CoordType, CoordinateXYZM>;
-            case Ordinate::M:
-                return std::is_same_v<CoordType, CoordinateXYM> || std::is_same_v<CoordType, CoordinateXYZM>;
-        }
-        assert(0);
-    }
-
-    template<typename T>
-    CircularArc makeArc(T p0, T p1, T p2)
-    {
-        auto seq = std::make_unique<CoordinateSequence>(3, hasOrdinate<T>(Ordinate::Z), hasOrdinate<T>(Ordinate::M));
-        seq->setAt(p0, 0);
-        seq->setAt(p1, 1);
-        seq->setAt(p2, 2);
-
-        CircularArc ret(*seq, 0);
-
-        seqStore_.push_back(std::move(seq));
-
-        return ret;
-    }
-
     using ArcOrPoint = std::variant<XY, XYZ, XYM, XYZM, CircularArc>;
 
     static std::string to_string(CircularArcIntersector::intersection_type t)
@@ -130,12 +99,12 @@ struct test_circulararcintersector_data {
                                   const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
                                   const ArcOrPoint& i1 = CoordinateXYZM::getNull())
     {
-        CoordinateSequence cs1(3, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
+        CoordinateSequence cs1(3, C1::template has<Ordinate::Z>(), C1::template has<Ordinate::M>());
         cs1.setAt(p0, 0);
         cs1.setAt(p1, 1);
         cs1.setAt(p2, 2);
 
-        CoordinateSequence cs2(3, hasOrdinate<C2>(Ordinate::Z), hasOrdinate<C2>(Ordinate::M));
+        CoordinateSequence cs2(3, C2::template has<Ordinate::Z>(), C2::template has<Ordinate::M>());
         cs2.setAt(q0, 0);
         cs2.setAt(q1, 1);
         cs2.setAt(q2, 2);
@@ -153,14 +122,14 @@ struct test_circulararcintersector_data {
                                         const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
                                         const ArcOrPoint& i1 = CoordinateXYZM::getNull())
     {
-        CoordinateSequence cs1(3, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
+        CoordinateSequence cs1(3, C1::template has<Ordinate::Z>(), C1::template has<Ordinate::M>());
         cs1.setAt(p0, 0);
         cs1.setAt(p1, 1);
         cs1.setAt(p2, 2);
 
         const CircularArc arc(cs1, 0);
 
-        CoordinateSequence seg(2, hasOrdinate<C2>(Ordinate::Z), hasOrdinate<C2>(Ordinate::M));
+        CoordinateSequence seg(2, C2::template has<Ordinate::Z>(), C2::template has<Ordinate::M>());
         seg.setAt(q0, 0);
         seg.setAt(q1, 1);
 
@@ -174,12 +143,12 @@ struct test_circulararcintersector_data {
                                         const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
                                         const ArcOrPoint& i1 = CoordinateXYZM::getNull())
     {
-        CoordinateSequence seg(2, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
+        CoordinateSequence seg(2, C1::template has<Ordinate::Z>(), C1::template has<Ordinate::M>());
         seg.setAt(p0, 0);
         seg.setAt(p1, 1);
 
 
-        CoordinateSequence arcSeq(3, hasOrdinate<C2>(Ordinate::Z), hasOrdinate<C2>(Ordinate::M));
+        CoordinateSequence arcSeq(3, C2::template has<Ordinate::Z>(), C2::template has<Ordinate::M>());
         arcSeq.setAt(q0, 0);
         arcSeq.setAt(q1, 1);
         arcSeq.setAt(q2, 2);
@@ -195,11 +164,11 @@ struct test_circulararcintersector_data {
                                         const ArcOrPoint& i0 = CoordinateXYZM::getNull(),
                                         const ArcOrPoint& i1 = CoordinateXYZM::getNull())
     {
-        CoordinateSequence seg0(2, hasOrdinate<C1>(Ordinate::Z), hasOrdinate<C1>(Ordinate::M));
+        CoordinateSequence seg0(2, C1::template has<Ordinate::Z>(), C1::template has<Ordinate::M>());
         seg0.setAt(p0, 0);
         seg0.setAt(p1, 1);
 
-        CoordinateSequence seg1(2, hasOrdinate<C2>(Ordinate::Z), hasOrdinate<C2>(Ordinate::M));
+        CoordinateSequence seg1(2, C2::template has<Ordinate::Z>(), C2::template has<Ordinate::M>());
         seg1.setAt(q0, 0);
         seg1.setAt(q1, 1);
 
@@ -541,7 +510,7 @@ void object::test<10>()
         XY{-5, 0}, XY{0, 5}, XY{5, 0}, // CW
         XY{-4, 3}, XY{0, 5}, XY{4, 3}, // CW
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc{{-4, 3}, {0, 5}, {4, 3}}
+        CircularArc::create(XY{-4, 3}, {0, 5}, {4, 3})
     ); // CW
 }
 
@@ -555,7 +524,7 @@ void object::test<11>()
         XY{5, 0}, XY{0, 5}, XY{-5, 0}, // CCW
         XY{-4, 3}, XY{0, 5}, XY{4, 3}, // CW
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc{{4, 3}, {0, 5}, {-4, 3}}
+        CircularArc::create(XY{4, 3}, {0, 5}, {-4, 3})
     ); // CCW
 }
 
@@ -569,7 +538,7 @@ void object::test<12>()
         XY{-5, 0}, XY{0, 5}, XY{5, 0},
         XY{5, 0}, XY{0, -5}, XY{0, 5},
       CircularArcIntersector::COCIRCULAR_INTERSECTION,
-     CircularArc{{-5, 0}, {-5 * std::sqrt(2) / 2, 5 * std::sqrt(2) / 2}, {0, 5}},
+     CircularArc::create(XY{-5, 0}, {-5 * std::sqrt(2) / 2, 5 * std::sqrt(2) / 2}, {0, 5}),
      XY{5, 0}
     );
 }
@@ -584,8 +553,8 @@ void object::test<13>()
         XY{-5, 0}, XY{0, 5}, XY{5, 0},
         XY{3, 4}, XY{0, -5}, XY{-3, 4},
       CircularArcIntersector::COCIRCULAR_INTERSECTION,
-     CircularArc{{3, 4}, {4.4721359549995796, 2.2360679774997898}, {5, 0}},
-     CircularArc{{-5, 0}, {-4.4721359549995796, 2.2360679774997907}, {-3, 4}}
+     CircularArc::create(XY{3, 4}, {4.4721359549995796, 2.2360679774997898}, {5, 0}),
+     CircularArc::create(XY{-5, 0}, {-4.4721359549995796, 2.2360679774997907}, {-3, 4})
     );
 }
 
@@ -850,7 +819,7 @@ void object::test<39>()
     checkIntersection(XY{0, 5}, XY{5, 0}, XY{0, -5},
                       XY{4, 3}, XY{5, 0}, XY{4, -3},
                       CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                      CircularArc{{4, 3}, {5, 0}, {4, -3}});
+                      CircularArc::create(XY{4, 3}, {5, 0}, {4, -3}));
 }
 
 #if 0
@@ -901,7 +870,7 @@ template<>
 template<>
 void object::test<43>()
 {
-    set_test_name("IOX-ILI: overlayTwoARCSS_ameEndPointsS_ameDirection");
+    set_test_name("IOX-ILI: overlayTwoARCS_SameEndPointsS_ameDirection");
     // two arcs with same arcPoint and radius.
     // startPoints and endPoints are same. lines are in same direction
 
@@ -909,7 +878,7 @@ void object::test<43>()
         XY{100.0, 100.0}, XY{120,150.0}, XY{100.0,200.0},
         XY{100.0, 100.0}, XY{120,150.0}, XY{100.0,200.0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc{{100.0, 100.0}, {120, 150}, {100, 200}}
+        CircularArc::create(XY{100.0, 100.0}, {120, 150}, {100, 200})
     );
 }
 
@@ -925,7 +894,7 @@ void object::test<44>()
         XY{0.0, 10.0}, XY{4.0,8.0}, XY{0.0,0.0},
         XY{0.0, 10.0}, XY{4.0,2.0}, XY{0.0,0.0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc{{0, 10}, {5, 5}, {0, 0}}
+        CircularArc::create(XY{0, 10}, {5, 5}, {0, 0})
     );
 }
 
@@ -942,7 +911,7 @@ void object::test<45>()
         XY{0.0, 10.0}, XY{4.0,8.0}, XY{0.0,0.0},
         XY{0.0, 10.0}, XY{4.0,8.0}, XY{4.0,2.0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc{{0, 10}, {4, 2}, {0, 5}, 5, Orientation::CLOCKWISE}
+        CircularArc::create(XY{0, 10}, XY{4, 2}, XY{0, 5}, 5, Orientation::CLOCKWISE)
     );
 }
 
@@ -955,10 +924,10 @@ void object::test<46>()
     // startPoint1 is equal to endPoint2, startPoint2 is equal to endPoint1.
 
     checkIntersection(
-        CircularArc({100.0, 100.0}, {80.0, 150.0}, {100.0, 200.0}),
-        CircularArc({100.0, 200.0}, {80.0, 150.0}, {100.0, 100.0}),
+        XY{100.0, 100.0}, XY{80.0, 150.0}, XY{100.0, 200.0},
+        XY{100.0, 200.0}, XY{80.0, 150.0}, XY{100.0, 100.0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc({100.0, 100.0}, {80.0, 150.0}, {100.0, 200.0}));
+        CircularArc::create(XY{100.0, 100.0}, {80.0, 150.0}, {100.0, 200.0}));
 }
 
 template<>
@@ -968,12 +937,12 @@ void object::test<47>()
     set_test_name("IOX-ILI: overlayTwoARCS_DifferentStartPointsS_ameDirection_DifferentLength");
     // two arcs. ArcPoint is equal. different angle.
     // startPoints are different. endPoints are same.
-    CircularArc a({70.0, 60.0}, {50.0, 100.0}, {60.0, 130.0});
-    CircularArc b({60.0, 70.0}, {50.0, 100.0}, {60.0, 130.0});
+    CircularArc a = CircularArc::create(XY{70.0, 60.0}, {50.0, 100.0}, {60.0, 130.0});
+    CircularArc b = CircularArc::create(XY{60.0, 70.0}, {50.0, 100.0}, {60.0, 130.0});
 
     checkIntersection(a, b,
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc({60, 70}, {60, 130}, a.getCenter(), a.getRadius(), a.getOrientation()));
+        CircularArc::create(XY{60, 70}, {60, 130}, a.getCenter(), a.getRadius(), a.getOrientation()));
 }
 
 template<>
@@ -985,12 +954,12 @@ void object::test<48>()
     // ArcPoint is equal.
     // startPoints are different. endPoints are different.
 
-    CircularArc a({70.0,  60.0}, {50.0, 100.0}, {70.0, 140.0});
-    CircularArc b({60.0, 130.0}, {50.0, 100.0}, {60.0,  70.0});
+    CircularArc a = CircularArc::create(XY{70.0,  60.0}, {50.0, 100.0}, {70.0, 140.0});
+    CircularArc b = CircularArc::create(XY{60.0, 130.0}, {50.0, 100.0}, {60.0,  70.0});
 
     checkIntersection(a, b, 
             CircularArcIntersector::COCIRCULAR_INTERSECTION,
-            CircularArc({60, 70}, {60, 130}, a.getCenter(), a.getRadius(), a.getOrientation()));
+            CircularArc::create(XY{60, 70}, XY{60, 130}, a.getCenter(), a.getRadius(), a.getOrientation()));
 
 }
 
@@ -1003,8 +972,8 @@ void object::test<49>()
     // ArcPoint is equal.
     // startPoints are same, endpoints are different
 
-    CircularArc a({70.0, 60.0}, {50.0, 100.0}, {70.0, 140.0});
-    CircularArc b({70.0, 60.0}, {50.0, 100.0}, {60.0, 130.0});
+    CircularArc a = CircularArc::create(XY{70.0, 60.0}, {50.0, 100.0}, {70.0, 140.0});
+    CircularArc b = CircularArc::create(XY{70.0, 60.0}, {50.0, 100.0}, {60.0, 130.0});
 
     checkIntersection(a, b,
         CircularArcIntersector::COCIRCULAR_INTERSECTION, b);
@@ -1020,12 +989,12 @@ void object::test<50>()
     // One endpoint is the same, one is different.
 
 
-    CircularArc a({70.0,  60.0}, {50.0, 100.0}, {70.0, 140.0});
-    CircularArc b({60.0, 130.0}, {50.0, 100.0}, {70.0,  60.0});
+    CircularArc a = CircularArc::create(XY{70.0,  60.0}, {50.0, 100.0}, {70.0, 140.0});
+    CircularArc b = CircularArc::create(XY{60.0, 130.0}, {50.0, 100.0}, {70.0,  60.0});
 
     checkIntersection(a, b,
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        CircularArc({70, 60}, {60, 130}, a.getCenter(), a.getRadius(), a.getOrientation()));
+        CircularArc::create(XY{70, 60}, XY{60, 130}, a.getCenter(), a.getRadius(), a.getOrientation()));
 }
 
 template<>
@@ -1035,8 +1004,8 @@ void object::test<51>()
     set_test_name("IOX-ILI: twoARCSS_ameRadiusAndCenter_DontOverlay");
     // two arcs with same center and radius that don't touch each other.
 
-    CircularArc a({70.0,  60.0}, {50.0,  100.0}, {70.0,  140.0});
-    CircularArc b({140.0, 70.0}, {150.0, 100.0}, {140.0, 130.0});
+    CircularArc a = CircularArc::create(XY{70.0,  60.0}, {50.0,  100.0}, {70.0,  140.0});
+    CircularArc b = CircularArc::create(XY{140.0, 70.0}, {150.0, 100.0}, {140.0, 130.0});
 
     checkIntersection(a, b, CircularArcIntersector::NO_INTERSECTION);
 }
@@ -1048,8 +1017,8 @@ void object::test<52>()
     set_test_name("IOX-ILI: twoARCSS_ameRadiusAndCenter_Touch_DontOverlay");
     // Two arcs with same radius and center that touch at the endpoints
 
-    CircularArc a({50.0,  100.0}, {100.0, 150.0}, {150.0, 100.0});
-    CircularArc b({150.0, 100.0}, {100.0, 50.0},  {50.0,  100.0});
+    CircularArc a = CircularArc::create(XY{50.0,  100.0}, {100.0, 150.0}, {150.0, 100.0});
+    CircularArc b = CircularArc::create(XY{150.0, 100.0}, {100.0, 50.0},  {50.0,  100.0});
 
     checkIntersection(a, b, CircularArcIntersector::TWO_POINT_INTERSECTION, a.p0(), a.p2());
 }
@@ -1062,8 +1031,8 @@ void object::test<53>()
     // arcs touch at endpoints
     // Potential fix is to use tolerance for checking if computed points are within arc.
 
-    CircularArc a({2654828.912, 1223354.671}, {2654829.982, 1223353.601}, {2654831.052, 1223354.671});
-    CircularArc b({2654831.052, 1223354.671}, {2654829.982, 1223355.741}, {2654828.912, 1223354.671});
+    CircularArc a = CircularArc::create(XY{2654828.912, 1223354.671}, {2654829.982, 1223353.601}, {2654831.052, 1223354.671});
+    CircularArc b = CircularArc::create(XY{2654831.052, 1223354.671}, {2654829.982, 1223355.741}, {2654828.912, 1223354.671});
 
     checkIntersection(a, b, CircularArcIntersector::TWO_POINT_INTERSECTION, a.p0(), a.p2());
 }
@@ -1075,8 +1044,8 @@ void object::test<54>()
     set_test_name("IOX-ILI: twoARCS_intersect0");
     // https://github.com/claeis/ilivalidator/issues/186
 
-    CircularArc a({2658317.225, 1250832.586}, {2658262.543, 1250774.465}, {2658210.528, 1250713.944});
-    CircularArc b({2658211.456, 1250715.072}, {2658161.386, 1250651.279}, {2658114.283, 1250585.266});
+    CircularArc a = CircularArc::create(XY{2658317.225, 1250832.586}, {2658262.543, 1250774.465}, {2658210.528, 1250713.944});
+    CircularArc b = CircularArc::create(XY{2658211.456, 1250715.072}, {2658161.386, 1250651.279}, {2658114.283, 1250585.266});
 
     // An intersection is visually apparent in QGIS, but CGAL 5.6 reports no intersections...
     checkIntersection(a, b, CircularArcIntersector::NO_INTERSECTION);
@@ -1411,7 +1380,7 @@ void object::test<73>() {
         XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
         XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        makeArc(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
+        CircularArc::create(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
     );
 
     // counter-clockwise inputs
@@ -1419,7 +1388,7 @@ void object::test<73>() {
         XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
         XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        makeArc(XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0})
+        CircularArc::create(XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0})
     );
 
     // mixed-orientation inputs
@@ -1427,7 +1396,7 @@ void object::test<73>() {
         XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
         XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        makeArc(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
+        CircularArc::create(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
     );
 }
 
@@ -1442,7 +1411,7 @@ void object::test<74>() {
         XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15},
         XY{-5, 0}, XY{0, 5}, XY{5, 0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        makeArc(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
+        CircularArc::create(XYZ{-5, 0, 0}, XYZ{0, 5, 0}, XYZ{5, 0, 15})
     );
 
     // counter-clockwise input
@@ -1450,7 +1419,7 @@ void object::test<74>() {
         XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0},
         XY{5, 0}, XY{0, 5}, XY{-5, 0},
         CircularArcIntersector::COCIRCULAR_INTERSECTION,
-        makeArc(XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0})
+        CircularArc::create(XYZ{5, 0, 15}, XYZ{0, 5, 0}, XYZ{-5, 0, 0})
     );
 }
 
@@ -1537,7 +1506,7 @@ void object::test<77>() {
         XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
         XYZ{-4, 3, frac*15}, XYZ{0, 5, 7.5}, XYZ{4, 3, (1-frac)*15},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{-4, 3, frac*15}, XYZ{0, 5, 0}, XYZ{4, 3, (1-frac)*15})
+                CircularArc::create(XYZ{-4, 3, frac*15}, XYZ{0, 5, 0}, XYZ{4, 3, (1-frac)*15})
     );
 
     // Counter-clockwise inputs
@@ -1545,7 +1514,7 @@ void object::test<77>() {
         XYZ{5, 0, 15}, XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
         XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 7.5}, XYZ{-4, 3, frac*15},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 0}, XYZ{-4, 3, frac*15})
+                CircularArc::create(XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 0}, XYZ{-4, 3, frac*15})
     );
 }
 
@@ -1563,7 +1532,7 @@ void object::test<78>() {
         XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
         XY{-4, 3}, XY{0, 5}, XY{4, 3},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{-4, 3, frac*15}, XYZ{0, 5, 7.5}, XYZ{4, 3, (1-frac)*15})
+                CircularArc::create(XYZ{-4, 3, frac*15}, XYZ{0, 5, 7.5}, XYZ{4, 3, (1-frac)*15})
     );
 
     // counter-clockwise inputs
@@ -1571,7 +1540,7 @@ void object::test<78>() {
         XYZ{5, 0, 15}, XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
         XY{4, 3}, XY{0, 5}, XY{-4, 3},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 7.5}, XYZ{-4, 3, frac*15})
+                CircularArc::create(XYZ{4, 3, (1-frac)*15}, XYZ{0, 5, 7.5}, XYZ{-4, 3, frac*15})
     );
 }
 
@@ -1586,7 +1555,7 @@ void object::test<79>() {
         XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
         XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200})
+                CircularArc::create(XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200})
     );
 
     // counter-clockwise inputs
@@ -1594,7 +1563,7 @@ void object::test<79>() {
         XYZ{5, 0, 15}, XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
         XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100})
+                CircularArc::create(XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100})
     );
 }
 
@@ -1608,7 +1577,7 @@ void object::test<80>() {
         XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200},
         XYZ{-5, 0, 0}, XYZ{0, 5, 7.5}, XYZ{5, 0, 15},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200})
+                CircularArc::create(XYZ{-4, 3, 100}, XYZ{0, 5, 150}, XYZ{4, 3, 200})
     );
 
     // counter-clockwise inputs
@@ -1616,7 +1585,7 @@ void object::test<80>() {
         XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100}, 
         XYZ{5, 0, 15},  XYZ{0, 5, 7.5}, XYZ{-5, 0, 0},
            CircularArcIntersector::COCIRCULAR_INTERSECTION,
-                makeArc(XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100})
+                CircularArc::create(XYZ{4, 3, 200}, XYZ{0, 5, 150}, XYZ{-4, 3, 100})
     );
 
 }

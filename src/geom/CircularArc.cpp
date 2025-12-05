@@ -13,83 +13,55 @@
  **********************************************************************/
 
 #include <geos/geom/CircularArc.h>
+#include <geos/triangulate/quadedge/TrianglePredicate.h>
 #include <sstream>
 
 namespace geos::geom {
 
-CircularArc::CircularArc(const CoordinateXY& q0, const CoordinateXY& q1, const CoordinateXY& q2)
-: m_seq(new CoordinateSequence(3, false, false))
-, m_pos(0)
-, m_own_coordinates(true)
+CircularArc::CircularArc() :
+    m_seq(nullptr),
+    m_center_known(true),
+    m_radius_known(true),
+    m_orientation_known(true),
+    m_own_coordinates(true)
+{}
+
+template<typename CoordType>
+static CircularArc createFromPoints(const CoordType& p0, const CoordType& p2, const CoordinateXY& center, double radius, int orientation)
 {
-    m_seq->setAt(q0, 0);
-    m_seq->setAt(q1, 1);
-    m_seq->setAt(q2, 2);
+    static_assert(std::is_base_of_v<CoordinateXY, CoordType>);
+
+    auto seq = std::make_unique<CoordinateSequence>(3, CoordType::template has<Ordinate::Z>(), CoordType::template has<Ordinate::M>());
+    seq->setAt(p0, 0);
+    seq->setAt(geos::algorithm::CircularArcs::getMidpoint(p0, p2, center, radius, orientation == algorithm::Orientation::COUNTERCLOCKWISE), 1);
+    seq->setAt(p2, 2);
+
+    CircularArc ret(std::move(seq), 0);
+
+    return ret;
 }
 
-#if 0
-CircularArc::CircularArc(const Coordinate& q0, const Coordinate& q1, const Coordinate& q2)
-    : m_seq(new CoordinateSequence(3, true, false))
-    , m_pos(0)
-    , m_own_coordinates(true)
-{
-    m_seq->setAt(q0, 0);
-    m_seq->setAt(q1, 1);
-    m_seq->setAt(q2, 2);
+CircularArc
+CircularArc::create(const CoordinateXY& p0, const CoordinateXY& p2, const CoordinateXY& center, double radius, int orientation) {
+    return createFromPoints(p0, p2, center, radius, orientation);
 }
 
-CircularArc::CircularArc(const CoordinateXYM& q0, const CoordinateXYM& q1, const CoordinateXYM& q2)
-    : m_seq(new CoordinateSequence(3, false, true))
-    , m_pos(0)
-    , m_own_coordinates(true) {
-    m_seq->setAt(q0, 0);
-    m_seq->setAt(q1, 1);
-    m_seq->setAt(q2, 2);
+CircularArc
+CircularArc::create(const Coordinate& p0, const Coordinate& p2, const CoordinateXY& center, double radius, int orientation) {
+    return createFromPoints(p0, p2, center, radius, orientation);
 }
 
-CircularArc::CircularArc(const CoordinateXYZM& q0, const CoordinateXYZM& q1, const CoordinateXYZM& q2)
-        : m_seq(new CoordinateSequence(3, true, true))
-        , m_pos(0)
-        , m_own_coordinates(true) {
-    m_seq->setAt(q0, 0);
-    m_seq->setAt(q1, 1);
-    m_seq->setAt(q2, 2);
-}
-#endif
-
-CircularArc::CircularArc(double theta0, double theta2, const CoordinateXY& center, double radius, int orientation)
-        : m_seq(new CoordinateSequence(3, false, false)),
-          m_pos(0),
-          m_center(center),
-          m_radius(radius),
-          m_orientation(orientation),
-          m_center_known(true),
-          m_radius_known(true),
-          m_orientation_known(true),
-          m_own_coordinates(true)
-{
-    m_seq->setAt(algorithm::CircularArcs::createPoint(center, radius, theta0), 0);
-    m_seq->setAt(algorithm::CircularArcs::createPoint(center, radius, algorithm::CircularArcs::getMidpointAngle(theta0, theta2, orientation==algorithm::Orientation::COUNTERCLOCKWISE)), 1);
-    m_seq->setAt(algorithm::CircularArcs::createPoint(center, radius, theta2), 2);
+CircularArc
+CircularArc::create(const CoordinateXYM& p0, const CoordinateXYM& p2, const CoordinateXY& center, double radius, int orientation) {
+    return createFromPoints(p0, p2, center, radius, orientation);
 }
 
-CircularArc::CircularArc(const CoordinateXY& q0, const CoordinateXY& q2, const CoordinateXY& center, double radius, int orientation)
-    : m_seq(new CoordinateSequence(3, false, false)),
-      m_pos(0),
-      m_center(center),
-      m_radius(radius),
-      m_orientation(orientation),
-      m_center_known(true),
-      m_radius_known(true),
-      m_orientation_known(true),
-      m_own_coordinates(true)
-{
-    m_seq->setAt(q0, 0);
-    m_seq->setAt(algorithm::CircularArcs::getMidpoint(q0, q2, center, radius, orientation==algorithm::Orientation::COUNTERCLOCKWISE), 1);
-    m_seq->setAt(q2, 2);
+CircularArc
+CircularArc::create(const CoordinateXYZM& p0, const CoordinateXYZM& p2, const CoordinateXY& center, double radius, int orientation) {
+    return createFromPoints(p0, p2, center, radius, orientation);
 }
 
-CircularArc::CircularArc(CoordinateSequence& seq, std::size_t pos) :
+CircularArc::CircularArc(const CoordinateSequence& seq, std::size_t pos) :
     m_seq(&seq),
     m_pos(pos),
     m_own_coordinates(false) {}
@@ -101,7 +73,7 @@ CircularArc::CircularArc(std::unique_ptr<CoordinateSequence> seq, std::size_t po
     seq.release();
 }
 
-CircularArc::CircularArc(CoordinateSequence& seq, std::size_t pos, const CoordinateXY& center, double radius, int orientation) :
+CircularArc::CircularArc(const CoordinateSequence& seq, std::size_t pos, const CoordinateXY& center, double radius, int orientation) :
     m_seq(&seq),
     m_pos(pos),
     m_center(center),
@@ -131,8 +103,9 @@ CircularArc::CircularArc(const CircularArc& other) :
     m_orientation_known(other.m_orientation_known),
     m_own_coordinates(true)
 {
-    m_seq->reserve(3);
-    m_seq->add(*other.getCoordinateSequence(), other.getCoordinatePosition(), other.getCoordinatePosition() + 2);
+    CoordinateSequence* seq = const_cast<CoordinateSequence*>(m_seq);
+    seq->reserve(3);
+    seq->add(*other.getCoordinateSequence(), other.getCoordinatePosition(), other.getCoordinatePosition() + 2);
 }
 
 CircularArc::CircularArc(CircularArc&& other) noexcept {
@@ -168,8 +141,9 @@ CircularArc::operator=(const CircularArc& other)
     m_radius = other.m_radius;
     m_radius_known = other.m_radius_known;
 
-    m_seq->reserve(3);
-    m_seq->add(*other.getCoordinateSequence(), other.getCoordinatePosition(), other.getCoordinatePosition() + 2);
+    CoordinateSequence* seq = const_cast<CoordinateSequence*>(m_seq);
+    seq->reserve(3);
+    seq->add(*other.getCoordinateSequence(), other.getCoordinatePosition(), other.getCoordinatePosition() + 2);
 
     return *this;
 }
@@ -313,18 +287,47 @@ CircularArc::isUpwardAtPoint(const CoordinateXY& q) const {
     return isUpward;
 }
 
-void
-CircularArc::reverse() {
-    m_seq->swap(m_pos, m_pos+2);
+CircularArc
+CircularArc::reverse() const
+{
+    auto seq = std::make_unique<CoordinateSequence>(3, m_seq->hasZ(), m_seq->hasM());
+    m_seq->applyAt(m_pos, [&seq](const auto& pt) {
+        seq->setAt(pt, 2);
+    });
+    m_seq->applyAt(m_pos + 1, [&seq](const auto& pt) {
+        seq->setAt(pt, 1);
+    });
+    m_seq->applyAt(m_pos + 2, [&seq](const auto& pt) {
+        seq->setAt(pt, 0);
+    });
+
+    CircularArc ret(std::move(seq), 0);
+
     if (m_orientation_known) {
         if (m_orientation == algorithm::Orientation::COUNTERCLOCKWISE) {
-            m_orientation = algorithm::Orientation::CLOCKWISE;
+            ret.m_orientation = algorithm::Orientation::CLOCKWISE;
         } else if (m_orientation == algorithm::Orientation::CLOCKWISE) {
-            m_orientation = algorithm::Orientation::COUNTERCLOCKWISE;
+            ret.m_orientation = algorithm::Orientation::COUNTERCLOCKWISE;
+        } else {
+            ret.m_orientation = algorithm::Orientation::COLLINEAR;
         }
+        ret.m_orientation_known = true;
     }
+
+    if (m_center_known) {
+        ret.m_center = m_center;
+        ret.m_center_known = true;
+    }
+
+    if (m_radius_known) {
+        ret.m_radius = m_radius;
+        ret.m_radius_known = true;
+    }
+
+    return ret;
 }
 
+#if 0
 std::pair<CircularArc, CircularArc>
 CircularArc::splitAtPoint(const CoordinateXY& q) const {
     return std::make_pair(
@@ -332,6 +335,7 @@ CircularArc::splitAtPoint(const CoordinateXY& q) const {
         CircularArc(q, p2(), getCenter(), getRadius(), getOrientation())
     );
 }
+#endif
 
 std::string
 CircularArc::toString() const {

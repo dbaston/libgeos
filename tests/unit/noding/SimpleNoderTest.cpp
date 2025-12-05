@@ -12,6 +12,7 @@
 using geos::geom::CoordinateXY;
 using geos::geom::CoordinateSequence;
 using geos::geom::CircularArc;
+using geos::geom::Ordinate;
 using geos::algorithm::Orientation;
 using geos::noding::ArcString;
 using geos::noding::SegmentString;
@@ -23,6 +24,20 @@ using geos::noding::SimpleNoder;
 namespace tut {
 
 struct test_simplenoder_data {
+
+    // FIXME: This is duplicated from CircularArcIntersectorTest
+    template<typename T>
+    CircularArc makeArc(T p0, T p2, const CoordinateXY& center, double radius, int orientation)
+    {
+        auto seq = std::make_unique<CoordinateSequence>(3, T::template has<Ordinate::Z>(), T::template has<Ordinate::M>());
+        seq->setAt(p0, 0);
+        seq->setAt(geos::algorithm::CircularArcs::getMidpoint(p0, p2, center, radius, orientation == Orientation::COUNTERCLOCKWISE), 1);
+        seq->setAt(p2, 2);
+
+        CircularArc ret(std::move(seq), 0);
+
+        return ret;
+    }
 
     template<typename T1, typename T2>
     static void
@@ -129,10 +144,10 @@ void object::test<2>()
     set_test_name("arc-arc intersection");
 
     std::vector<CircularArc> arcs0;
-    arcs0.push_back(CircularArc({-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE));
+    arcs0.push_back(makeArc(CoordinateXY{-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE));
 
     std::vector<CircularArc> arcs1;
-    arcs1.push_back(CircularArc({-1, 1}, {1, 1}, {0, 1}, 1, Orientation::COUNTERCLOCKWISE));
+    arcs1.push_back(makeArc(CoordinateXY{-1, 1}, {1, 1}, {0, 1}, 1, Orientation::COUNTERCLOCKWISE));
 
     NodableArcString as0(std::move(arcs0), nullptr, false, false, nullptr);
     NodableArcString as1(std::move(arcs1), nullptr, false, false, nullptr);
@@ -162,7 +177,7 @@ void object::test<3>()
     set_test_name("arc-segment intersection");
 
     std::vector<CircularArc> arcs0;
-    arcs0.push_back(CircularArc({-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE));
+    arcs0.push_back(makeArc(CoordinateXY{-1, 0}, {1, 0}, {0, 0}, 1, Orientation::CLOCKWISE));
     NodableArcString as0(std::move(arcs0), nullptr, false, false, nullptr);
 
     auto seq1 = std::make_unique<CoordinateSequence>();
