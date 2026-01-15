@@ -81,6 +81,8 @@ OverlayMixedPoints::OverlayMixedPoints(int p_opCode, const Geometry* geom0, cons
     , pm(p_pm ? p_pm : geom0->getPrecisionModel())
     , geometryFactory(geom0->getFactory())
     , resultDim(OverlayUtil::resultDimension(opCode, geom0->getDimension(), geom1->getDimension()))
+    , resultHasZ(geom0->hasZ() || geom1->hasZ())
+    , resultHasM(geom0->hasM() || geom1->hasM())
 {
     // name the dimensional geometries
     if (geom0->getDimension() == 0) {
@@ -230,7 +232,7 @@ OverlayMixedPoints::createPointResult(std::vector<std::unique_ptr<Point>>& point
 std::vector<std::unique_ptr<Point>>
 OverlayMixedPoints::findPoints(bool isCovered, const CoordinateSequence* coords) const
 {
-    CoordinateSequence resultCoords(0, coords->hasZ(), coords->hasM());
+    CoordinateSequence resultCoords(0, resultHasZ, resultHasM);
 
     coords->forEach([&resultCoords, isCovered, this](const auto& coord) {
         // keep only points contained
@@ -254,9 +256,17 @@ OverlayMixedPoints::createPoints(const CoordinateSequence& coords) const
 {
     std::vector<std::unique_ptr<Point>> points;
     points.reserve(coords.size());
-    coords.forEach([&points, this](const auto& coord) {
-        points.push_back(geometryFactory->createPoint(coord));
-    });
+
+    if (coords.size() == 1) {
+        points.push_back(geometryFactory->createPoint(coords));
+    } else {
+        coords.forEach([&points, &coords, this](const auto& coord) {
+            CoordinateSequence ptSeq(1, coords.hasZ(), coords.hasM());
+            ptSeq.setAt(coord, 0);
+            points.push_back(geometryFactory->createPoint(ptSeq));
+        });
+    }
+
     return points;
 }
 

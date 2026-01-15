@@ -294,4 +294,16 @@ void object::test<19>()
                       "POINT M (5 5 99)");
 }
 
+template<>
+template<>
+void object::test<20>()
+{
+    //https://github.com/libgeos/geos/issues/1367
+    set_test_name("Intersection of LineString ZM with 2D point");
+
+    checkIntersection("LINESTRING ZM (0 0 100 200, 10 0 300 400)",
+       "POINT (2 0)",
+       "POINT ZM (2 0 100 300)");
+}
+
 } // namespace tut

@@ -99,6 +99,8 @@ private:
     int geomNonPointDim;
     std::unique_ptr<PointOnGeometryLocator> locator;
     int resultDim;
+    bool resultHasZ;
+    bool resultHasM;
 
     // Methods
     std::unique_ptr<PointOnGeometryLocator> createLocator(const Geometry* geomNonPoint);
