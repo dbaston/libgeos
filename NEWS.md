@@ -1,6 +1,14 @@
+## Changes in 3.14.2
+2026-xx-xx
+
+- Fixes/Improvements:
+  - Fix some cases of dropped M values in overlay (GH-1364/GH-1388, Dan Baston)
+  - GEOSClusterDBSCAN fix unsassigned clusters with minPoints <= 1 (GH-1386, Dan Baston)
+  - Fix crash in GEOSConvexHull (GH-1358, Dan Baston)
+
 
 ## Changes in 3.14.1
-2025-xx-xx
+2025-10-27
 
 - Fixes/Improvements:
   - Make floating-point exceptions optional for geosop (GH-1305, Maxim Kochetkov)
