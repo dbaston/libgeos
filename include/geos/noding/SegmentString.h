@@ -60,35 +60,11 @@ public:
     /// @param newSeq coordinates of this SegmentString
     ///
     SegmentString(const void* newContext, const std::shared_ptr<const geom::CoordinateSequence>& newSeq)
-        :
-        seq(newSeq),
-        context(newContext)
+        : PathString(newContext),
+        seq(newSeq)
     {}
 
-    virtual
-    ~SegmentString() {}
-
-    /** \brief
-     * Gets the user-defined data for this segment string.
-     *
-     * @return the user-defined data
-     */
-    const void*
-    getData() const
-    {
-        return context;
-    }
-
-    /** \brief
-     * Sets the user-defined data for this segment string.
-     *
-     * @param data an Object containing user-defined data
-     */
-    void
-    setData(const void* data)
-    {
-        context = data;
-    }
+    ~SegmentString() override = default;
 
     std::size_t size() const {
         // FIXME: Remove this method, or make consistent with getSize
@@ -189,8 +165,6 @@ protected:
     std::shared_ptr<const geom::CoordinateSequence> seq;
 
 private:
-    const void* context;
-
     static int safeOctant(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1)
     {
         if(p0.equals2D(p1)) {

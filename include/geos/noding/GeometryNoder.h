@@ -25,10 +25,14 @@
 
 // Forward declarations
 namespace geos {
+namespace algorithm {
+class CircularArcIntersector;
+}
 namespace geom {
 class Geometry;
 }
 namespace noding {
+class ArcIntersectionAdder;
 class Noder;
 }
 }
@@ -56,12 +60,14 @@ private:
     const geom::Geometry& argGeom;
     const bool argGeomHasCurves;
 
+    std::unique_ptr<Noder> noder;
+    std::unique_ptr<algorithm::CircularArcIntersector> m_cai;
+    std::unique_ptr<ArcIntersectionAdder> m_aia;
+
     static void extractPathStrings(const geom::Geometry& g,
                                    std::vector<std::unique_ptr<PathString>>& to);
 
     Noder& getNoder();
-
-    std::unique_ptr<Noder> noder;
 
     std::unique_ptr<geom::Geometry> toGeometry(std::vector<std::unique_ptr<PathString>>& noded) const;
 

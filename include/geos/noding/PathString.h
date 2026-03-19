@@ -30,11 +30,35 @@ namespace geos::noding {
 /// of a noding process.
 class GEOS_DLL PathString {
 public:
+    explicit PathString(const void* p_context = nullptr) : context(p_context) {}
+
     virtual ~PathString() = default;
 
     virtual std::size_t getSize() const = 0;
 
     virtual double getLength() const = 0;
+
+    /** \brief
+     * Gets the user-defined data for this segment string.
+     *
+     * @return the user-defined data
+     */
+    const void*
+    getData() const
+    {
+        return context;
+    }
+
+    /** \brief
+     * Sets the user-defined data for this segment string.
+     *
+     * @param data an Object containing user-defined data
+     */
+    void
+    setData(const void* data)
+    {
+        context = data;
+    }
 
     /// \brief
     /// Return a pointer to the CoordinateSequence associated
@@ -43,6 +67,10 @@ public:
 
     std::vector<PathString*>
     static toRawPointerVector(const std::vector<std::unique_ptr<PathString>> & segStrings);
+
+private:
+
+    const void* context;
 };
 
 }
