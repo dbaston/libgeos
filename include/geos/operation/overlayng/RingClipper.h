@@ -61,6 +61,7 @@ namespace overlayng { // geos.operation.overlayng
  */
 class GEOS_DLL RingClipper {
     using Coordinate = geos::geom::Coordinate;
+    using CoordinateXY = geos::geom::CoordinateXY;
     using CoordinateSequence = geos::geom::CoordinateSequence;
     using Envelope = geos::geom::Envelope;
 
@@ -87,10 +88,10 @@ private:
     * with an edge of the clip box.
     * The segment must be known to intersect the edge.
     */
-    void intersection(const Coordinate& a, const Coordinate& b, int edgeIndex, Coordinate& rsltPt) const;
-    double intersectionLineY(const Coordinate& a, const Coordinate& b, double y) const;
-    double intersectionLineX(const Coordinate& a, const Coordinate& b, double x) const;
-    bool isInsideEdge(const Coordinate& p, int edgeIndex) const;
+    void intersection(const CoordinateXY& a, const CoordinateXY& b, int edgeIndex, CoordinateXY& rsltPt) const;
+    static double intersectionLineY(const CoordinateXY& a, const CoordinateXY& b, double y);
+    static double intersectionLineX(const CoordinateXY& a, const CoordinateXY& b, double x);
+    bool isInsideEdge(const CoordinateXY& p, int edgeIndex) const;
 
 
 public:
