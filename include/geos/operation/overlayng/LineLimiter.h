@@ -54,6 +54,7 @@ namespace overlayng { // geos.operation.overlayng
 class GEOS_DLL LineLimiter {
     using Envelope = geos::geom::Envelope;
     using Coordinate = geos::geom::Coordinate;
+    using CoordinateXY = geos::geom::CoordinateXY;
     using CoordinateSequence = geos::geom::CoordinateSequence;
 
 private:
@@ -61,14 +62,21 @@ private:
     // Members
     const Envelope* limitEnv;
     std::unique_ptr<geom::CoordinateSequence> ptList;
-    const Coordinate* lastOutside;
+    const CoordinateXY* lastOutside;
     std::vector<std::unique_ptr<CoordinateSequence>> sections;
+    bool hasZ{false};
+    bool hasM{false};
 
     // Methods
-    void addPoint(const Coordinate* p);
-    void addOutside(const Coordinate* p);
-    bool isLastSegmentIntersecting(const Coordinate* p);
-    bool isSectionOpen();
+    template<typename CoordType>
+    void addPoint(const CoordType& p);
+
+    template<typename CoordType>
+    void addOutside(const CoordType& p);
+    bool isLastSegmentIntersecting(const CoordinateXY& p) const;
+    bool isSectionOpen() const;
+
+    template<typename CoordType>
     void startSection();
     void finishSection();
 

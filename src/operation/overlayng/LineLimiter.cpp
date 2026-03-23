@@ -34,32 +34,36 @@ LineLimiter::limit(const CoordinateSequence *pts)
     lastOutside = nullptr;
     ptList.reset(nullptr);
     sections.clear();
+    hasZ = pts->hasZ();
+    hasM = pts->hasM();
 
-    for (std::size_t i = 0; i < pts->size(); i++) {
-        const Coordinate* p = &(pts->getAt(i));
-        if (limitEnv->intersects(*p)) {
+    pts->forEach([this](const auto& p) {
+        if (limitEnv->intersects(p)) {
             addPoint(p);
         }
         else {
             addOutside(p);
         }
-    }
+    });
+
     // finish last section, if any
     finishSection();
     return sections;
 }
 
 /*private*/
+template<typename CoordType>
 void
-LineLimiter::addPoint(const Coordinate* p)
+LineLimiter::addPoint(const CoordType& p)
 {
-    startSection();
-    ptList->add(*p, false);
+    startSection<CoordType>();
+    ptList->add(p, false);
 }
 
 /*private*/
+template<typename CoordType>
 void
-LineLimiter::addOutside(const Coordinate* p)
+LineLimiter::addOutside(const CoordType& p)
 {
     bool segIntersects = isLastSegmentIntersecting(p);
     if (!segIntersects) {
@@ -67,16 +71,16 @@ LineLimiter::addOutside(const Coordinate* p)
     }
     else {
         if(lastOutside != nullptr) {
-            addPoint(lastOutside);
+            addPoint(*static_cast<const CoordType*>(lastOutside));
         }
         addPoint(p);
     }
-    lastOutside = p;
+    lastOutside = &p;
 }
 
 /*private*/
 bool
-LineLimiter::isLastSegmentIntersecting(const Coordinate* p)
+LineLimiter::isLastSegmentIntersecting(const CoordinateXY& p) const
 {
     if (lastOutside == nullptr) {
         // last point must have been inside
@@ -84,26 +88,27 @@ LineLimiter::isLastSegmentIntersecting(const Coordinate* p)
             return true;
         return false;
     }
-    return limitEnv->intersects(*lastOutside, *p);
+    return limitEnv->intersects(*lastOutside, p);
 }
 
 /*private*/
 bool
-LineLimiter::isSectionOpen()
+LineLimiter::isSectionOpen() const
 {
     return ptList != nullptr;
 }
 
 /*private*/
+template<typename CoordType>
 void
 LineLimiter::startSection()
 {
     if (!isSectionOpen()) {
-        ptList = detail::make_unique<CoordinateSequence>();
+        ptList = std::make_unique<CoordinateSequence>(0, hasZ, hasM);
     }
 
     if (lastOutside != nullptr) {
-        ptList->add(*lastOutside, false);
+        ptList->add(*static_cast<const CoordType*>(lastOutside), false);
     }
     lastOutside = nullptr;
 }
@@ -125,7 +130,7 @@ LineLimiter::finishSection()
     assert(!ptList->hasRepeatedPoints());
     //ptList->erase(std::unique(ptList->begin(), ptList->end()), ptList->end());
 
-    sections.emplace_back(ptList.release());
+    sections.push_back(std::move(ptList));
     ptList.reset(nullptr);
 }
 

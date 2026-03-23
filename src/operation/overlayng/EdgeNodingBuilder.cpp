@@ -414,7 +414,7 @@ EdgeNodingBuilder::isToBeLimited(const LineString* line) const
 
 /*private*/
 std::vector<std::unique_ptr<CoordinateSequence>>&
-EdgeNodingBuilder::limit(const LineString* line)
+EdgeNodingBuilder::limit(const LineString* line) const
 {
     const CoordinateSequence* pts = line->getCoordinatesRO();
     return limiter->limit(pts);
