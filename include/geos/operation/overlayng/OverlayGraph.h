@@ -51,12 +51,13 @@ namespace overlayng { // geos.operation.overlayng
  */
 class GEOS_DLL OverlayGraph {
     using Coordinate = geos::geom::Coordinate;
+    using CoordinateXY = geos::geom::CoordinateXY;
     using CoordinateSequence = geos::geom::CoordinateSequence;
 
 private:
 
     // Members
-    std::unordered_map<Coordinate, OverlayEdge*, geom::Coordinate::HashCode> nodeMap;
+    std::unordered_map<CoordinateXY, OverlayEdge*, geom::Coordinate::HashCode> nodeMap;
     std::vector<OverlayEdge*> edges;
 
     // Locally store the OverlayEdge and OverlayLabel
