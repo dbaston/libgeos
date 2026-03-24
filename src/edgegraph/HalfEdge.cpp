@@ -202,8 +202,8 @@ HalfEdge::compareAngularDirection(const HalfEdge* e) const
     * Check relative orientation of direction vectors
     * this is > e if it is CCW of e
     */
-    const Coordinate& dir1 = directionPt();
-    const Coordinate& dir2 = e->directionPt();
+    const CoordinateXY& dir1 = directionPt();
+    const CoordinateXY& dir2 = e->directionPt();
     return algorithm::Orientation::index(e->m_orig, dir2, dir1);
 }
 
