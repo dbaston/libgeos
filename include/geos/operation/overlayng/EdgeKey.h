@@ -61,7 +61,7 @@ private:
         }
     }
 
-    void init(const geom::Coordinate& p0, const geom::Coordinate& p1)
+    void init(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1)
     {
         p0x = p0.x;
         p0y = p0.y;
