@@ -109,7 +109,7 @@ protected:
     *
     * @return the direction point for the edge
     */
-    virtual const geom::CoordinateXYZM& directionPt() const { return dest(); };
+    virtual const geom::CoordinateXY& directionPt() const { return dest(); };
 
 
 public:
