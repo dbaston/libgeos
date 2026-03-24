@@ -17,7 +17,6 @@
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/Dimension.h>
-#include <geos/operation/overlayng/OverlayEdge.h>
 #include <geos/operation/overlayng/OverlayLabel.h>
 #include <geos/operation/overlayng/EdgeSourceInfo.h>
 #include <geos/util/GEOSException.h>
@@ -220,7 +219,7 @@ public:
         return cs;
     };
 
-    const geom::Coordinate& getCoordinate(std::size_t index)  const
+    const geom::CoordinateXY& getCoordinate(std::size_t index)  const
     {
         return pts->getAt(index);
     };
@@ -310,8 +309,8 @@ public:
 
     bool compareTo(const Edge& e) const
     {
-        const geom::Coordinate& ca = getCoordinate(0);
-        const geom::Coordinate& cb = e.getCoordinate(0);
+        const geom::CoordinateXY& ca = getCoordinate(0);
+        const geom::CoordinateXY& cb = e.getCoordinate(0);
         if(ca.compareTo(cb) < 0) {
             return true;
         }
@@ -319,8 +318,8 @@ public:
             return false;
         }
         else {
-            const geom::Coordinate& cca = getCoordinate(1);
-            const geom::Coordinate& ccb = e.getCoordinate(1);
+            const geom::CoordinateXY& cca = getCoordinate(1);
+            const geom::CoordinateXY& ccb = e.getCoordinate(1);
             if(cca.compareTo(ccb) < 0) {
                 return true;
             }
