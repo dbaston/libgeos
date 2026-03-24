@@ -150,7 +150,7 @@ InputGeometry::hasEdges(uint8_t geomIndex) const
 */
 /*public*/
 Location
-InputGeometry::locatePointInArea(uint8_t geomIndex, const Coordinate& pt)
+InputGeometry::locatePointInArea(uint8_t geomIndex, const CoordinateXY& pt)
 {
     if (isCollapsed[geomIndex] || getGeometry(geomIndex)->isEmpty())
         return Location::EXTERIOR;
