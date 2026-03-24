@@ -49,7 +49,7 @@ struct test_linelimiter_data {
         // std::cout << "--expect--" << std::endl;
         // std::cout << w.write(expected.get()) << std::endl;
 
-        ensure_equals_geometry(expected.get(), result.get());
+        ensure_equals_geometry_xyzm(expected.get(), result.get());
     }
 
     std::unique_ptr<Geometry>
@@ -170,7 +170,17 @@ void object::test<8> ()
     checkLimit(wkt, env, expected);
 }
 
+template<>
+template<>
+void object::test<9>()
+{
+    set_test_name("M values preserved");
 
+    std::string wkt= "LINESTRING M (7 17 1, 23 17 2, 23 13 3, 7 13 4)";
+    Envelope env(10,20,10,20);
+    std::string expected = "MULTILINESTRING M ((7 17 1, 23 17 2), (23 13 3, 7 13 4))";
+    checkLimit(wkt, env, expected);
+}
 
 
 } // namespace tut
