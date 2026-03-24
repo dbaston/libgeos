@@ -316,4 +316,14 @@ void object::test<21>()
         "LINESTRING ZM (0 0 2 9, 1 0 5 7)");
 }
 
+template<>
+template<>
+void object::test<22> ()
+{
+    set_test_name("POLYGON XYM / POLYGON XYM intersection");
+
+    checkIntersection("POLYGON M ((4 12 6, 2 6 7, 7 6 8, 11 4 9, 15 15 10, 4 12 6))", "POLYGON M ((1 9 1, 9 9 2, 9 1 3, 1 1 4, 1 9 1))",
+        "POLYGON M ((2 6 7, 3 9 3.875, 9 9 2, 9 5 5.5, 7 6 8, 2 6 7))");
+}
+
 } // namespace tut
