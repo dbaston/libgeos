@@ -42,6 +42,7 @@ class GEOS_DLL InputGeometry {
     using Geometry = geos::geom::Geometry;
     using Envelope = geos::geom::Envelope;
     using Coordinate = geos::geom::Coordinate;
+    using CoordinateXY = geos::geom::CoordinateXY;
     using Location = geos::geom::Location;
     using PointOnGeometryLocator = geos::algorithm::locate::PointOnGeometryLocator;
 
@@ -91,7 +92,7 @@ public:
     *
     * @see Location
     */
-    Location locatePointInArea(uint8_t geomIndex, const Coordinate& pt);
+    Location locatePointInArea(uint8_t geomIndex, const CoordinateXY& pt);
 
     PointOnGeometryLocator* getLocator(uint8_t geomIndex);
     void setCollapsed(uint8_t geomIndex, bool isGeomCollapsed);
