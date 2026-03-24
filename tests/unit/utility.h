@@ -407,7 +407,11 @@ ensure_equals_exact_geometry_xyz(const geos::geom::Geometry *lhs_in,
     }
     else if (const GeometryCollection* gc1 = dynamic_cast<const GeometryCollection *>(lhs_in)) {
       const GeometryCollection *gc2 = static_cast<const GeometryCollection *>(rhs_in);
-      for (unsigned int i = 0; i < gc1->getNumGeometries(); i++) {
+        ensure_equals("number of components does not match",
+                      gc1->getNumGeometries(),
+                      gc2->getNumGeometries());
+
+        for (unsigned int i = 0; i < gc1->getNumGeometries(); i++) {
         ensure_equals_exact_geometry_xyz(gc1->getGeometryN(i), gc2->getGeometryN(i), tolerance);
       }
     }
@@ -493,7 +497,11 @@ ensure_equals_exact_geometry_xyzm(const geos::geom::Geometry *lhs_in,
     }
     else if (const GeometryCollection* gc1 = dynamic_cast<const GeometryCollection *>(lhs_in)) {
       const GeometryCollection *gc2 = static_cast<const GeometryCollection *>(rhs_in);
-      for (unsigned int i = 0; i < gc1->getNumGeometries(); i++) {
+        ensure_equals("number of components does not match",
+                      gc1->getNumGeometries(),
+                      gc2->getNumGeometries());
+
+        for (unsigned int i = 0; i < gc1->getNumGeometries(); i++) {
         ensure_equals_exact_geometry_xyzm(gc1->getGeometryN(i), gc2->getGeometryN(i), tolerance);
       }
     } else {
@@ -584,6 +592,10 @@ ensure_equals_exact_geometry(const geos::geom::Geometry *lhs_in,
     }
     else if (const GeometryCollection* gc1 = dynamic_cast<const GeometryCollection *>(lhs_in)) {
         const GeometryCollection *gc2 = static_cast<const GeometryCollection *>(rhs_in);
+        ensure_equals("number of components does not match",
+                      gc1->getNumGeometries(),
+                      gc2->getNumGeometries());
+
         for (unsigned int i = 0; i < gc1->getNumGeometries(); i++) {
             ensure_equals_exact_geometry(gc1->getGeometryN(i), gc2->getGeometryN(i), tolerance);
         }
