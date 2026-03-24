@@ -46,6 +46,7 @@ namespace overlayng { // geos.operation.overlayng
 */
 class GEOS_DLL OverlayEdge : public edgegraph::HalfEdge {
     using Coordinate = geos::geom::Coordinate;
+    using CoordinateXY = geos::geom::CoordinateXY;
     using CoordinateXYZM = geos::geom::CoordinateXYZM;
     using CoordinateSequence = geos::geom::CoordinateSequence;
     using Location = geos::geom::Location;
@@ -60,7 +61,7 @@ private:
     * The label must be interpreted accordingly.
     */
     bool direction;
-    CoordinateXYZM dirPt;
+    CoordinateXY dirPt;
     OverlayLabel* label;
     bool m_isInResultArea;
     bool m_isInResultLine;
@@ -78,7 +79,7 @@ private:
 
 public:
 
-    OverlayEdge(const CoordinateXYZM& p_orig, const CoordinateXYZM& p_dirPt,
+    OverlayEdge(const CoordinateXYZM& p_orig, const CoordinateXY& p_dirPt,
                 bool p_direction, OverlayLabel* p_label,
                 const std::shared_ptr<const CoordinateSequence>& p_pts)
         : HalfEdge(p_orig)
@@ -102,7 +103,7 @@ public:
         return direction;
     };
 
-    const CoordinateXYZM& directionPt() const override
+    const CoordinateXY& directionPt() const override
     {
         return dirPt;
     };
