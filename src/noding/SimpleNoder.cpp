@@ -85,8 +85,12 @@ SimpleNoder::getNodedPaths()
                 nodedPaths.push_back(std::move(segString));
             }
         } else {
+            std::vector<std::unique_ptr<ArcString>> tmp;
             auto* nas = detail::down_cast<NodableArcString*>(ps);
-            nodedPaths.push_back(nas->getNoded());
+            nas->getNoded(tmp);
+            for (auto& arcString : tmp) {
+                nodedPaths.push_back(std::move(arcString));
+            }
         }
     }
 
