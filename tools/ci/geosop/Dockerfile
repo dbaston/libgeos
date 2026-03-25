@@ -35,4 +35,8 @@ RUN apk add --no-cache libstdc++
 COPY --from=builder /install/bin/geosop /usr/local/bin/geosop
 COPY --from=builder /install/lib/libgeos.* /usr/local/lib/
 
-ENTRYPOINT ["geosop"]
+# Make a wrapper 'geosopw' to show e.g. 'Segmentation fault (core dumped)'
+RUN printf "#!/bin/sh\ngeosop \"\$@\"\n" > /usr/local/bin/geosopw && \
+  chmod +x /usr/local/bin/geosopw
+
+ENTRYPOINT ["geosopw"]
