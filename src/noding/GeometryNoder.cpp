@@ -66,6 +66,10 @@ public:
     void
     filter_ro(const geom::Geometry* g) override
     {
+        if (g->isEmpty()) {
+            return;
+        }
+
         if(const auto* ls = dynamic_cast<const geom::LineString*>(g)) {
             auto coord = ls->getSharedCoordinates();
             auto ss = std::make_unique<NodedSegmentString>(coord, _constructZ, _constructM, nullptr);
