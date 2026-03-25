@@ -33,7 +33,7 @@ public:
         m_adds[segmentIndex].push_back(intPt);
     }
 
-    std::unique_ptr<ArcString> getNoded();
+    void getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs);
 
 private:
     std::map<size_t, std::vector<geom::CoordinateXYZM>> m_adds;

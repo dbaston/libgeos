@@ -127,10 +127,14 @@ GeometryNoder::toGeometry(std::vector<std::unique_ptr<PathString>>& nodedEdges) 
     for(auto& path :  nodedEdges) {
         const auto& coords = path->getCoordinates();
 
+        bool isLinear = dynamic_cast<SegmentString*>(path.get());
+
+        // TODO: Make OrientedCoordinateArray not require strict equality of arc control points
+
         OrientedCoordinateArray oca1(*coords);
         // Check if an equivalent edge is known
         if(ocas.insert(oca1).second) {
-            if (dynamic_cast<SegmentString*>(path.get())) {
+            if (isLinear) {
                 lines.push_back(geomFact->createLineString(coords));
             } else {
                 resultArcs = true;
