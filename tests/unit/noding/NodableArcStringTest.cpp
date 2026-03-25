@@ -8,6 +8,7 @@ using geos::geom::CircularArc;
 using geos::geom::Ordinate;
 using geos::geom::CoordinateXY;
 using geos::geom::CoordinateXYZM;
+using geos::noding::ArcString;
 using geos::noding::NodableArcString;
 
 namespace tut {
@@ -20,7 +21,7 @@ struct test_nodablearcstring_data {
     using XYZM = CoordinateXYZM;
 
     static void test_add_points(const CircularArc& arc, const std::vector<CoordinateXY>& coords,
-                                const std::vector<CircularArc>& expected, bool reversed=false) {
+                                const std::vector<std::vector<CircularArc>>& expected, bool reversed=false) {
         std::vector<CircularArc> arcs;
         arcs.push_back(arc);
         NodableArcString nas(arcs, nullptr, false, false, nullptr);
@@ -29,20 +30,27 @@ struct test_nodablearcstring_data {
             nas.addIntersection(coord, 0);
         }
 
-        auto noded = nas.getNoded();
+        std::vector<std::unique_ptr<ArcString>> noded;
+        nas.getNoded(noded);
 
-        ensure_equals(noded->getSize(), expected.size());
+        ensure_equals(noded.size(), expected.size());
 
-        for (std::size_t i = 0; i < expected.size(); i++) {
-            ensure_arc_equals(noded->getArc(i), expected[i], 1e-8);
+        for (std::size_t i = 0; i < noded.size(); i++) {
+            for (std::size_t j = 0; j < noded[i]->getSize(); j++) {
+                ensure_arc_equals(noded[i]->getArc(j), expected[i][j], 1e-8);
+            }
         }
 
         if (!reversed) {
             const auto revArc = arc.reverse();
 
-            std::vector<CircularArc> revExpected;
+            std::vector<std::vector<CircularArc>> revExpected;
             for (const auto& x : expected) {
-                revExpected.push_back(x.reverse());
+                revExpected.push_back(x);
+                std::reverse(revExpected.back().begin(), revExpected.back().end());
+                for (auto& y : revExpected.back()) {
+                    y = y.reverse();
+                }
             }
             std::reverse(revExpected.begin(), revExpected.end());
 
@@ -74,12 +82,12 @@ void object::test<1>()
     coords.emplace_back(-3, 4);
     coords.emplace_back(-4, 3);
 
-    std::vector<CircularArc> expected;
-    expected.push_back(CircularArc::create(XY{-5, 0}, {-4, 3}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{-4, 3}, {-3, 4}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{-3, 4}, {3, 4}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{3, 4}, {4, 3}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{4, 3}, {5, 0}, {0, 0}, 5, Orientation::CLOCKWISE));
+    std::vector<std::vector<CircularArc>> expected;
+    expected.push_back({CircularArc::create(XY{-5, 0}, {-4, 3}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{-4, 3}, {-3, 4}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{-3, 4}, {3, 4}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{3, 4}, {4, 3}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{4, 3}, {5, 0}, {0, 0}, 5, Orientation::CLOCKWISE)});
 
     test_add_points(in, coords, expected);
 }
@@ -99,13 +107,13 @@ void object::test<2>()
     coords.emplace_back(3, 4);
     coords.emplace_back(5, 0);
 
-    std::vector<CircularArc> expected;
-    expected.push_back(CircularArc::create(XY{0, 5}, {3, 4}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{3, 4}, {4, 3}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{4, 3}, {5, 0}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{5, 0}, {4, -3}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{4, -3}, {3, -4}, {0, 0}, 5, Orientation::CLOCKWISE));
-    expected.push_back(CircularArc::create(XY{3, -4}, {0, -5}, {0, 0}, 5, Orientation::CLOCKWISE));
+    std::vector<std::vector<CircularArc>> expected;
+    expected.push_back({CircularArc::create(XY{0, 5}, {3, 4}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{3, 4}, {4, 3}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{4, 3}, {5, 0}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{5, 0}, {4, -3}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{4, -3}, {3, -4}, {0, 0}, 5, Orientation::CLOCKWISE)});
+    expected.push_back({CircularArc::create(XY{3, -4}, {0, -5}, {0, 0}, 5, Orientation::CLOCKWISE)});
 
     test_add_points(in, coords, expected);
 }
@@ -118,8 +126,8 @@ void object::test<3>()
     CircularArc in = CircularArc::create(CoordinateXY{-1, 0}, CoordinateXY{0, 1}, CoordinateXY{1, 0});
 
     std::vector<CoordinateXY> coords;
-    std::vector<CircularArc> expected;
-    expected.push_back(in);
+    std::vector<std::vector<CircularArc>> expected;
+    expected.push_back({in});
     test_add_points(in, coords, expected);
 }
 
@@ -147,15 +155,16 @@ void object::test<4>()
 
     nas.addIntersection( intPt, 0);
 
-    auto noded = nas.getNoded();
+    std::vector<std::unique_ptr<ArcString>> noded;
+    nas.getNoded(noded);
 
-    ensure_equals(noded->getSize(), 2u);
-    const CircularArc& arc0 = noded->getArc(0);
+    ensure_equals(noded.size(), 2u);
+    const CircularArc& arc0 = noded[0]->getArc(0);
     ensure_arc_equals(arc0, CircularArc::create(p0, intPt, arc.getCenter(), arc.getRadius(), arc.getOrientation()), 1e-8);
     ensure_equals(arc0.p1<CoordinateXYZM>().z, (p0.z + intPt.z) / 2);
     ensure_equals(arc0.p1<CoordinateXYZM>().m, (p0.m + intPt.m) / 2);
 
-    const CircularArc& arc1 = noded->getArc(1);
+    const CircularArc& arc1 = noded[1]->getArc(0);
     ensure_arc_equals(arc1, CircularArc::create(intPt, p2, arc.getCenter(), arc.getRadius(), arc.getOrientation()), 1e-8);
     ensure_equals(arc1.p1<CoordinateXYZM>().z, (intPt.z + p2.z) / 2);
     ensure_equals(arc1.p1<CoordinateXYZM>().m, (intPt.m + p2.m) / 2);
