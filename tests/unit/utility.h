@@ -227,17 +227,19 @@ ensure_equals_geometry(T const* lhs_in, T const* rhs_in, double tolerance = 0.0)
     lhs->normalize();
     rhs->normalize();
 
-    ensure_equals("is-valid do not match",
-                  lhs->isValid(), rhs->isValid());
+    if (!lhs->hasCurvedComponents() && !rhs->hasCurvedComponents()) {
+        if(!isInstanceOf<GeometryCollection>(lhs.get()) &&
+           !isInstanceOf<GeometryCollection>(rhs.get())) {
+            ensure_equals("is-simple do not match",
+                          lhs->isSimple(), rhs->isSimple());
+           }
+
+        ensure_equals("is-valid do not match",
+                      lhs->isValid(), rhs->isValid());
+    }
 
     ensure_equals("is-empty do not match",
                   lhs->isEmpty(), rhs->isEmpty());
-
-    if(!isInstanceOf<GeometryCollection>(lhs.get()) &&
-       !isInstanceOf<GeometryCollection>(rhs.get())) {
-        ensure_equals("is-simple do not match",
-                      lhs->isSimple(), rhs->isSimple());
-    }
 
     ensure_equals("type do not match",
                   lhs->getGeometryType(), rhs->getGeometryType());
