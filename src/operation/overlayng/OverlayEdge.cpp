@@ -55,7 +55,7 @@ OverlayEdge::getCoordinatesOriented() const
 void
 OverlayEdge::addCoordinates(CoordinateSequence* coords) const
 {
-    bool isFirstEdge = coords->size() > 0;
+    const bool isFirstEdge = coords->isEmpty();
     if (direction) {
         std::size_t startIndex = 1;
         if (isFirstEdge) {

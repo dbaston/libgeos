@@ -125,7 +125,8 @@ void object::test<7>()
     ensure(input_);
 
     result_ = GEOSMakeValid(input_);
-    expected_ = fromWKT("MULTIPOLYGON ZM (((0 0 1 2, 0.5 0.5 2.5 3.5, 1 0 2 3, 0 0 1 2)), ((1 1 4 5, 0.5 0.5 2.5 3.5, 0 1 3 4, 1 1 4 5)))");
+    expected_ = fromWKT("MULTIPOLYGON ZM (((0.5 0.5 2.5 3.5, 1 0 2 3, 0 0 1 2, 0.5 0.5 2.5 3.5)), ((0.5 0.5 2.5 3.5, 0 1 3 4, 1 1 4 5, 0.5 0.5 2.5 3.5)))");
+
     ensure_geometry_equals_identical(result_, expected_);
 }
 

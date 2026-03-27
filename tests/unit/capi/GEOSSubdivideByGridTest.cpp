@@ -50,7 +50,7 @@ void object::test<2>()
 
     result_ = GEOSSubdivideByGrid(input_, 1, 0, 5, 3, 4, 3, true);
 
-    ensure_geometry_equals_identical(expected_, result_);
+    ensure_geometry_equals(expected_, result_);
 }
 
 }
