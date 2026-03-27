@@ -74,6 +74,7 @@ namespace overlayng { // geos.operation.overlayng
  * @author Martin Davis
  */
 class GEOS_DLL OverlayMixedPoints {
+    using Curve = geos::geom::Curve;
     using GeometryFactory = geos::geom::GeometryFactory;
     using PrecisionModel = geos::geom::PrecisionModel;
     using Geometry = geos::geom::Geometry;
@@ -83,6 +84,7 @@ class GEOS_DLL OverlayMixedPoints {
     using Point = geos::geom::Point;
     using Polygon = geos::geom::Polygon;
     using LineString = geos::geom::LineString;
+    using Surface = geos::geom::Surface;
     using PointOnGeometryLocator = algorithm::locate::PointOnGeometryLocator;
 
 private:
@@ -121,11 +123,11 @@ private:
 
     std::unique_ptr<Geometry> copyNonPoint() const;
 
-    std::unique_ptr<CoordinateSequence> extractCoordinates(const Geometry* points, const PrecisionModel* pm) const;
+    static std::unique_ptr<CoordinateSequence> extractCoordinates(const Geometry* points, const PrecisionModel* pm);
 
-    std::vector<std::unique_ptr<Polygon>> extractPolygons(const Geometry* geom) const;
+    static std::vector<std::unique_ptr<Surface>> extractPolygons(const Geometry* geom);
 
-    std::vector<std::unique_ptr<LineString>> extractLines(const Geometry* geom) const;
+    static std::vector<std::unique_ptr<Curve>> extractLines(const Geometry* geom);
 
 
 
