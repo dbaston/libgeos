@@ -276,6 +276,11 @@ CircularArc::getArea() const {
     return R*R/2*(theta - std::sin(theta));
 }
 
+CoordinateXY
+CircularArc::getDirectionPoint() const {
+    return algorithm::CircularArcs::getDirectionPoint(getCenter(), getRadius(), theta0(), getOrientation() == algorithm::Orientation::COUNTERCLOCKWISE);
+}
+
 Envelope
 CircularArc::getEnvelope() const {
     Envelope env;

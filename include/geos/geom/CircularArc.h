@@ -105,6 +105,11 @@ public:
         return m_pos;
     }
 
+    /// Computes a direction point suitable for ordering arcs with the same
+    /// origin point. The direction point is located at a distance R along the
+    /// line tangent to the arc at the origin point.
+    CoordinateXY getDirectionPoint() const;
+
     Envelope getEnvelope() const;
 
     /// Return the length of the arc

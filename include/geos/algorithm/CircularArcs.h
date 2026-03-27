@@ -32,6 +32,8 @@ public:
 
     static double getAngle(const geom::CoordinateXY& pt, const geom::CoordinateXY& center);
 
+    static geom::CoordinateXY getDirectionPoint(const geom::CoordinateXY& center, double radius, double theta, bool isCCW);
+
     static double getMidpointAngle(double theta0, double theta2, bool isCCW);
 
     static geom::CoordinateXY getMidpoint(const geom::CoordinateXY& p0, const geom::CoordinateXY& p2, const geom::CoordinateXY& center, double radius, bool isCCW);

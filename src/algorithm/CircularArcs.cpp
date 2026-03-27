@@ -39,6 +39,18 @@ CircularArcs::getAngle(const CoordinateXY& p, const CoordinateXY& center)
     return std::atan2(p.y - center.y, p.x - center.x);
 }
 
+CoordinateXY
+CircularArcs::getDirectionPoint(const geom::CoordinateXY& center, double radius, double theta, bool isCCW)
+{
+    const double dt = geos::MATH_PI / 4 * (isCCW ? 1: -1);
+
+    // To get a point that is exactly on the tangent to this arc at p0, we would create a point
+    // at radius * sqrt(2). During overlay, this can produce a situation where noded edges originating
+    // from the same point have direction points that are in the same direction. Nudging the direction point
+    // slightly in the direction of the arc resolves this issue.
+    return createPoint(center, radius * std::sqrt(2) * (1 - 1e-6), theta + dt);
+}
+
 double
 CircularArcs::getMidpointAngle(double theta0, double theta2, bool isCCW)
 {

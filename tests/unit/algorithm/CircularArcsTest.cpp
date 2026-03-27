@@ -3,11 +3,13 @@
 #include <geos/geom/Coordinate.h>
 #include <geos/algorithm/CircularArcs.h>
 #include <geos/geom/CircularArc.h>
+#include <geos/geom/Quadrant.h>
 
 using geos::geom::CircularArc;
 using geos::geom::CoordinateXY;
 using geos::algorithm::CircularArcs;
 using geos::geom::Envelope;
+using geos::geom::Quadrant;
 using geos::MATH_PI;
 
 namespace tut {
@@ -305,5 +307,26 @@ void object::test<17>() {
         CoordinateXY{std::sqrt(2)/2, std::sqrt(2)/2}.distance(CoordinateXY{0.5, 0.5}));
 }
 
+template<>
+template<>
+void object::test<18>() {
+    set_test_name("getDirectionPoint");
+
+    const CircularArc arc1 = CircularArc::create(XY{-4, 3}, XY{0, -5}, XY{-4, -3});
+    const auto dp1 = arc1.getDirectionPoint();
+    ensure_equals(Quadrant::quadrant(arc1.p0(), dp1), 0); // NE
+    ensure_equals("dp1.x", dp1.x, -1, 1e-5);
+    ensure_equals("dp1.y", dp1.y, 7, 1e-5);
+    ensure_equals("point is not expected distance from p0", arc1.p0().distance(dp1), arc1.getRadius(), 1e-5);
+
+
+    const auto arc2 = arc1.reverse();
+    const auto dp2 = arc2.getDirectionPoint();
+    ensure_equals(Quadrant::quadrant(arc2.p0(), dp2), 3); // SE
+    ensure_equals("dp2.x", dp2.x, -1, 1e-5);
+    ensure_equals("dp2.y", dp2.y, -7, 1e-5);
+    ensure_equals("point is not expected distance from p0", arc2.p0().distance(dp2), arc2.getRadius(), 1e-5);
 }
 
+
+}
