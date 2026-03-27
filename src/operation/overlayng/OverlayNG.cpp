@@ -309,10 +309,10 @@ OverlayNG::extractResult(int p_opCode, OverlayGraph* graph)
     //--- Build polygons
     std::vector<OverlayEdge*> resultAreaEdges = graph->getResultAreaEdges();
     PolygonBuilder polyBuilder(resultAreaEdges, geomFact);
-    std::vector<std::unique_ptr<Polygon>> resultPolyList = polyBuilder.getPolygons();
+    std::vector<std::unique_ptr<Surface>> resultPolyList = polyBuilder.getPolygons();
     bool hasResultAreaComponents = (!resultPolyList.empty());
 
-    std::vector<std::unique_ptr<LineString>> resultLineList;
+    std::vector<std::unique_ptr<Curve>> resultLineList;
     std::vector<std::unique_ptr<Point>> resultPointList;
 
     GEOS_CHECK_FOR_INTERRUPTS();

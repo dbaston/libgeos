@@ -175,11 +175,11 @@ std::unique_ptr<Geometry>
 OverlayMixedPoints::computeUnion(const CoordinateSequence* coords)
 {
     std::vector<std::unique_ptr<Point>> resultPointList = findPoints(false, coords);
-    std::vector<std::unique_ptr<LineString>> resultLineList;
+    std::vector<std::unique_ptr<Curve>> resultLineList;
     if (geomNonPointDim == 1) {
         resultLineList = extractLines(geomNonPoint.get());
     }
-    std::vector<std::unique_ptr<Polygon>> resultPolyList;
+    std::vector<std::unique_ptr<Surface>> resultPolyList;
     if (geomNonPointDim == 2) {
         resultPolyList = extractPolygons(geomNonPoint.get());
     }
@@ -274,7 +274,7 @@ OverlayMixedPoints::hasLocation(bool isCovered, const CoordinateXY& coord) const
 
 /*private*/
 std::unique_ptr<CoordinateSequence>
-OverlayMixedPoints::extractCoordinates(const Geometry* points, const PrecisionModel* p_pm) const
+OverlayMixedPoints::extractCoordinates(const Geometry* points, const PrecisionModel* p_pm)
 {
     auto coords = detail::make_unique<CoordinateSequence>(0u, points->hasZ(), points->hasM());
     coords->reserve(points->getNumPoints());
@@ -285,12 +285,12 @@ OverlayMixedPoints::extractCoordinates(const Geometry* points, const PrecisionMo
 }
 
 /*private*/
-std::vector<std::unique_ptr<Polygon>>
-OverlayMixedPoints::extractPolygons(const Geometry* geom) const
+std::vector<std::unique_ptr<Surface>>
+OverlayMixedPoints::extractPolygons(const Geometry* geom)
 {
-    std::vector<std::unique_ptr<Polygon>> list;
+    std::vector<std::unique_ptr<Surface>> list;
     for (std::size_t i = 0; i < geom->getNumGeometries(); i++) {
-        const Polygon* poly = static_cast<const Polygon*>(geom->getGeometryN(i));
+        const Surface* poly = static_cast<const Surface*>(geom->getGeometryN(i));
         if(!poly->isEmpty()) {
             list.emplace_back(poly->clone());
         }
@@ -299,12 +299,12 @@ OverlayMixedPoints::extractPolygons(const Geometry* geom) const
 }
 
 /*private*/
-std::vector<std::unique_ptr<LineString>>
-OverlayMixedPoints::extractLines(const Geometry* geom) const
+std::vector<std::unique_ptr<Curve>>
+OverlayMixedPoints::extractLines(const Geometry* geom)
 {
-    std::vector<std::unique_ptr<LineString>> list;
+    std::vector<std::unique_ptr<Curve>> list;
     for (std::size_t i = 0; i < geom->getNumGeometries(); i++) {
-        const LineString* line = static_cast<const LineString*>(geom->getGeometryN(i));
+        const Curve* line = static_cast<const Curve*>(geom->getGeometryN(i));
         if (! line->isEmpty()) {
             list.emplace_back(line->clone());
         }

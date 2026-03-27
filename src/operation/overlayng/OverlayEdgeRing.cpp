@@ -18,6 +18,9 @@
 #include <geos/geom/Envelope.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
+#include <geos/geom/CircularString.h>
+#include <geos/geom/CompoundCurve.h>
+#include <geos/geom/CurvePolygon.h>
 #include <geos/geom/GeometryFactory.h>
 #include <geos/util/TopologyException.h>
 #include <geos/algorithm/locate/PointOnGeometryLocator.h>
@@ -42,19 +45,17 @@ OverlayEdgeRing::OverlayEdgeRing(OverlayEdge* start, const GeometryFactory* geom
     , locator(nullptr)
     , shell(nullptr)
 {
-    auto ringPts = std::make_shared<CoordinateSequence>(0u, start->getCoordinatesRO()->hasZ(), start->getCoordinatesRO()->hasM());
-    computeRingPts(start, *ringPts);
-    computeRing(ringPts, geometryFactory);
+    computeRing(start, geometryFactory);
 }
 
 /*public*/
-std::unique_ptr<LinearRing>
+std::unique_ptr<Curve>
 OverlayEdgeRing::getRing()
 {
     return std::move(ring);
 }
 
-const LinearRing*
+const Curve*
 OverlayEdgeRing::getRingPtr() const
 {
     return ring.get();
@@ -133,16 +134,34 @@ OverlayEdgeRing::closeRing(CoordinateSequence& pts)
 }
 
 /*private*/
-void
-OverlayEdgeRing::computeRingPts(OverlayEdge* start, CoordinateSequence& pts)
+std::unique_ptr<Curve>
+OverlayEdgeRing::computeRingGeometry(OverlayEdge* start, const GeometryFactory* gfact) const
 {
     OverlayEdge* edge = start;
+
+    const bool hasZ = start->getCoordinatesRO()->hasZ();
+    const bool hasM = start->getCoordinatesRO()->hasM();
+    bool isCurved = start->isCurved();
+
+    std::vector<std::unique_ptr<SimpleCurve>> curves;
+    auto pts = std::make_unique<CoordinateSequence>(0u, hasZ, hasM);
+    const CoordinateXYZM& startPoint = edge->orig();
+
     do {
         if (edge->getEdgeRing() == this)
             throw util::TopologyException("Edge visited twice during ring-building", edge->getCoordinate());
             // only valid for polygonal output
 
-        edge->addCoordinates(&pts);
+        if (edge->isCurved() && !isCurved) {
+            curves.push_back(gfact->createLineString(std::move(pts)));
+            pts = std::make_unique<CoordinateSequence>(0u, hasZ, hasM);
+        } else if (!edge->isCurved() && isCurved) {
+            curves.push_back(gfact->createCircularString(std::move(pts)));
+            pts = std::make_unique<CoordinateSequence>(0u, hasZ, hasM);
+        }
+
+        isCurved = edge->isCurved();
+        edge->addCoordinates(pts.get());
         edge->setEdgeRing(this);
         if (edge->nextResult() == nullptr)
             throw util::TopologyException("Found null edge in ring", edge->dest());
@@ -150,29 +169,40 @@ OverlayEdgeRing::computeRingPts(OverlayEdge* start, CoordinateSequence& pts)
         edge = edge->nextResult();
     }
     while (edge != start);
-    closeRing(pts);
+
+    if (pts->size() > 0 && pts->back<CoordinateXY>() != startPoint) {
+        pts->add(startPoint);
+    }
+
+    if (curves.empty()) {
+        if (isCurved) {
+            return gfact->createCircularString(std::move(pts));
+        }
+        return gfact->createLinearRing(std::move(pts));
+    }
+
+    if (isCurved) {
+        curves.push_back(gfact->createCircularString(std::move(pts)));
+    } else {
+        curves.push_back(gfact->createLineString(std::move(pts)));
+    }
+
+    return gfact->createCompoundCurve(std::move(curves));
 }
 
 /*private*/
 void
-OverlayEdgeRing::computeRing(const std::shared_ptr<CoordinateSequence> & p_ringPts, const GeometryFactory* geometryFactory)
+OverlayEdgeRing::computeRing(OverlayEdge* start, const GeometryFactory* geometryFactory)
 {
     if (ring != nullptr) return;   // don't compute more than once
-    ring = geometryFactory->createLinearRing(p_ringPts);
-    m_isHole = algorithm::Orientation::isCCW(ring->getCoordinatesRO());
-}
+    ring = computeRingGeometry(start, geometryFactory);
 
-/**
-* Computes the list of coordinates which are contained in this ring.
-* The coordinates are computed once only and cached.
-*
-* @return an array of the {@link Coordinate}s in this ring
-*/
-/*private*/
-const CoordinateSequence&
-OverlayEdgeRing::getCoordinates() const
-{
-    return *ring->getCoordinatesRO();
+    if (ring->getGeometryTypeId() == GEOS_COMPOUNDCURVE) {
+        const auto seq = ring->getCoordinates();
+        m_isHole = algorithm::Orientation::isCCW(seq.get());
+    } else {
+        m_isHole = algorithm::Orientation::isCCW(static_cast<const SimpleCurve*>(ring.get())->getCoordinatesRO());
+    }
 }
 
 /**
@@ -269,7 +299,17 @@ OverlayEdgeRing::isPointInOrOut(const OverlayEdgeRing& otherRing) const {
 const Coordinate&
 OverlayEdgeRing::getCoordinate() const
 {
-    return ring->getCoordinatesRO()->getAt(0);
+    return *detail::down_cast<const Coordinate*>(ring->getCoordinate());
+}
+
+const CoordinateSequence&
+OverlayEdgeRing::getCoordinates() const
+{
+    if (ring->getGeometryTypeId() == GEOS_COMPOUNDCURVE) {
+        throw std::runtime_error("not implemented yet");
+    }
+
+    return *detail::down_cast<const SimpleCurve*>(ring.get())->getCoordinatesRO();
 }
 
 /**
@@ -277,19 +317,36 @@ OverlayEdgeRing::getCoordinate() const
 * @return the {@link Polygon} formed by this ring and its holes.
 */
 /*public*/
-std::unique_ptr<Polygon>
-OverlayEdgeRing::toPolygon(const GeometryFactory* factory)
+std::unique_ptr<Surface>
+OverlayEdgeRing::toSurface(const GeometryFactory* factory)
 {
+    // TODO: Move this logic to GeometryFactory
     if (holes.empty()) {
-        return factory->createPolygon(std::move(ring));
+        if (ring->getGeometryTypeId() == GEOS_LINEARRING) {
+            return factory->createPolygon(std::unique_ptr<LinearRing>(detail::down_cast<LinearRing*>(ring.release())));
+        } else {
+            return factory->createCurvePolygon(std::move(ring));
+        }
     } else {
-        std::vector<std::unique_ptr<LinearRing>> holeLR(holes.size());
+        std::vector<std::unique_ptr<Curve>> holeCurves(holes.size());
+        bool hasCurves = ring->hasCurvedComponents();
 
         for (std::size_t i = 0; i < holes.size(); i++) {
-            holeLR[i] = holes[i]->getRing();
+            holeCurves[i] = holes[i]->getRing();
+            hasCurves |= holeCurves[i]->hasCurvedComponents();
         }
 
-        return factory->createPolygon(std::move(ring), std::move(holeLR));
+        if (hasCurves) {
+            return factory->createCurvePolygon(std::move(ring), std::move(holeCurves));
+        }
+
+        std::unique_ptr<LinearRing> shellLR(detail::down_cast<LinearRing*>(ring.release()));
+        std::vector<std::unique_ptr<LinearRing>> holeLR(holes.size());
+        for (std::size_t i = 0; i < holes.size(); i++) {
+            holeLR[i].reset(detail::down_cast<LinearRing*>(holeCurves[i].release()));
+        }
+
+        return factory->createPolygon(std::move(shellLR), std::move(holeLR));
     }
 }
 
