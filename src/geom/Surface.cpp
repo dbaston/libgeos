@@ -101,6 +101,12 @@ Surface::apply_rw(GeometryFilter* filter)
     filter->filter_rw(this);
 }
 
+std::unique_ptr<Surface>
+Surface::clone() const
+{
+    return std::unique_ptr<Surface>(detail::down_cast<Surface*>(cloneImpl()));
+}
+
 int
 Surface::compareToSameClass(const Geometry* g) const
 {

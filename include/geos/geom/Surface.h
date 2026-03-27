@@ -49,6 +49,8 @@ public:
 
     void apply_rw(const CoordinateFilter* filter) override;
 
+    std::unique_ptr<Surface> clone() const;
+
     std::unique_ptr<Geometry> convexHull() const override;
 
     bool
