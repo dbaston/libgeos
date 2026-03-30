@@ -1455,5 +1455,63 @@ void object::test<41>
     }
 }
 
+template<>
+template<>
+void object::test<42>
+() {
+    set_test_name("createSurface");
+    using geos::geom::GEOS_POLYGON;
+    using geos::geom::GEOS_CURVEPOLYGON;
+    using geos::geom::Curve;
+
+    // LinearRing
+    {
+        auto shell = reader_.read<Curve>("LINEARRING (0 0, 1 0, 1 1, 0 0)");
+        ensure_equals(factory_->createSurface(std::move(shell))->getGeometryTypeId(), GEOS_POLYGON);
+    }
+
+    // LineString
+    {
+        auto shell = reader_.read<Curve>("LINESTRING (0 0, 1 0, 1 1, 0 0)");
+        ensure_equals(factory_->createSurface(std::move(shell))->getGeometryTypeId(), GEOS_CURVEPOLYGON);
+    }
+
+    // CompoundCurve, linear
+    {
+        auto shell = reader_.read<Curve>("COMPOUNDCURVE ((0 0, 1 0, 1 1, 0 0))");
+        ensure_equals(factory_->createSurface(std::move(shell))->getGeometryTypeId(), GEOS_CURVEPOLYGON);
+    }
+
+    // CircularString
+    {
+        auto shell = reader_.read<Curve>("CIRCULARSTRING (-1 0, 0 1, 1 0, 0 -1, -1 0)");
+        ensure_equals(factory_->createSurface(std::move(shell))->getGeometryTypeId(), GEOS_CURVEPOLYGON);
+    }
+
+    // CompoundCurve, curved
+    {
+        auto shell = reader_.read<Curve>("COMPOUNDCURVE (CIRCULARSTRING (0 0, 1 1, 2 0), (2 0, 0 0))");
+        ensure_equals(factory_->createSurface(std::move(shell))->getGeometryTypeId(), GEOS_CURVEPOLYGON);
+    }
+
+    // LinearRing shell, LinearRing hole
+    {
+        auto shell = reader_.read<Curve>("LINEARRING (0 0, 10 0, 10 10, 0 10, 0 0)");
+        auto hole = reader_.read<Curve>("LINEARRING (5 5, 7 5, 7 7, 5 7, 5 5)");
+        std::vector<std::unique_ptr<Curve>> holes;
+        holes.push_back(std::move(hole));
+        ensure_equals(factory_->createSurface(std::move(shell), std::move(holes))->getGeometryTypeId(), GEOS_POLYGON);
+    }
+
+    // LinearRing shell, CompoundCurve hole
+    {
+        auto shell = reader_.read<Curve>("LINEARRING (0 0, 10 0, 10 10, 0 10, 0 0)");
+        auto hole = reader_.read<Curve>("COMPOUNDCURVE ((5 5, 7 5, 7 7, 5 7, 5 5))");
+        std::vector<std::unique_ptr<Curve>> holes;
+        holes.push_back(std::move(hole));
+        ensure_equals(factory_->createSurface(std::move(shell), std::move(holes))->getGeometryTypeId(), GEOS_CURVEPOLYGON);
+    }
+
+}
 
 } // namespace tut

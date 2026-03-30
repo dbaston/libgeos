@@ -308,6 +308,15 @@ public:
     std::unique_ptr<CurvePolygon> createCurvePolygon(std::unique_ptr<Curve>&& shell,
                                                      std::vector<std::unique_ptr<Curve>> && holes) const;
 
+
+    /// Construct a Surface, taking ownership of given arguments
+    /// If arguments are LinearRings, a Polygon will be returned.
+    /// Otherwise, a CurvePolygon will be returned.
+    std::unique_ptr<Surface> createSurface(std::unique_ptr<Curve>&& shell) const;
+
+    std::unique_ptr<Surface> createSurface(std::unique_ptr<Curve>&& shell,
+                                           std::vector<std::unique_ptr<Curve>> && holes) const;
+
     /// Construct an EMPTY LineString
     std::unique_ptr<LineString> createLineString(std::size_t coordinateDimension = 2) const;
     std::unique_ptr<LineString> createLineString(bool hasZ, bool hasM) const;
