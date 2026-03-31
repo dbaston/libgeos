@@ -47,7 +47,7 @@ CurveBuilder::add(const Curve& geom)
 void
 CurveBuilder::add(const CoordinateSequence& coords, bool isCurved)
 {
-    getSeq(isCurved).add(*coords, false);
+    getSeq(isCurved).add(coords, false);
 }
 
 void

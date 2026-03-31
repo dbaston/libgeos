@@ -25,6 +25,7 @@
 #include <geos/planargraph/Node.h>
 #include <geos/planargraph/DirectedEdgeStar.h>
 #include <geos/planargraph/DirectedEdge.h>
+#include <geos/geom/CircularString.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/LineString.h>
 #include <geos/util.h>
@@ -156,6 +157,46 @@ PolygonizeGraph::addEdge(const LineString* line)
     newCoords.push_back(linePts.release());
 }
 
+void
+PolygonizeGraph::addEdge(const CircularString* geom)
+{
+    if(geom->isEmpty()) {
+        return;
+    }
+
+    const CoordinateSequence* linePts = geom->getCoordinatesRO();
+
+    const CoordinateXY& startPt = linePts->getAt<CoordinateXY>(0);
+    const CoordinateXY& endPt = linePts->getAt<CoordinateXY>(linePts->getSize() - 1);
+    Node* nStart = getNode(startPt);
+    Node* nEnd = getNode(endPt);
+
+    DirectedEdge* de0;
+    DirectedEdge* de1;
+
+    // Forward edge
+    {
+        CircularArc startArc(*linePts, 0);
+        CoordinateXY dirPt = startArc.getDirectionPoint();
+        de0 = new PolygonizeDirectedEdge(nStart, nEnd, dirPt, true);
+    }
+
+    // Reverse edge
+    {
+        CircularArc endArc = CircularArc(*linePts, linePts->getSize() - 3).reverse();
+        CoordinateXY dirPt = endArc.getDirectionPoint();
+        de1 = new PolygonizeDirectedEdge(nEnd, nStart, dirPt, false);
+    }
+
+    newDirEdges.push_back(de0);
+    newDirEdges.push_back(de1);
+
+    Edge* edge = new PolygonizeEdge(geom);
+    newEdges.push_back(edge);
+    edge->setDirectedEdges(de0, de1);
+    add(edge);
+}
+
 Node*
 PolygonizeGraph::getNode(const CoordinateXY& pt)
 {
@@ -276,7 +317,7 @@ PolygonizeGraph::findLabeledEdgeRings(std::vector<DirectedEdge*>& dirEdges,
 
 /* public */
 void
-PolygonizeGraph::deleteCutEdges(std::vector<const LineString*>& cutLines)
+PolygonizeGraph::deleteCutEdges(std::vector<const SimpleCurve*>& cutLines)
 {
     computeNextCWEdges();
 
@@ -427,12 +468,12 @@ PolygonizeGraph::findEdgeRing(PolygonizeDirectedEdge* startDE)
 
 /* public */
 void
-PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines)
+PolygonizeGraph::deleteDangles(std::vector<const SimpleCurve*>& dangleLines)
 {
     std::vector<Node*> nodeStack;
     findNodesOfDegree(1, nodeStack);
 
-    std::set<const LineString*> uniqueDangles;
+    std::set<const SimpleCurve*> uniqueDangles;
 
     while(!nodeStack.empty()) {
         Node* node = nodeStack.back();
@@ -448,7 +489,7 @@ PolygonizeGraph::deleteDangles(std::vector<const LineString*>& dangleLines)
             }
             // save the line as a dangle
             auto e = detail::down_cast<PolygonizeEdge*>(de->getEdge());
-            const LineString* ls = e->getLine();
+            const SimpleCurve* ls = e->getLine();
             if(uniqueDangles.insert(ls).second) {
                 dangleLines.push_back(ls);
             }

@@ -73,7 +73,7 @@ void object::test<2>()
 
     auto expected = reader_.read("COMPOUNDCURVE ((-6 0, -5 0), CIRCULARSTRING (-5 0, 0 5,  5 0), (5 0, 6 0), CIRCULARSTRING (6 0, 0 6, -6 0))");
 
-    ensure_equals_geometry(result.get(), expected.get());
+    ensure_equals_geometry(static_cast<const Geometry*>(result.get()), expected.get());
 }
 
 template<>
@@ -89,7 +89,7 @@ void object::test<3>()
 
     auto expected = reader_.read("LINEARRING (0 0, 1 0, 1 1, 0 1, 0 0)");
 
-    ensure_equals_geometry(result.get(), expected.get());
+    ensure_equals_geometry(static_cast<const Geometry*>(result.get()), expected.get());
 }
 
 template<>
@@ -106,7 +106,7 @@ void object::test<4>()
 
     auto expected = reader_.read("LINESTRING (0 0, 1 1, 2 2)");
 
-    ensure_equals_geometry(result.get(), expected.get());
+    ensure_equals_geometry(static_cast<const Geometry*>(result.get()), expected.get());
 }
 
 template<>

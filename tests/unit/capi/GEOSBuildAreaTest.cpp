@@ -38,11 +38,14 @@ template<>
 template<>
 void object::test<2>()
 {
+    set_test_name("curved inputs");
+
     input_ = fromWKT("MULTICURVE( CIRCULARSTRING (0 0, 1 1, 2 0), (2 0, 0 0) )");
-    ensure(input_ != nullptr);
 
     result_ = GEOSBuildArea(input_);
-    ensure(result_ == nullptr);
+    ensure(result_);
+
+    expected_ = fromWKT("CURVEPOLYGON (COMPOUNDCURVE(CIRCULARSTRING (0 0, 1 1, 2 0), (2 0, 0 0)))");
 }
 
 } // namespace tut

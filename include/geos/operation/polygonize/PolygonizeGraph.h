@@ -33,10 +33,12 @@
 // Forward declarations
 namespace geos {
 namespace geom {
-class LineString;
-class GeometryFactory;
+class CircularString;
 class Coordinate;
 class CoordinateSequence;
+class GeometryFactory;
+class LineString;
+class SimpleCurve;
 }
 namespace planargraph {
 class Node;
@@ -96,6 +98,13 @@ public:
 
     /**
      * \brief
+     * Add a CircularString forming an edge of the polygon graph.
+     * @param geom the CircularString to add
+     */
+    void addEdge(const geom::CircularString* geom);
+
+    /**
+     * \brief
      * Computes the EdgeRings formed by the edges in this graph.
      *
      * @param edgeRingList : the EdgeRing found by the
@@ -108,12 +117,12 @@ public:
      * \brief
      * Finds and removes all cut edges from the graph.
      *
-     * @param cutLines : the list of the LineString forming the removed
+     * @param cutLines : the list of the geometries forming the removed
      *                   cut edges will be pushed here.
      *
      * TODO: document ownership of the returned LineStrings
      */
-    void deleteCutEdges(std::vector<const geom::LineString*>& cutLines);
+    void deleteCutEdges(std::vector<const geom::SimpleCurve*>& cutLines);
 
     /** \brief
      * Marks all edges from the graph which are "dangles".
@@ -124,10 +133,10 @@ public:
      * In order to handle large recursion depths efficiently,
      * an explicit recursion stack is used
      *
-     * @param dangleLines : the LineStrings that formed dangles will
+     * @param dangleLines : the geometries that formed dangles will
      *                      be push_back'ed here
      */
-    void deleteDangles(std::vector<const geom::LineString*>& dangleLines);
+    void deleteDangles(std::vector<const geom::SimpleCurve*>& dangleLines);
 
 private:
 

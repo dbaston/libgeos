@@ -5267,6 +5267,7 @@ extern GEOSGeometry GEOS_DLL *GEOSNode(const GEOSGeometry* g);
 * linework is extracted as the edges to be polygonized.
 *
 * Z and M values from the input linework will be preserved.
+* Curved geometries are supported since GEOS 3.15.
 *
 * The edges must be correctly noded; that is, they must only meet
 * at their endpoints and not overlap anywhere. If your edges are not
@@ -5295,7 +5296,7 @@ extern GEOSGeometry GEOS_DLL *GEOSNode(const GEOSGeometry* g);
 * that the input lines form a valid polygonal geometry (which may
 * include holes or nested polygons).
 *
-* \param geoms Array of linear geometries to polygons. Caller retains ownership of both array container and objects.
+* \param geoms Array of linear geometries to polygonize. Caller retains ownership of both array container and objects.
 * \param ngeoms Size of the geoms array.
 * \return The polygonal output geometry.
 * Caller is responsible for freeing with GEOSGeom_destroy().
@@ -5312,7 +5313,10 @@ extern GEOSGeometry GEOS_DLL *GEOSPolygonize(
 * but returns a result which is a valid polygonal geometry.
 * The result will not contain any edge-adjacent elements.
 *
-* \param geoms Array of linear geometries to polygons. Caller retains ownership of both array container and objects.
+* Z and M values from the input linework will be preserved.
+* Curved geometries are supported since GEOS 3.15.
+*
+* \param geoms Array of linear geometries to polygonize. Caller retains ownership of both array container and objects.
 * \param ngeoms Size of the geoms array.
 * \return The polygonal output geometry.
 * Caller is responsible for freeing with GEOSGeom_destroy().
@@ -5330,7 +5334,10 @@ extern GEOSGeometry GEOS_DLL *GEOSPolygonize_valid(
 * "cut edges", the linear features that are connected at both ends,
 * do *not* participate in the final polygon.
 *
-* \param geoms Array of linear geometries to polygons. Caller retains ownersihp of both array container and objects.
+* Z and M values from the input linework will be preserved.
+* Curved geometries are supported since GEOS 3.15.
+*
+* \param geoms Array of linear geometries to polygonize. Caller retains ownership of both array container and objects.
 * \param ngeoms Size of the geoms array.
 * \return The "cut edges"
 * Caller is responsible for freeing with GEOSGeom_destroy().
@@ -5345,6 +5352,9 @@ extern GEOSGeometry GEOS_DLL *GEOSPolygonizer_getCutEdges(
 /**
 * Perform the polygonization as GEOSPolygonize() and return the
 * polygonal result as well as all extra outputs.
+*
+* Z and M values from the input linework will be preserved.
+* Curved geometries are supported since GEOS 3.15.
 *
 * \param[in] input A single geometry with all the input lines to polygonize.
 * \param[out] cuts Pointer to hold "cut edges", connected on both ends but not part of output. Caller must free.

@@ -2448,7 +2448,7 @@ extern "C" {
                 plgnzr.add(g[i]);
             }
 
-            auto polys = plgnzr.getPolygons();
+            auto polys = plgnzr.getSurfaces();
             const GeometryFactory* gf = handle->geomFactory;
             return gf->createGeometryCollection(std::move(polys)).release();
         });
@@ -2471,13 +2471,25 @@ extern "C" {
                 srid = g[i]->getSRID();
             }
 
-            auto polys = plgnzr.getPolygons();
-            if (polys.empty()) {
+            auto surfaces = plgnzr.getSurfaces();
+            if (surfaces.empty()) {
                 out = handle->geomFactory->createGeometryCollection().release();
-            } else if (polys.size() == 1) {
-                return polys[0].release();
+            } else if (surfaces.size() == 1) {
+                return surfaces[0].release();
             } else {
-                return handle->geomFactory->createMultiPolygon(std::move(polys)).release();
+                const bool isCurved = std::any_of(surfaces.begin(), surfaces.end(), [](const auto& poly) {
+                    return poly->hasCurvedComponents();
+                });
+
+                if (isCurved) {
+                    return handle->geomFactory->createMultiSurface(std::move(surfaces)).release();
+                } else {
+                    std::vector<std::unique_ptr<Polygon>> polygons(surfaces.size());
+                    for (std::size_t i = 0; i < surfaces.size(); i++) {
+                        polygons[i].reset(geos::detail::down_cast<Polygon*>(surfaces[i].release()));
+                    }
+                    return handle->geomFactory->createMultiPolygon(std::move(polygons)).release();
+                }
             }
 
             out->setSRID(srid);
@@ -2613,7 +2625,7 @@ extern "C" {
                 srid = g[i]->getSRID();
             }
 
-            const std::vector<const LineString*>& lines = plgnzr.getCutEdges();
+            const std::vector<const SimpleCurve*>& lines = plgnzr.getCutEdges();
 
             // We need a vector of Geometry pointers, not Polygon pointers.
             // STL vector doesn't allow transparent upcast of this
@@ -2650,7 +2662,7 @@ extern "C" {
             const GeometryFactory* gf = g->getFactory();
 
             if(cuts) {
-                const std::vector<const LineString*>& lines = plgnzr.getCutEdges();
+                const std::vector<const SimpleCurve*>& lines = plgnzr.getCutEdges();
                 std::vector<std::unique_ptr<Geometry>> linevec(lines.size());
                 for(std::size_t i = 0, n = lines.size(); i < n; ++i) {
                     linevec[i] = lines[i]->clone();
@@ -2660,7 +2672,7 @@ extern "C" {
             }
 
             if(dangles) {
-                const std::vector<const LineString*>& lines = plgnzr.getDangles();
+                const std::vector<const SimpleCurve*>& lines = plgnzr.getDangles();
                 std::vector<std::unique_ptr<Geometry>> linevec(lines.size());
                 for(std::size_t i = 0, n = lines.size(); i < n; ++i) {
                     linevec[i] = lines[i]->clone();
@@ -2670,7 +2682,7 @@ extern "C" {
             }
 
             if(invalid) {
-                const std::vector<std::unique_ptr<LineString>>& lines = plgnzr.getInvalidRingLines();
+                const std::vector<std::unique_ptr<Curve>>& lines = plgnzr.getInvalidRingLines();
                 std::vector<std::unique_ptr<Geometry>> linevec(lines.size());
                 for(std::size_t i = 0, n = lines.size(); i < n; ++i) {
                     linevec[i] = lines[i]->clone();
@@ -2679,7 +2691,7 @@ extern "C" {
                 *invalid = gf->createGeometryCollection(std::move(linevec)).release();
             }
 
-            auto polys = plgnzr.getPolygons();
+            auto polys = plgnzr.getSurfaces();
             Geometry* out = gf->createGeometryCollection(std::move(polys)).release();
             out->setSRID(g->getSRID());
             return out;

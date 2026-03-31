@@ -23,13 +23,16 @@
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/LinearRing.h>
 #include <geos/geom/Coordinate.h>
+#include <geos/geom/CoordinateFilter.h>
 #include <geos/geom/Envelope.h>
 #include <geos/geom/GeometryFactory.h>
+#include <geos/geom/util/CurveBuilder.h>
 #include <geos/algorithm/PointLocation.h>
 #include <geos/algorithm/Orientation.h>
+#include <geos/algorithm/locate/IndexedPointInAreaLocator.h>
+#include <geos/algorithm/locate/SimplePointInAreaLocator.h>
 #include <geos/util/IllegalArgumentException.h>
 #include <geos/util.h> // TODO: drop this, includes too much
-#include <geos/algorithm/locate/IndexedPointInAreaLocator.h>
 #include <geos/geom/Location.h>
 
 #include <vector>
@@ -49,7 +52,7 @@ namespace polygonize { // geos.operation.polygonize
 
 /*public*/
 EdgeRing*
-EdgeRing::findEdgeRingContaining(const std::vector<EdgeRing*> & erList)
+EdgeRing::findEdgeRingContaining(const std::vector<EdgeRing*> & erList) const
 {
     EdgeRing* minContainingRing = nullptr;
     for (auto& edgeRing : erList) {
@@ -110,8 +113,6 @@ EdgeRing::EdgeRing(const GeometryFactory* newFactory)
     :
     factory(newFactory),
     ring(nullptr),
-    ringPts(nullptr),
-    holes(nullptr),
     is_hole(false)
 {
 #ifdef DEBUG_ALLOC
@@ -141,35 +142,68 @@ void
 EdgeRing::computeHole()
 {
     getRingInternal();
-    is_hole = Orientation::isCCW(ring->getCoordinatesRO());
+
+    if (ring->getGeometryTypeId() == GEOS_COMPOUNDCURVE) {
+        auto coords = ring->getCoordinates();
+        is_hole = Orientation::isCCW(coords.get());
+    } else {
+        const SimpleCurve* sc = detail::down_cast<SimpleCurve*>(ring.get());
+        is_hole = Orientation::isCCW(sc->getCoordinatesRO());
+    }
 }
 
 /*public*/
 void
-EdgeRing::addHole(LinearRing* hole)
+EdgeRing::addHole(std::unique_ptr<Curve> hole)
 {
-    if(holes == nullptr) {
-        holes.reset(new std::vector<std::unique_ptr<LinearRing>>());
-    }
-    holes->emplace_back(hole);
+    holes.push_back(std::move(hole));
 }
 
 void
 EdgeRing::addHole(EdgeRing* holeER) {
     holeER->setShell(this);
     auto hole = holeER->getRingOwnership(); // TODO is this right method?
-    addHole(hole.release());
+    addHole(std::move(hole));
 }
 
 /*public*/
-std::unique_ptr<Polygon>
+std::unique_ptr<Surface>
 EdgeRing::getPolygon()
 {
-    if (holes) {
-        return factory->createPolygon(std::move(ring), std::move(*holes));
+    if (!holes.empty()) {
+        return factory->createSurface(std::move(ring), std::move(holes));
     } else {
-        return factory->createPolygon(std::move(ring));
+        return factory->createSurface(std::move(ring));
     }
+}
+
+// Adapter class to check whether a point lies within a ring.
+// Unlike IndexedPointInAreaLocator, SimplePointInAreaLocator does not treat
+// closed rings as areas.
+class PointInCurvedRingLocator : public algorithm::locate::PointOnGeometryLocator {
+    public:
+        explicit PointInCurvedRingLocator(const Curve& ring) : m_ring(ring) {}
+
+        geom::Location locate(const geom::CoordinateXY* p) override {
+            return PointLocation::locateInRing(*p, m_ring);
+        }
+
+    private:
+        const Curve& m_ring;
+};
+
+algorithm::locate::PointOnGeometryLocator*
+EdgeRing::getLocator() const
+{
+    if (ringLocator == nullptr) {
+        const auto* rng = getRingInternal();
+        if (rng->hasCurvedComponents()) {
+            ringLocator = std::make_unique<PointInCurvedRingLocator>(*rng);
+        } else {
+            ringLocator = std::make_unique<algorithm::locate::IndexedPointInAreaLocator>(*rng);
+        }
+    }
+    return ringLocator.get();
 }
 
 /*public*/
@@ -182,13 +216,19 @@ EdgeRing::isValid() const
 void
 EdgeRing::computeValid()
 {
-    getCoordinates();
-    if (ringPts->size() <= 3) {
+    const Curve* r = getRingInternal();
+
+    if (r->getNumPoints() <= 3) {
         is_valid = false;
         return;
     }
-    getRingInternal();
-    is_valid = ring->isValid();
+
+    if (r->getGeometryTypeId() == GEOS_LINEARRING) {
+        is_valid = getRingInternal()->isValid();
+    } else {
+        // TODO: Change once IsValidOp supports curves
+        is_valid = true;
+    }
 }
 
 bool
@@ -206,24 +246,51 @@ EdgeRing::contains(const EdgeRing& otherRing) const {
 bool
 EdgeRing::isPointInOrOut(const EdgeRing& otherRing) const {
     // in most cases only one or two points will be checked
-    for (const CoordinateXY& pt : otherRing.getCoordinates()->items<CoordinateXY>()) {
-        geom::Location loc = locate(pt);
-        if (loc == geom::Location::INTERIOR) {
-            return true;
+
+    struct PointTester : public CoordinateFilter {
+
+    public:
+        explicit PointTester(const EdgeRing* p_ring) : m_er(p_ring), m_result(false) {}
+
+        void filter_ro(const CoordinateXY* pt) override {
+            Location loc = m_er->locate(*pt);
+
+            if (loc == geom::Location::INTERIOR) {
+                m_done = true;
+                m_result = true;
+            } else if (loc == geom::Location::EXTERIOR) {
+                m_done = true;
+                m_result = false;
+            }
+
+            // pt is on BOUNDARY, so keep checking for a determining location
         }
-        if (loc == geom::Location::EXTERIOR) {
-            return false;
+
+        bool isDone() const override {
+            return m_done;
         }
-        // pt is on BOUNDARY, so keep checking for a determining location
-    }
-    return false;
+
+        bool getResult() const {
+            return m_result;
+        }
+
+    private:
+        const EdgeRing* m_er;
+        bool m_done{false};
+        bool m_result;
+    };
+
+    PointTester tester(this);
+    otherRing.getRingInternal()->apply_ro(&tester);
+
+    return tester.getResult();
 }
 
 /*private*/
-const CoordinateSequence*
-EdgeRing::getCoordinates() const
+const Curve*
+EdgeRing::getRingInternal() const
 {
-    if(ringPts == nullptr) {
+    if (ring == nullptr) {
         bool hasZ = false;
         bool hasM = false;
 
@@ -233,51 +300,26 @@ EdgeRing::getCoordinates() const
             hasM |= edge->getLine()->hasM();
         }
 
-        ringPts = std::make_shared<CoordinateSequence>(0u, hasZ, hasM);
+        geom::util::CurveBuilder builder(*factory, hasZ, hasM);
 
         for(const auto& de : deList) {
-            auto edge = detail::down_cast<PolygonizeEdge*>(de->getEdge());
+            const auto edge = detail::down_cast<PolygonizeEdge*>(de->getEdge());
+            const bool isCurved = edge->getLine()->getGeometryTypeId() == GEOS_CIRCULARSTRING;
+
+            CoordinateSequence& ringPts = builder.getSeq(isCurved);
+
             addEdge(edge->getLine()->getCoordinatesRO(),
-                    de->getEdgeDirection(), ringPts.get());
+                    de->getEdgeDirection(), &ringPts);
         }
-    }
-    return ringPts.get();
-}
 
-/*public*/
-std::unique_ptr<LineString>
-EdgeRing::getLineString()
-{
-    getCoordinates();
-    return factory->createLineString(ringPts);
-}
-
-/*public*/
-const LinearRing*
-EdgeRing::getRingInternal() const
-{
-    if(ring != nullptr) {
-        return ring.get();
+        ring = builder.getGeometry();
     }
 
-    getCoordinates();
-    try {
-        ring = factory->createLinearRing(*ringPts);
-    }
-    catch(const geos::util::IllegalArgumentException& e) {
-#if GEOS_DEBUG
-        // FIXME: print also ringPts
-        std::cerr << "EdgeRing::getRingInternal: "
-                  << e.what()
-                  << std::endl;
-#endif
-        ::geos::ignore_unused_variable_warning(e);
-    }
     return ring.get();
 }
 
 /*public*/
-std::unique_ptr<LinearRing>
+std::unique_ptr<Curve>
 EdgeRing::getRingOwnership()
 {
     getRingInternal(); // active lazy generation

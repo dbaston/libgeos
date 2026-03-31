@@ -137,7 +137,7 @@ struct test_polygonizetest_data {
         }
 
         switch(typ) {
-            case ResultType::POLYGONS: retGeoms = asGeometry(polygonizer.getPolygons()); break;
+            case ResultType::POLYGONS: retGeoms = asGeometry(polygonizer.getSurfaces()); break;
             case ResultType::CUT_EDGES: retGeoms = asGeometry(polygonizer.getCutEdges()); break;
             case ResultType::DANGLES: retGeoms = asGeometry(polygonizer.getDangles()); break;
             case ResultType::INVALID_RING_LINES: retGeoms = asGeometry(polygonizer.getInvalidRingLines()); break;
@@ -399,6 +399,64 @@ void object::test<11>()
         },
         false,
         POLYGONS);
+}
+
+template<>
+template<>
+void object::test<12>()
+{
+    set_test_name("curved inputs");
+
+    std::vector<std::string> input{
+        "MULTICURVE ((10 0, 0 0, 0 10, 10 10), CIRCULARSTRING (10 10, 5 5, 10 0), COMPOUNDCURVE ((10 10, 20 10, 20 0, 10 0), CIRCULARSTRING (10 0, 15 5, 10 10)))"
+    };
+
+    std::vector<std::string> expected{
+        "CURVEPOLYGON (COMPOUNDCURVE ((0 0, 0 10, 10 10), CIRCULARSTRING (10 10, 5 5, 10 0), (10 0, 0 0)))",
+        "CURVEPOLYGON (CIRCULARSTRING (10 0, 5 5, 10 10, 15 5, 10 0))",
+        "CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (10 0, 15 5, 10 10), (10 10, 20 10, 20 0, 10 0)))"
+    };
+
+    doTest(input, expected, false, POLYGONS);
+
+    // remove the hole
+    expected.erase(expected.begin() + 1);
+    doTest(input, expected, true, POLYGONS);
+}
+
+template<>
+template<>
+void object::test<13>()
+{
+    set_test_name("curved dangle");
+
+    doTest({"LINESTRING (0 0, 1 0, 1 1, 0 0)", "CIRCULARSTRING (1 1, 2 2, 3 1)"},
+           {"CIRCULARSTRING (1 1, 2 2, 3 1)"},
+           false,
+           DANGLES);
+}
+
+template<>
+template<>
+void object::test<14>()
+{
+    set_test_name("curved inputs requiring PIP test");
+
+    std::vector<std::string> input{
+        "COMPOUNDCURVE(CIRCULARSTRING (-4 -3, 0 5, 4 -3), (4 -3, -4 -3))",
+        "COMPOUNDCURVE((-4 -3, -1 0), CIRCULARSTRING (-1 0, 0 1, 1 0), (1 0, -4 -3))"
+    };
+
+    std::vector<std::string> expected{
+        "CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (-4 -3, 0 5, 4 -3), (4 -3, -4 -3)), COMPOUNDCURVE ((-4 -3, 1 0), CIRCULARSTRING (1 0, 0 1, -1 0), (-1 0, -4 -3)))",
+        "CURVEPOLYGON (COMPOUNDCURVE ((-4 -3, -1 0), CIRCULARSTRING (-1 0, 0 1, 1 0), (1 0, -4 -3)))"
+    };
+
+    doTest(input, expected, false, POLYGONS);
+
+    expected.erase(expected.begin() + 1);
+
+    doTest(input, expected, true, POLYGONS);
 }
 
 } // namespace tut

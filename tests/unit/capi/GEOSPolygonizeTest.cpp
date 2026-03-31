@@ -189,6 +189,8 @@ template<>
 void object::test<7>
 ()
 {
+    set_test_name("GEOSPolygonize with curved inputs");
+
     constexpr int size = 2;
     GEOSGeometry* geoms[size];
     geoms[0] = GEOSGeomFromWKT("LINESTRING (0 0, 2 0)");
@@ -198,9 +200,11 @@ void object::test<7>
         ensure(geom != nullptr);
     }
 
-    GEOSGeometry* g = GEOSPolygonize(geoms, size);
+    result_ = GEOSPolygonize(geoms, size);
+    ensure(result_);
 
-    ensure("curved geometries not supported", g == nullptr);
+    expected_ = fromWKT("GEOMETRYCOLLECTION( CURVEPOLYGON (COMPOUNDCURVE((0 0, 2 0), CIRCULARSTRING (2 0, 1 1, 0 0))))");
+    ensure_geometry_equals(result_, expected_);
 
     for(auto& input : geoms) {
         GEOSGeom_destroy(input);
@@ -229,6 +233,25 @@ void object::test<8>
 
     ensure_geometry_equals_identical(result_, expected_);
 }
+
+template<>
+template<>
+void object::test<9>()
+{
+    set_test_name("GEOSPolygonize_valid with curved inputs");
+
+    input_ = fromWKT("MULTICURVE ((10 0, 0 0, 0 10, 10 10), CIRCULARSTRING (10 10, 5 5, 10 0), COMPOUNDCURVE ((10 10, 20 10, 20 0, 10 0), CIRCULARSTRING (10 0, 15 5, 10 10)))");
+
+    result_ = GEOSPolygonize_valid(&input_, 1);
+    ensure(result_);
+
+    expected_ = fromWKT("MULTISURFACE ("
+        "CURVEPOLYGON (COMPOUNDCURVE ((0 0, 0 10, 10 10), CIRCULARSTRING (10 10, 5 5, 10 0), (10 0, 0 0))),"
+        "CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (10 0, 15 5, 10 10), (10 10, 20 10, 20 0, 10 0))))");
+
+    ensure_geometry_equals(result_, expected_);
+}
+
 
 } // namespace tut
 

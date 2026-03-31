@@ -22,8 +22,11 @@
 #include <geos/operation/polygonize/PolygonizeGraph.h>
 #include <geos/operation/polygonize/EdgeRing.h>
 #include <geos/operation/polygonize/HoleAssigner.h>
+#include <geos/geom/CircularString.h>
+#include <geos/geom/CompoundCurve.h>
 #include <geos/geom/LineString.h>
 #include <geos/geom/Geometry.h>
+#include <geos/geom/GeometryFactory.h>
 #include <geos/geom/Polygon.h>
 #include <geos/util/Interrupt.h>
 // std
@@ -44,17 +47,25 @@ namespace geos {
 namespace operation { // geos.operation
 namespace polygonize { // geos.operation.polygonize
 
-Polygonizer::LineStringAdder::LineStringAdder(Polygonizer* p):
+Polygonizer::SimpleCurveAdder::SimpleCurveAdder(Polygonizer* p):
     pol(p)
 {
 }
 
 void
-Polygonizer::LineStringAdder::filter_ro(const Geometry* g)
+Polygonizer::SimpleCurveAdder::filter_ro(const Geometry* g)
 {
-    auto ls = dynamic_cast<const LineString*>(g);
-    if(ls) {
-        pol->add(ls);
+    if (g->getGeometryTypeId() == GEOS_COMPOUNDCURVE) {
+        const auto& cc = static_cast<const CompoundCurve&>(*g);
+        for (std::size_t i = 0; i < cc.getNumCurves(); i++) {
+            filter_ro(cc.getCurveN(i));
+        }
+
+        return;
+    }
+
+    if(const auto sc = dynamic_cast<const SimpleCurve*>(g)) {
+        pol->add(sc);
     }
 }
 
@@ -71,14 +82,6 @@ Polygonizer::Polygonizer(bool onlyPolygonal):
 {
 }
 
-/*
- * Add a collection of geometries to be polygonized.
- * May be called multiple times.
- * Any dimension of Geometry may be added;
- * the constituent linework will be extracted and used
- *
- * @param geomList a list of {@link Geometry}s with linework to be polygonized
- */
 void
 Polygonizer::add(std::vector<Geometry*>* geomList)
 {
@@ -87,14 +90,6 @@ Polygonizer::add(std::vector<Geometry*>* geomList)
     }
 }
 
-/*
- * Add a collection of geometries to be polygonized.
- * May be called multiple times.
- * Any dimension of Geometry may be added;
- * the constituent linework will be extracted and used
- *
- * @param geomList a list of {@link Geometry}s with linework to be polygonized
- */
 void
 Polygonizer::add(std::vector<const Geometry*>* geomList)
 {
@@ -103,49 +98,55 @@ Polygonizer::add(std::vector<const Geometry*>* geomList)
     }
 }
 
-/*
- * Add a geometry to the linework to be polygonized.
- * May be called multiple times.
- * Any dimension of Geometry may be added;
- * the constituent linework will be extracted and used
- *
- * @param g a Geometry with linework to be polygonized
- */
 void
 Polygonizer::add(const Geometry* g)
 {
-    util::ensureNoCurvedComponents(g);
     g->apply_ro(&lineStringAdder);
 }
 
-/*
- * Add a linestring to the graph of polygon edges.
- *
- * @param line the LineString to add
- */
 void
-Polygonizer::add(const LineString* line)
+Polygonizer::add(const SimpleCurve* line)
 {
     // create a new graph using the factory from the input Geometry
     if(graph == nullptr) {
         graph.reset(new PolygonizeGraph(line->getFactory()));
     }
-    graph->addEdge(line);
+
+    if (line->getGeometryTypeId() == GEOS_CIRCULARSTRING) {
+        graph->addEdge(detail::down_cast<const CircularString*>(line));
+    } else {
+        graph->addEdge(detail::down_cast<const LineString*>(line));
+    }
 }
 
-/*
- * Gets the list of polygons formed by the polygonization.
- * @return a collection of Polygons
- */
 std::vector<std::unique_ptr<Polygon>>
 Polygonizer::getPolygons()
 {
     polygonize();
+
+    std::vector<std::unique_ptr<Polygon>> ret;
+    ret.reserve(polyList.size());
+    for (auto& surf : polyList) {
+        if (surf->getGeometryTypeId() == GEOS_POLYGON) {
+            ret.emplace_back(detail::down_cast<Polygon*>(surf.release()));
+        }
+    }
+    polyList.clear();
+
+    return ret;
+}
+
+std::vector<std::unique_ptr<Surface>>
+Polygonizer::getSurfaces()
+{
+    polygonize();
+
     return std::move(polyList);
 }
 
+
 /* public */
-const std::vector<const LineString*>&
+const std::vector<const SimpleCurve*>&
 Polygonizer::getDangles()
 {
     polygonize();
@@ -159,7 +160,7 @@ Polygonizer::hasDangles() {
 }
 
 /* public */
-const std::vector<const LineString*>&
+const std::vector<const SimpleCurve*>&
 Polygonizer::getCutEdges()
 {
     polygonize();
@@ -174,7 +175,7 @@ Polygonizer::hasCutEdges()
 }
 
 /* public */
-const std::vector<std::unique_ptr<LineString>>&
+const std::vector<std::unique_ptr<Curve>>&
 Polygonizer::getInvalidRingLines()
 {
     polygonize();
@@ -265,7 +266,7 @@ Polygonizer::findValidRings(const std::vector<EdgeRing*>& edgeRingList,
     }
 }
 
-std::vector<std::unique_ptr<geom::LineString>>
+std::vector<std::unique_ptr<geom::Curve>>
 Polygonizer::extractInvalidLines(std::vector<EdgeRing*>& invalidRings)
 {
     /**
@@ -286,10 +287,15 @@ Polygonizer::extractInvalidLines(std::vector<EdgeRing*>& invalidRings)
      * which is either valid or marked as not processed.
      * This avoids including outer rings which have linework which is duplicated.
      */
-    std::vector<std::unique_ptr<LineString>> invalidLines;
+    std::vector<std::unique_ptr<Curve>> invalidLines;
     for (EdgeRing* er : invalidRings) {
         if (isIncludedInvalid(er)) {
-            invalidLines.push_back(er->getLineString());
+            auto ringGeom = er->getRingOwnership();
+            if (ringGeom->getGeometryTypeId() == GEOS_LINEARRING) {
+                ringGeom = ringGeom->getFactory()->createLineString(ringGeom->getCoordinates());
+            }
+
+            invalidLines.push_back(std::move(ringGeom));
         }
         er->setProcessed(true);
     }
@@ -298,7 +304,7 @@ Polygonizer::extractInvalidLines(std::vector<EdgeRing*>& invalidRings)
 }
 
 bool
-Polygonizer::isIncludedInvalid(EdgeRing* invalidRing)
+Polygonizer::isIncludedInvalid(const EdgeRing* invalidRing)
 {
     for (const PolygonizeDirectedEdge* de: invalidRing->getEdges()) {
         const PolygonizeDirectedEdge* deAdj = static_cast<PolygonizeDirectedEdge*>(de->getSym());
@@ -358,10 +364,10 @@ Polygonizer::findOuterShells(std::vector<EdgeRing*> & shells)
     }
 }
 
-std::vector<std::unique_ptr<Polygon>>
+std::vector<std::unique_ptr<Surface>>
 Polygonizer::extractPolygons(std::vector<EdgeRing*> & shells, bool includeAll)
 {
-    std::vector<std::unique_ptr<Polygon>> polys;
+    std::vector<std::unique_ptr<Surface>> polys;
     for (EdgeRing* er : shells) {
         if (includeAll || er->isIncluded()) {
             polys.emplace_back(er->getPolygon());
