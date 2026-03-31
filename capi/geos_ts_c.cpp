@@ -85,6 +85,7 @@
 #include <geos/operation/grid/Grid.h>
 #include <geos/operation/grid/GridIntersection.h>
 #include <geos/operation/linemerge/LineMerger.h>
+#include <geos/operation/spanning/SpanningTree.h>
 #include <geos/operation/intersection/Rectangle.h>
 #include <geos/operation/intersection/RectangleIntersection.h>
 #include <geos/operation/overlay/snap/GeometrySnapper.h>
@@ -2702,6 +2703,46 @@ extern "C" {
             out->setSRID(g->getSRID());
 
             return out.release();
+        });
+    }
+
+    std::size_t*
+    GEOSMinimumSpanningTree_r(GEOSContextHandle_t extHandle, const Geometry* const* geoms, unsigned int ngeoms)
+    {
+        using geos::operation::spanning::SpanningTree;
+        using geos::geom::Curve;
+
+        if (ngeoms == 0 || geoms == nullptr) {
+            return nullptr;
+        }
+
+        return execute(extHandle, [&]() {
+            std::vector<const Curve*> curvevec(ngeoms);
+            for (unsigned int i = 0; i < ngeoms; ++i) {
+                if (geoms[i]) {
+                    auto typeId = geoms[i]->getGeometryTypeId();
+                    if (typeId == geos::geom::GEOS_LINESTRING ||
+                        typeId == geos::geom::GEOS_CIRCULARSTRING ||
+                        typeId == geos::geom::GEOS_COMPOUNDCURVE) {
+                        curvevec[i] = static_cast<const Curve*>(geoms[i]);
+                    }
+                    else {
+                        curvevec[i] = nullptr;
+                    }
+                }
+                else {
+                    curvevec[i] = nullptr;
+                }
+            }
+
+            std::vector<std::size_t> result;
+            SpanningTree::mst(curvevec, result);
+
+            std::size_t* result_buf = static_cast<std::size_t*>(malloc(ngeoms * sizeof(std::size_t)));
+            if (result_buf) {
+                std::copy(result.begin(), result.end(), result_buf);
+            }
+            return result_buf;
         });
     }
 
