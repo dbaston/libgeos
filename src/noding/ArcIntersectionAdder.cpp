@@ -35,6 +35,10 @@ ArcIntersectionAdder::processIntersections(ArcString& e0, std::size_t segIndex0,
         return;
     }
 
+    if (isTrivialIntersection(&e0, segIndex0, &e1, segIndex1)) {
+        return;
+    }
+
     for (std::uint8_t i = 0; i < m_intersector.getNumPoints(); i++) {
         detail::down_cast<NodableArcString*>(&e0)->addIntersection(m_intersector.getPoint(i), segIndex0);
         detail::down_cast<NodableArcString*>(&e1)->addIntersection(m_intersector.getPoint(i), segIndex1);
@@ -73,6 +77,33 @@ ArcIntersectionAdder::processIntersections(ArcString& e0, std::size_t segIndex0,
 
 }
 
+bool
+ArcIntersectionAdder::isAdjacentSegments(std::size_t i1, std::size_t i2)
+{
+    return (i1 > i2 ? i1 - i2 : i2 - i1) == 1;
+}
+
+bool
+ArcIntersectionAdder::isTrivialIntersection(const PathString *e0, std::size_t segIndex0,
+                                            const PathString *e1, std::size_t segIndex1) const
+{
+    if (e0 != e1) {
+        return false;
+    }
+
+    // TODO: If two ArcStrings form a circle they may have a trivial intersection with
+    // two points.
+    if (m_intersector.getNumPoints() != 1) {
+        return false;
+    }
+
+    if (isAdjacentSegments(segIndex0, segIndex1)) {
+        return true;
+    }
+
+    return false;
+}
+
 void
 ArcIntersectionAdder::processIntersections(SegmentString& e0, std::size_t segIndex0, SegmentString& e1, std::size_t segIndex1)
 {
@@ -90,11 +121,13 @@ ArcIntersectionAdder::processIntersections(SegmentString& e0, std::size_t segInd
         return;
     }
 
-    // todo collinear?
+    if (isTrivialIntersection(&e0, segIndex0, &e1, segIndex1)) {
+        return;
+    }
+
+    // TODO: Handle collinear segments
 
     static_cast<NodedSegmentString&>(e0).addIntersection(m_intersector.getPoint(0), segIndex0);
-
-
 }
 
 }

@@ -33,6 +33,11 @@ public:
     void processIntersections(SegmentString& e0, std::size_t segIndex0, SegmentString& e1, std::size_t segIndex1) override;
 
 private:
+    static bool isAdjacentSegments(std::size_t i1, std::size_t i2);
+
+    bool isTrivialIntersection(const PathString* e0, std::size_t segIndex0,
+                               const PathString* e1, std::size_t segIndex1) const;
+
     algorithm::CircularArcIntersector& m_intersector;
 };
 
