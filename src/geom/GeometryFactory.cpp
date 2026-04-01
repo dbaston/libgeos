@@ -635,6 +635,42 @@ const
     return std::unique_ptr<CurvePolygon>(new CurvePolygon(std::move(shell), std::move(holes), *this));
 }
 
+/* public */
+std::unique_ptr<Surface>
+GeometryFactory::createSurface(std::unique_ptr<Curve> && shell)
+const
+{
+    if (shell->getGeometryTypeId() == GEOS_LINEARRING) {
+        std::unique_ptr<LinearRing> shellLR(detail::down_cast<LinearRing*>(shell.release()));
+        return createPolygon(std::move(shellLR));
+    }
+
+    return createCurvePolygon(std::move(shell));
+}
+
+/* public */
+std::unique_ptr<Surface>
+GeometryFactory::createSurface(std::unique_ptr<Curve> && shell, std::vector<std::unique_ptr<Curve>> && holes)
+const
+{
+    const bool returnPolygon = shell->getGeometryTypeId() == GEOS_LINEARRING && std::all_of(holes.begin(), holes.end(), [](const auto& hole) {
+        return hole->getGeometryTypeId() == GEOS_LINEARRING;
+    });
+
+    if (returnPolygon) {
+        std::unique_ptr<LinearRing> shellLR(detail::down_cast<LinearRing*>(shell.release()));
+
+        std::vector<std::unique_ptr<LinearRing>> holesLR(holes.size());
+        for (std::size_t i = 0; i < holes.size(); i++) {
+            holesLR[i].reset(detail::down_cast<LinearRing*>(holes[i].release()));
+        }
+
+        return createPolygon(std::move(shellLR), std::move(holesLR));
+    }
+
+    return createCurvePolygon(std::move(shell), std::move(holes));
+}
+
 /*public*/
 std::unique_ptr<LineString>
 GeometryFactory::createLineString(std::size_t coordinateDimension) const
