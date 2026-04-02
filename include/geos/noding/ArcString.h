@@ -32,10 +32,10 @@ public:
     explicit ArcString(std::vector<geom::CircularArc> arcs) : m_arcs(std::move(arcs)) {
     }
 
-    ArcString(std::vector<geom::CircularArc> arcs, const std::shared_ptr<const geom::CoordinateSequence>& seq, void* context)
-        : m_arcs(std::move(arcs)),
-          m_seq(seq),
-          m_context(context)
+    ArcString(std::vector<geom::CircularArc> arcs, const std::shared_ptr<const geom::CoordinateSequence>& seq, const void* p_context)
+        : PathString(p_context),
+          m_arcs(std::move(arcs)),
+          m_seq(seq)
     {}
 
     std::size_t getSize() const override {
@@ -67,7 +67,6 @@ public:
 protected:
     std::vector<geom::CircularArc> m_arcs;
     std::shared_ptr<const geom::CoordinateSequence> m_seq;
-    void* m_context;
 };
 
 }
