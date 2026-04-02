@@ -31,8 +31,8 @@ pseudoAngleDiffCCW(double paStart, double pa) {
     return diff;
 }
 
-NodableArcString::NodableArcString(std::vector<geom::CircularArc> arcs, const std::shared_ptr<const geom::CoordinateSequence>& coords, bool constructZ, bool constructM, void* context) :
-    ArcString(std::move(arcs), coords, context),
+NodableArcString::NodableArcString(std::vector<geom::CircularArc> arcs, const std::shared_ptr<const geom::CoordinateSequence>& coords, bool constructZ, bool constructM, const void* p_context) :
+    ArcString(std::move(arcs), coords, p_context),
     m_constructZ(constructZ),
     m_constructM(constructM)
 {
@@ -144,6 +144,7 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
         const int orientation = toSplit.getOrientation();
 
         bool arcIsSplit = true;
+        const bool preserveControlPoint = true;
         std::vector<CoordinateXYZM> arcPoints;
         const auto it = m_adds.find(arcIndex);
         if (it == m_adds.end()) {
@@ -157,7 +158,7 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
             }
         }
 
-        if (!arcIsSplit) {
+        if (preserveControlPoint && !arcIsSplit) {
             // No nodes added, just copy the coordinates into the sequence.
             const geom::CoordinateSequence* srcSeq = m_arcs[arcIndex].getCoordinateSequence();
             std::size_t srcPos = m_arcs[arcIndex].getCoordinatePosition();
@@ -174,6 +175,8 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
             const CoordinateXYZM& p0 = arcPoints[i - 1];
             const CoordinateXYZM& p2 = arcPoints[i];
 
+            // TODO: Check if control point of original arc falls into this section,
+            // and use it instead of calculating a midpoint here?
             CoordinateXYZM p1(algorithm::CircularArcs::getMidpoint(p0, p2, center, radius, isCCW));
             p1.z = (p0.z + p2.z) / 2;
             p1.m = (p0.m + p2.m) / 2;
@@ -188,14 +191,17 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
             arcs.emplace_back(*dstSeq, dstPos, center, radius, orientation);
 
             // Finish the ArcString, start a new one.
-            splitArcs.push_back(std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, nullptr));
-            dstSeq = std::make_unique<geom::CoordinateSequence>(0, m_constructZ, m_constructM);
-            arcs.clear();
+            const bool isSplitPoint = i != arcPoints.size() - 1;
+            if (isSplitPoint) {
+                splitArcs.push_back(std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, getData()));
+                dstSeq = std::make_unique<geom::CoordinateSequence>(0, m_constructZ, m_constructM);
+                arcs.clear();
+            }
         }
     }
 
     if (!arcs.empty()) {
-        splitArcs.push_back(std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, nullptr));
+        splitArcs.push_back(std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, getData()));
     }
 }
 

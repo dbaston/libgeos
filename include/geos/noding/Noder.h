@@ -22,6 +22,7 @@
 // Forward declarations
 namespace geos {
 namespace noding {
+class PathString;
 class SegmentString;
 }
 }
@@ -64,6 +65,11 @@ public:
      *         This method may only be called once.
      */
     virtual std::vector<std::unique_ptr<SegmentString>> getNodedSubstrings() = 0;
+
+    virtual void computePathNodes(const std::vector<PathString*>& inputPaths);
+
+    virtual std::vector<std::unique_ptr<PathString>> getNodedPaths();
+
 
     virtual
     ~Noder() {}

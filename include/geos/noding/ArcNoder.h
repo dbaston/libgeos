@@ -42,12 +42,12 @@ public:
 
     std::vector<std::unique_ptr<SegmentString>> getNodedSubstrings() override;
 
-    virtual void computePathNodes(const std::vector<PathString*>& inputPaths) = 0;
+    void computePathNodes(const std::vector<PathString*>& inputPaths) override = 0;
 
-    virtual std::vector<std::unique_ptr<PathString>> getNodedPaths() = 0;
+    std::vector<std::unique_ptr<PathString>> getNodedPaths() override = 0;
 
 protected:
-    ArcIntersector* m_intersector;
+    ArcIntersector* m_intersector{nullptr};
 };
 
 }
