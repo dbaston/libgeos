@@ -2444,13 +2444,19 @@ extern "C" {
 
             // Polygonize
             Polygonizer plgnzr;
+            int srid = 0;
             for(std::size_t i = 0; i < ngeoms; ++i) {
                 plgnzr.add(g[i]);
+                if (!srid) {
+                    srid = g[i]->getSRID();
+                }
             }
 
             auto polys = plgnzr.getSurfaces();
             const GeometryFactory* gf = handle->geomFactory;
-            return gf->createGeometryCollection(std::move(polys)).release();
+            auto out = gf->createGeometryCollection(std::move(polys));
+            out->setSRID(srid);
+            return out.release();
         });
     }
 
@@ -2461,39 +2467,41 @@ extern "C" {
 
         return execute(extHandle, [&]() -> Geometry* {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-            Geometry* out;
+            std::unique_ptr<Geometry> out;
 
             // Polygonize
             Polygonizer plgnzr(true);
             int srid = 0;
             for(std::size_t i = 0; i < ngeoms; ++i) {
                 plgnzr.add(g[i]);
-                srid = g[i]->getSRID();
+                if (!srid) {
+                    srid = g[i]->getSRID();
+                }
             }
 
             auto surfaces = plgnzr.getSurfaces();
             if (surfaces.empty()) {
-                out = handle->geomFactory->createGeometryCollection().release();
+                out = handle->geomFactory->createGeometryCollection();
             } else if (surfaces.size() == 1) {
-                return surfaces[0].release();
+                out = std::move(surfaces[0]);
             } else {
                 const bool isCurved = std::any_of(surfaces.begin(), surfaces.end(), [](const auto& poly) {
                     return poly->hasCurvedComponents();
                 });
 
                 if (isCurved) {
-                    return handle->geomFactory->createMultiSurface(std::move(surfaces)).release();
+                    out = handle->geomFactory->createMultiSurface(std::move(surfaces));
                 } else {
                     std::vector<std::unique_ptr<Polygon>> polygons(surfaces.size());
                     for (std::size_t i = 0; i < surfaces.size(); i++) {
                         polygons[i].reset(geos::detail::down_cast<Polygon*>(surfaces[i].release()));
                     }
-                    return handle->geomFactory->createMultiPolygon(std::move(polygons)).release();
+                    out = handle->geomFactory->createMultiPolygon(std::move(polygons));
                 }
             }
 
             out->setSRID(srid);
-            return out;
+            return out.release();
         });
     }
 
@@ -2622,7 +2630,9 @@ extern "C" {
             int srid = 0;
             for(std::size_t i = 0; i < ngeoms; ++i) {
                 plgnzr.add(g[i]);
-                srid = g[i]->getSRID();
+                if (srid == 0) {
+                    srid = g[i]->getSRID();
+                }
             }
 
             const std::vector<const SimpleCurve*>& lines = plgnzr.getCutEdges();
@@ -2655,6 +2665,7 @@ extern "C" {
         return execute(extHandle, [&]() {
             // Polygonize
             Polygonizer plgnzr;
+            const int srid = g->getSRID();
             for(std::size_t i = 0; i < g->getNumGeometries(); ++i) {
                 plgnzr.add(g->getGeometryN(i));
             }
@@ -2669,6 +2680,7 @@ extern "C" {
                 }
 
                 *cuts = gf->createGeometryCollection(std::move(linevec)).release();
+                (*cuts)->setSRID(srid);
             }
 
             if(dangles) {
@@ -2679,6 +2691,7 @@ extern "C" {
                 }
 
                 *dangles = gf->createGeometryCollection(std::move(linevec)).release();
+                (*dangles)->setSRID(srid);
             }
 
             if(invalid) {
@@ -2689,12 +2702,13 @@ extern "C" {
                 }
 
                 *invalid = gf->createGeometryCollection(std::move(linevec)).release();
+                (*invalid)->setSRID(srid);
             }
 
             auto polys = plgnzr.getSurfaces();
-            Geometry* out = gf->createGeometryCollection(std::move(polys)).release();
-            out->setSRID(g->getSRID());
-            return out;
+            auto out = gf->createGeometryCollection(std::move(polys));
+            out->setSRID(srid);
+            return out.release();
         });
     }
 
