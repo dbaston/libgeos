@@ -277,6 +277,45 @@ void object::test<9>()
     ensure_equals(GEOSGetSRID(result_), 4326);
 }
 
+template<>
+template<>
+void object::test<10>()
+{
+    set_test_name("GEOSPolygonize_full with curved inputs");
+
+    input_ = fromWKT("MULTICURVE (CIRCULARSTRING (0 0, 1 1, 2 0), CIRCULARSTRING (2 0, 3 1, 4 0), LINESTRING (2 0, 0 0))");
+    GEOSSetSRID(input_, 4326);
+
+    GEOSGeometry* cuts;
+    GEOSGeometry* dangles;
+    GEOSGeometry* invalidRings;
+
+    result_ = GEOSPolygonize_full(input_, &cuts, &dangles, &invalidRings);
+    ensure(result_);
+
+    expected_ = fromWKT("GEOMETRYCOLLECTION (CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (0 0, 1 1, 2 0), (2 0, 0 0))))");
+    GEOSGeometry* expected_cuts = GEOSGeomFromWKT("GEOMETRYCOLLECTION EMPTY");
+    GEOSGeometry* expected_dangles = GEOSGeomFromWKT("GEOMETRYCOLLECTION(CIRCULARSTRING (2 0, 3 1, 4 0))");
+    GEOSGeometry* expected_invalidRings = GEOSGeomFromWKT("GEOMETRYCOLLECTION EMPTY");
+
+    ensure_geometry_equals(result_, expected_);
+    ensure_geometry_equals(cuts, expected_cuts);
+    ensure_geometry_equals(dangles, expected_dangles);
+    ensure_geometry_equals(invalidRings, expected_invalidRings);
+
+    ensure_equals(GEOSGetSRID(result_), 4326);
+    ensure_equals(GEOSGetSRID(cuts), 4326);
+    ensure_equals(GEOSGetSRID(dangles), 4326);
+    ensure_equals(GEOSGetSRID(invalidRings), 4326);
+
+    GEOSGeom_destroy(cuts);
+    GEOSGeom_destroy(dangles);
+    GEOSGeom_destroy(invalidRings);
+
+    GEOSGeom_destroy(expected_cuts);
+    GEOSGeom_destroy(expected_dangles);
+    GEOSGeom_destroy(expected_invalidRings);
+}
 
 } // namespace tut
 
