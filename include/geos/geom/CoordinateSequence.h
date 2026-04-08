@@ -49,7 +49,7 @@ namespace geom { // geos::geom
  * stores 2D Coordinates and accesses using the Coordinate type. Sequences used by these parts
  * of the code must be created with constructors without `hasz` and `hasm` arguments.
  *
- * If a high-dimension Coordinate coordinate is read from a low-dimension CoordinateSequence,
+ * If a high-dimension coordinate is read from a low-dimension CoordinateSequence,
  * the higher dimensions will be populated with incorrect values or a segfault may occur.
  *
  */
@@ -220,6 +220,13 @@ public:
     bool hasM() const {
         return m_hasm;
     }
+
+    /**
+     * Set the dimensions of the CoordinateSequence.
+     * May cause a reallocation, invalidating any references to coordinates
+     * within this sequence.
+     */
+    void setZM(bool hasZ, bool hasM);
 
     /// Returns true if contains any two consecutive points
     bool hasRepeatedPoints() const;

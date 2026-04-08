@@ -1642,4 +1642,37 @@ void object::test<62>
     ensure_equals_xyzm(seq.getAt<CoordinateXYZM>(1), p2);
     ensure_equals_xyzm(seq.getAt<CoordinateXYZM>(2), p1);
 }
+
+template<>
+template<>
+void object::test<63>()
+{
+    set_test_name("setZM: add ZM to XY sequence");
+
+    CoordinateSequence seq(0, false, false);
+    seq.add(CoordinateXY{1, 2});
+    seq.add(CoordinateXY{3, 4});
+    seq.setZM(true, true);
+
+    ensure_equals_xyzm(seq.getAt<CoordinateXYZM>(0), CoordinateXYZM(1, 2, DoubleNotANumber, DoubleNotANumber));
+    ensure_equals_xyzm(seq.getAt<CoordinateXYZM>(1), CoordinateXYZM(3, 4, DoubleNotANumber, DoubleNotANumber));
+}
+
+template<>
+template<>
+void object::test<64>()
+{
+    set_test_name("setZM: remove Z from XY sequence with hidden Z value");
+
+    CoordinateSequence seq(0, false, false);
+    seq.add(CoordinateXY{1, 2});
+    seq.add(Coordinate{3, 4, 5});
+
+    seq.setZM(false, false);
+
+    ensure_equals_xyz(seq.getAt<Coordinate>(0), Coordinate(1, 2, DoubleNotANumber));
+    ensure_equals_xyz(seq.getAt<Coordinate>(1), Coordinate(3, 4, DoubleNotANumber));
+}
+
+
 } // namespace tut

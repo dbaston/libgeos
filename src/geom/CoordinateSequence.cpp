@@ -631,6 +631,25 @@ CoordinateSequence::setPoints(const std::vector<CoordinateXY>& v)
 }
 
 void
+CoordinateSequence::setZM(bool p_hasZ, bool p_hasM)
+{
+    if (p_hasZ != hasZ() || p_hasM != hasM()) {
+        CoordinateSequence newSeq(0, p_hasZ, p_hasM);
+        newSeq.add(*this);
+        *this = std::move(newSeq);
+    }
+
+    // Make sure we don't carry over Z values that were hiding in a
+    // self-declared 2D sequence.
+    if (!p_hasZ && (getCoordinateType() == CoordinateType::XYZ || getCoordinateType() == CoordinateType::XYZM)) {
+        const Coordinate& nullCoord = Coordinate::getNull();
+        for (std::size_t i = 2; i < m_vect.size(); i += stride()) {
+            m_vect[i] = nullCoord.z;
+        }
+    }
+}
+
+void
 CoordinateSequence::swap(std::size_t i, std::size_t j)
 {
     using difference_type = decltype(m_vect)::difference_type;
