@@ -21,6 +21,7 @@
 // Forward declarations
 namespace geos::geom {
 class CircularString;
+class CoordinateXY;
 class LineString;
 class SimpleCurve;
 }
@@ -38,6 +39,10 @@ public:
 
     static std::pair<std::unique_ptr<geom::CircularString>, std::unique_ptr<geom::CircularString>>
             splitCircularStringAtVertex(const geom::CircularString& cs, std::size_t i);
+
+    static std::pair<std::unique_ptr<geom::LineString>, std::unique_ptr<geom::LineString>>
+            splitLineStringAtPoint(const geom::LineString& ls, std::size_t i, const geom::CoordinateXY& pt);
+
 };
 
 }

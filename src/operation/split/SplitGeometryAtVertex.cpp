@@ -14,20 +14,59 @@
 
 #include <geos/operation/split/SplitGeometryAtVertex.h>
 
+#include <geos/algorithm/Interpolate.h>
 #include <geos/geom/LineString.h>
 #include <geos/geom/CircularString.h>
 #include <geos/geom/GeometryFactory.h>
 #include <geos/util/UnsupportedOperationException.h>
 
 using geos::geom::CoordinateSequence;
+using geos::geom::CoordinateXY;
+using geos::geom::CoordinateXYZM;
 using geos::geom::CircularString;
 using geos::geom::LineString;
 using geos::geom::SimpleCurve;
 using geos::geom::GeometryTypeId;
 
 namespace geos::operation::split {
+
 std::pair<std::unique_ptr<LineString>, std::unique_ptr<LineString>>
-        SplitGeometryAtVertex::splitLineStringAtVertex(const LineString& ls, std::size_t i)
+SplitGeometryAtVertex::splitLineStringAtPoint(const LineString& ls, std::size_t i, const CoordinateXY& pt)
+{
+    const auto& gf = *ls.getFactory();
+    const CoordinateSequence& pts = *ls.getCoordinatesRO();
+
+    if (i + 1 >= pts.size()) {
+        throw util::IllegalArgumentException("Cannot split LineString at point beyond end");
+    }
+
+    auto pts1 = std::make_shared<CoordinateSequence>(0, pts.hasZ(), pts.hasM());
+    auto pts2 = std::make_shared<CoordinateSequence>(0, pts.hasZ(), pts.hasM());
+
+    CoordinateXYZM ptZM(pt);
+    if (pts.hasZ() || pts.hasM()) {
+        CoordinateXYZM prev;
+        CoordinateXYZM next;
+        pts.getAt(i, prev);
+        pts.getAt(i + 1, next);
+
+        ptZM.z = algorithm::Interpolate::zGetOrInterpolate(pt, prev, next);
+        ptZM.m = algorithm::Interpolate::mGetOrInterpolate(pt, prev, next);
+    }
+
+    pts1->add(pts, 0, i);
+    pts1->add(ptZM);
+
+    if (i < pts.size() - 1) {
+        pts2->add(ptZM);
+        pts2->add(pts, i + 1, pts.size() - 1);
+    }
+
+    return { gf.createLineString(pts1), gf.createLineString(pts2) };
+}
+
+std::pair<std::unique_ptr<LineString>, std::unique_ptr<LineString>>
+SplitGeometryAtVertex::splitLineStringAtVertex(const LineString& ls, std::size_t i)
 {
     const auto& gf = *ls.getFactory();
     const CoordinateSequence& pts = *ls.getCoordinatesRO();

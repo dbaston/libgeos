@@ -7,6 +7,7 @@
 #include <geos/operation/split/SplitGeometryAtVertex.h>
 #include <geos/io/WKTReader.h>
 
+using geos::geom::CoordinateXY;
 using geos::geom::CircularString;
 using geos::geom::LineString;
 using geos::operation::split::SplitGeometryAtVertex;
@@ -26,7 +27,7 @@ template<>
 template<>
 void object::test<1>()
 {
-    set_test_name("LineString");
+    set_test_name("Split LineString ZM at vertex");
 
     auto input = reader_.read<LineString>("LINESTRING ZM (0 3 2 3, 5 8 3 4, 2 2 4 5, 6 1 5 6)");
 
@@ -63,7 +64,7 @@ template<>
 template<>
 void object::test<2>()
 {
-    set_test_name("CircularString");
+    set_test_name("Split CircularString ZM at vertex");
 
     auto input = reader_.read<CircularString>("CIRCULARSTRING ZM (-5 0 1 2, 0 5 2 3, 5 0 3 4, 10 -5 4 5, 15 0 5 6)");
 
@@ -96,6 +97,43 @@ void object::test<2>()
     }
 
     ensure_THROW(SplitGeometryAtVertex::splitSimpleCurveAtVertex(*input, 1), geos::util::IllegalArgumentException);
+}
+
+template<>
+template<>
+void object::test<3>()
+{
+    set_test_name("Split LineString ZM at new point");
+
+    auto input = reader_.read<LineString>("LINESTRING ZM (0 3 2 3, 5 8 3 4, 2 2 4 5, 6 1 5 6)");
+
+    CoordinateXY pt{2, 3};
+
+    ensure_THROW(SplitGeometryAtVertex::splitLineStringAtPoint(*input, 3, pt), geos::util::IllegalArgumentException);
+
+    // Split first segment
+    {
+        auto [first, second] = SplitGeometryAtVertex::splitLineStringAtPoint(*input, 0, pt);
+
+        auto expectedFirst = reader_.read("LINESTRING ZM (0 3 2 3, 2 3 2.282842712474619 3.282842712474619)");
+        auto expectedSecond = reader_.read("LINESTRING ZM (2 3 2.282842712474619 3.282842712474619, 5 8 3 4, 2 2 4 5, 6 1 5 6)");
+
+        ensure_equals_exact_geometry_xyzm(first.get(), expectedFirst.get(), 0.0);
+        ensure_equals_exact_geometry_xyzm(second.get(), expectedSecond.get(), 0.0);
+    }
+
+    // Split second segment
+    {
+        auto [first, second] = SplitGeometryAtVertex::splitLineStringAtPoint(*input, 1, pt);
+
+        auto expectedFirst = reader_.read("LINESTRING ZM (0 3 2 3, 5 8 3 4, 2 3 3.8692269873603533 4.869226987360353)");
+        auto expectedSecond = reader_.read("LINESTRING ZM (2 3 3.8692269873603533 4.869226987360353, 2 2 4 5, 6 1 5 6)");
+
+        ensure_equals_exact_geometry_xyzm(first.get(), expectedFirst.get(), 0.0);
+        ensure_equals_exact_geometry_xyzm(second.get(), expectedSecond.get(), 0.0);
+    }
+
+
 }
 
 }
