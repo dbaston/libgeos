@@ -125,6 +125,16 @@ public:
     std::unique_ptr<geom::Geometry> readHEX(std::istream& is);
 
     /**
+     * \brief Reads a Geometry hex format.
+     *
+     * @param hex the string to read
+     * @return the Geometry read
+     * @throws IOException
+     * @throws ParseException
+     */
+    std::unique_ptr<geom::Geometry> readHEX(const std::string& hex);
+
+    /**
      * \brief Print WKB in HEX form to out stream
      *
      * @param is is the stream to read from

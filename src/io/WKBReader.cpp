@@ -184,6 +184,13 @@ WKBReader::readHEX(std::istream& is)
     return this->read(os);
 }
 
+std::unique_ptr<Geometry>
+WKBReader::readHEX(const std::string& hex)
+{
+    std::istringstream ss(hex);
+    return readHEX(ss);
+}
+
 void
 WKBReader::minMemSize(geom::GeometryTypeId geomType, uint64_t size) const
 {
