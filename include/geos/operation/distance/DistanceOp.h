@@ -104,7 +104,15 @@ public:
                                  double distance);
 
     /**
-     * Compute the the nearest points of two geometries.
+     * Report the locations of the nearest points in the input geometries.
+     * The locations are presented in the same order as the input geometries.
+     *
+     * @return a pair of {@link GeometryLocation}s for the nearest points
+     */
+    const std::array<GeometryLocation, 2>& nearestLocations();
+
+    /**
+     * Compute the nearest points of two geometries.
      *
      * The points are presented in the same order as the input Geometries.
      *
