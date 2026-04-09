@@ -69,6 +69,14 @@ DistanceOp::distance(const Geometry& g0, const Geometry& g1)
 }
 
 /*public static*/
+const std::array<GeometryLocation, 2>&
+DistanceOp::nearestLocations()
+{
+    computeMinDistance();
+    return minDistanceLocation;
+}
+
+/*public static*/
 std::unique_ptr<CoordinateSequence>
 DistanceOp::nearestPoints(const Geometry* g0, const Geometry* g1)
 {

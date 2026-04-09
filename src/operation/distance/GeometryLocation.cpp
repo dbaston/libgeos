@@ -54,7 +54,7 @@ GeometryLocation::GeometryLocation(const Geometry* newComponent, const Coordinat
  * Returns the geometry associated with this location.
  */
 const Geometry*
-GeometryLocation::getGeometryComponent()
+GeometryLocation::getGeometryComponent() const
 {
     return component;
 }
@@ -65,27 +65,27 @@ GeometryLocation::getGeometryComponent()
  * @return the segment index for the location, or INSIDE_AREA
  */
 size_t
-GeometryLocation::getSegmentIndex()
+GeometryLocation::getSegmentIndex() const
 {
     return segIndex;
 }
 /**
  * Returns the location.
  */
-CoordinateXY&
-GeometryLocation::getCoordinate()
+const CoordinateXY&
+GeometryLocation::getCoordinate() const
 {
     return pt;
 }
 
 bool
-GeometryLocation::isInsideArea()
+GeometryLocation::isInsideArea() const
 {
     return inside_area;
 }
 
 std::string
-GeometryLocation::toString()
+GeometryLocation::toString() const
 {
     geos::io::WKTWriter writer;
     std::ostringstream ss;
