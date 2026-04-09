@@ -25,11 +25,13 @@
 #include <geos/geom/Geometry.h>
 #include <geos/geom/PrecisionModel.h>
 #include <geos/geom/CoordinateSequence.h>
+#include <geos/geom/CompoundCurve.h>
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/CircularString.h>
 #include <geos/geom/MultiCurve.h>
 #include <geos/geom/LineString.h>
 
+#include <geos/noding/ArcIntersectionAdder.h>
 #include <geos/noding/IteratedNoder.h>
 #include <geos/noding/NodableArcString.h>
 #include <geos/noding/SimpleNoder.h>
@@ -43,7 +45,6 @@
 #include <memory> // for unique_ptr
 #include <iostream>
 
-#include "geos/noding/ArcIntersectionAdder.h"
 
 namespace geos {
 namespace noding { // geos.noding
@@ -80,6 +81,10 @@ public:
 
             auto as = std::make_unique<NodableArcString>(std::move(arcs), coords, _constructZ, _constructM, nullptr);
             _to.push_back(std::move(as));
+        } else if (const auto* cc = dynamic_cast<const geom::CompoundCurve*>(g)) {
+            for (std::size_t i = 0; i < cc->getNumCurves(); i++) {
+                filter_ro(cc->getCurveN(i));
+            }
         }
     }
 private:
