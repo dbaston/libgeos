@@ -45,11 +45,17 @@ public:
 
     static std::unique_ptr<geom::Geometry> node(const geom::Geometry& geom);
 
+    static std::unique_ptr<geom::Geometry> node(const geom::Geometry& geom1, const geom::Geometry& geom2);
+
     GeometryNoder(const geom::Geometry& g);
+
+    GeometryNoder(const geom::Geometry& g1, const geom::Geometry& g2);
 
     ~GeometryNoder();
 
     std::unique_ptr<geom::Geometry> getNoded();
+
+    void setOnlyFirstGeomEdges(bool onlyFirstGeomEdges);
 
     // Declare type as noncopyable
     GeometryNoder(GeometryNoder const&) = delete;
@@ -57,8 +63,10 @@ public:
 
 private:
 
-    const geom::Geometry& argGeom;
+    const geom::Geometry* argGeom1;
+    const geom::Geometry* argGeom2;
     const bool argGeomHasCurves;
+    bool onlyFirstGeomEdges;
 
     std::unique_ptr<Noder> noder;
     std::unique_ptr<algorithm::CircularArcIntersector> m_cai;
