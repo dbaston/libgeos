@@ -58,10 +58,12 @@ class PathStringExtractor: public geom::GeometryComponentFilter {
 public:
     PathStringExtractor(std::vector<std::unique_ptr<PathString>> & to,
                            bool constructZ,
-                           bool constructM)
+                           bool constructM,
+                           const void* context)
         : _to(to)
         , _constructZ(constructZ)
         , _constructM(constructM)
+        , _context(context)
     {}
 
     void
@@ -73,13 +75,13 @@ public:
 
         if(const auto* ls = dynamic_cast<const geom::LineString*>(g)) {
             auto coord = ls->getSharedCoordinates();
-            auto ss = std::make_unique<NodedSegmentString>(coord, _constructZ, _constructM, nullptr);
+            auto ss = std::make_unique<NodedSegmentString>(coord, _constructZ, _constructM, _context);
             _to.push_back(std::move(ss));
         } else if (const auto* cs = dynamic_cast<const geom::CircularString*>(g)) {
             const auto& coords = cs->getSharedCoordinates();
             auto arcs = cs->getArcs();
 
-            auto as = std::make_unique<NodableArcString>(std::move(arcs), coords, _constructZ, _constructM, nullptr);
+            auto as = std::make_unique<NodableArcString>(std::move(arcs), coords, _constructZ, _constructM, _context);
             _to.push_back(std::move(as));
         } else if (const auto* cc = dynamic_cast<const geom::CompoundCurve*>(g)) {
             for (std::size_t i = 0; i < cc->getNumCurves(); i++) {
@@ -91,6 +93,7 @@ private:
     std::vector<std::unique_ptr<PathString>>& _to;
     bool _constructZ;
     bool _constructM;
+    const void* _context;
 
     PathStringExtractor(PathStringExtractor const&); /*= delete*/
     PathStringExtractor& operator=(PathStringExtractor const&); /*= delete*/
@@ -107,11 +110,28 @@ GeometryNoder::node(const geom::Geometry& geom)
     return noder.getNoded();
 }
 
+std::unique_ptr<geom::Geometry>
+GeometryNoder::node(const geom::Geometry& geom1, const geom::Geometry& geom2)
+{
+    GeometryNoder noder(geom1, geom2);
+    return noder.getNoded();
+}
+
 /* public */
 GeometryNoder::GeometryNoder(const geom::Geometry& g)
     :
-    argGeom(g),
-    argGeomHasCurves(g.hasCurvedComponents())
+    argGeom1(&g),
+    argGeom2(nullptr),
+    argGeomHasCurves(g.hasCurvedComponents()),
+    onlyFirstGeomEdges(false)
+{}
+
+GeometryNoder::GeometryNoder(const geom::Geometry& g1, const geom::Geometry& g2)
+    :
+    argGeom1(&g1),
+    argGeom2(&g2),
+    argGeomHasCurves(g1.hasCurvedComponents() || g2.hasCurvedComponents()),
+    onlyFirstGeomEdges(false)
 {}
 
 GeometryNoder::~GeometryNoder() = default;
@@ -120,7 +140,7 @@ GeometryNoder::~GeometryNoder() = default;
 std::unique_ptr<geom::Geometry>
 GeometryNoder::toGeometry(std::vector<std::unique_ptr<PathString>>& nodedEdges) const
 {
-    const geom::GeometryFactory* geomFact = argGeom.getFactory();
+    const geom::GeometryFactory* geomFact = argGeom1->getFactory();
 
     std::set< OrientedCoordinateArray > ocas;
 
@@ -130,6 +150,10 @@ GeometryNoder::toGeometry(std::vector<std::unique_ptr<PathString>>& nodedEdges) 
 
     bool resultArcs = false;
     for(auto& path :  nodedEdges) {
+        if (onlyFirstGeomEdges && path->getData() != argGeom1) {
+            continue;
+        }
+
         const auto& coords = path->getCoordinates();
 
         bool isLinear = dynamic_cast<SegmentString*>(path.get());
@@ -159,11 +183,15 @@ GeometryNoder::toGeometry(std::vector<std::unique_ptr<PathString>>& nodedEdges) 
 std::unique_ptr<geom::Geometry>
 GeometryNoder::getNoded()
 {
-    if (argGeom.isEmpty())
-        return argGeom.clone();
+    if (argGeom1->isEmpty() && (argGeom2 == nullptr || argGeom2->isEmpty()))
+        return argGeom1->clone();
 
     std::vector<std::unique_ptr<PathString>> lineList;
-    extractPathStrings(argGeom, lineList);
+
+    extractPathStrings(*argGeom1, lineList);
+    if (argGeom2 != nullptr) {
+        extractPathStrings(*argGeom2, lineList);
+    }
 
     Noder& p_noder = getNoder();
     p_noder.computePathNodes(PathString::toRawPointerVector(lineList));
@@ -179,7 +207,7 @@ void
 GeometryNoder::extractPathStrings(const geom::Geometry& g,
                                   std::vector<std::unique_ptr<PathString>>& to)
 {
-    PathStringExtractor ex(to, g.hasZ(), g.hasM());
+    PathStringExtractor ex(to, g.hasZ(), g.hasM(), &g);
     g.apply_ro(&ex);
 }
 
@@ -188,11 +216,11 @@ Noder&
 GeometryNoder::getNoder()
 {
     if(!noder) {
-        const geom::PrecisionModel* pm = argGeom.getFactory()->getPrecisionModel();
+        const geom::PrecisionModel* pm = argGeom1->getFactory()->getPrecisionModel();
         if (argGeomHasCurves) {
             noder = std::make_unique<SimpleNoder>();
 
-            m_cai = std::make_unique<algorithm::CircularArcIntersector>(argGeom.getPrecisionModel());
+            m_cai = std::make_unique<algorithm::CircularArcIntersector>(argGeom1->getPrecisionModel());
             m_aia = std::make_unique<ArcIntersectionAdder>(*m_cai);
             detail::down_cast<SimpleNoder*>(noder.get())->setArcIntersector(*m_aia);
         } else {
@@ -202,6 +230,11 @@ GeometryNoder::getNoder()
     return *noder;
 }
 
+void
+GeometryNoder::setOnlyFirstGeomEdges(bool p_onlyFirstGeomEdges)
+{
+    onlyFirstGeomEdges = p_onlyFirstGeomEdges;
+}
 
 } // namespace geos.noding
 } // namespace geos
