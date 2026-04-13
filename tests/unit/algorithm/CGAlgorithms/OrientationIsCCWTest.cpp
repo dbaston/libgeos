@@ -45,7 +45,7 @@ struct test_isccw_data {
         ensure("WKT must be POLYGON)", poly != nullptr);
         const geos::geom::CoordinateSequence* cs = poly->getExteriorRing()->getCoordinatesRO();
         bool actualCCW = Orientation::isCCW(cs);
-        ensure_equals("CoordinateSequence isCCW", expectedCCW, actualCCW);
+        ensure_equals("CoordinateSequence isCCW", actualCCW, expectedCCW);
     }
 
     void
