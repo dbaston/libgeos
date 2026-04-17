@@ -592,13 +592,11 @@ void object::test<48>()
               "GEOMETRYCOLLECTION (CIRCULARSTRING (-5 0, -2.6286555605956674 4.2532540417602, 2.23606797749979 4.47213595499958), CIRCULARSTRING (2.23606797749979 4.47213595499958, 3.2037371962288375 3.8387586505926348, 4 3))");
 }
 
-#if 0
 template<>
 template<>
 void object::test<49>()
 {
     set_test_name("split CurvePolygon with line");
-    // fails because getInteriorPoint does not support curves
 
     testSplit("CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (-5 0, -4 3, 4 3), (4 3, -5 0)))",
               "LINESTRING (0 0, 3 6)",
@@ -608,6 +606,7 @@ void object::test<49>()
              );
 }
 
+#if 0
 template<>
 template<>
 void object::test<50>()

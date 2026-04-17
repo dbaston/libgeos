@@ -32,6 +32,7 @@
 #include <geos/operation/distance/GeometryLocation.h>
 #include <geos/operation/polygonize/Polygonizer.h>
 #include <geos/operation/split/SplitGeometryAtVertex.h>
+#include <geos/shape/random/RandomPointsBuilder.h>
 
 using geos::geom::CircularString;
 using geos::geom::CoordinateXY;
@@ -41,6 +42,7 @@ using geos::geom::GeometryCollection;
 using geos::geom::Point;
 using geos::geom::LineString;
 using geos::geom::MultiLineString;
+using geos::geom::MultiPoint;
 using geos::geom::prep::PreparedGeometryFactory;
 using geos::geom::util::GeometryCombiner;
 using geos::geom::util::GeometryTransformer;
@@ -51,6 +53,7 @@ using geos::noding::GeometryNoder;
 using geos::operation::polygonize::Polygonizer;
 using geos::operation::distance::DistanceOp;
 using geos::operation::distance::GeometryLocation;
+using geos::shape::random::RandomPointsBuilder;
 
 namespace geos::operation::split {
 
@@ -264,6 +267,23 @@ GeometrySplitter::splitLinealWithEdge(const Geometry &geom, const Geometry &edge
     return nodedGC;
 }
 
+static std::unique_ptr<Point>
+getInteriorPoint(const geom::Surface& surface)
+{
+    if (!surface.hasCurvedComponents()) {
+        return surface.getInteriorPoint();
+    }
+
+    RandomPointsBuilder rpb(surface.getFactory());
+    rpb.setNumPoints(1);
+    rpb.setExtent(surface);
+    auto mp = rpb.getGeometry();
+
+    auto geoms = detail::down_cast<MultiPoint*>(mp.get())->releaseGeometries();
+
+    return std::unique_ptr<Point>(detail::down_cast<Point*>(geoms[0].release()));
+}
+
 std::unique_ptr<Geometry>
 GeometrySplitter::splitPolygonalWithEdge(const Geometry &geom, const Geometry &edge)
 {
@@ -294,7 +314,7 @@ GeometrySplitter::splitPolygonalWithEdge(const Geometry &geom, const Geometry &e
     } else {
         for (auto& surface : surfaces)
         {
-            const auto testPoint = surface->getInteriorPoint();
+            const auto testPoint = getInteriorPoint(*surface);
             if (geom.intersects(testPoint.get())) {
                 keep.push_back(std::move(surface));
             }
