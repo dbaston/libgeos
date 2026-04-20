@@ -53,8 +53,8 @@ PointLocator::locate(const CoordinateXY& p, const Geometry* geom)
         return locate(p, ls_geom);
     }
 
-    if (geomTypeId == GEOS_POLYGON) {
-        const Polygon* poly_geom = static_cast<const Polygon*>(geom);
+    if (geomTypeId == GEOS_POLYGON || geomTypeId == GEOS_CURVEPOLYGON) {
+        const Surface* poly_geom = static_cast<const Surface*>(geom);
         return locate(p, poly_geom);
     }
 
@@ -185,32 +185,24 @@ PointLocator::locate(const CoordinateXY& p, const LineString* l)
 
 /* private */
 Location
-PointLocator::locateInPolygonRing(const CoordinateXY& p, const LinearRing* ring)
+PointLocator::locateInPolygonRing(const CoordinateXY& p, const Curve* ring)
 {
     if(!ring->getEnvelopeInternal()->intersects(p)) {
         return Location::EXTERIOR;
     }
 
-    const CoordinateSequence* cl = ring->getCoordinatesRO();
-
-    if(PointLocation::isOnLine(p, cl)) {
-        return Location::BOUNDARY;
-    }
-    if(PointLocation::isInRing(p, cl)) {
-        return Location::INTERIOR;
-    }
-    return Location::EXTERIOR;
+    return PointLocation::locateInRing(p, *ring);
 }
 
 /* private */
 Location
-PointLocator::locate(const CoordinateXY& p, const Polygon* poly)
+PointLocator::locate(const CoordinateXY& p, const Surface* poly)
 {
     if(poly->isEmpty()) {
         return Location::EXTERIOR;
     }
 
-    const LinearRing* shell = poly->getExteriorRing();
+    const Curve* shell = poly->getExteriorRing();
     assert(shell);
 
     Location shellLoc = locateInPolygonRing(p, shell);
@@ -223,7 +215,7 @@ PointLocator::locate(const CoordinateXY& p, const Polygon* poly)
 
     // now test if the point lies in or on the holes
     for(std::size_t i = 0, n = poly->getNumInteriorRing(); i < n; ++i) {
-        const LinearRing* hole = poly->getInteriorRingN(i);
+        const Curve* hole = poly->getInteriorRingN(i);
         Location holeLoc = locateInPolygonRing(p, hole);
         if(holeLoc == Location::INTERIOR) {
             return Location::EXTERIOR;

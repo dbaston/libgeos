@@ -190,6 +190,14 @@ public:
         return containsAngle(theta);
     }
 
+    CoordinateXY closestPoint(const CoordinateXY& p) const;
+    std::array<CoordinateXY, 2> closestPoints(const CoordinateXY& p1, const CoordinateXY& p2) const;
+    std::array<CoordinateXY, 2> closestPoints(const CircularArc& other) const;
+
+    double distance(const CoordinateXY& p) const;
+    double distance(const CoordinateXY& p1, const CoordinateXY& p2) const;
+    double distance(const CircularArc& other) const;
+
     /// Return true if the arc is pointing positive in the y direction
     /// at the location of a specified point. The point is assumed to
     /// be on the arc.

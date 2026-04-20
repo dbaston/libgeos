@@ -26,11 +26,13 @@
 namespace geos {
 namespace geom {
 class CoordinateXY;
+class Curve;
 class Geometry;
 class LinearRing;
 class LineString;
 class Polygon;
 class Point;
+class Surface;
 }
 }
 
@@ -96,9 +98,9 @@ private:
 
     geom::Location locate(const geom::CoordinateXY& p, const geom::LineString* l);
 
-    geom::Location locateInPolygonRing(const geom::CoordinateXY& p, const geom::LinearRing* ring);
+    static geom::Location locateInPolygonRing(const geom::CoordinateXY& p, const geom::Curve* ring);
 
-    geom::Location locate(const geom::CoordinateXY& p, const geom::Polygon* poly);
+    static geom::Location locate(const geom::CoordinateXY& p, const geom::Surface* poly);
 
 };
 

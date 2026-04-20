@@ -412,14 +412,13 @@ template<>
 template<>
 void object::test<32>()
 {
+    set_test_name("curved inputs");
+
     geom1_ = fromWKT("CIRCULARSTRING (0 0, 1 1, 2 0)");
     geom2_ = fromWKT("LINESTRING (1 1.0001, 2 1)");
 
-    ensure(geom1_);
-    ensure(geom2_);
-
     char ret = GEOSDistanceWithin(geom1_, geom2_, 0.1);
-    ensure_equals("curved geometry not supported", ret, 2);
+    ensure_equals(ret, 1);
 }
 
 template<>

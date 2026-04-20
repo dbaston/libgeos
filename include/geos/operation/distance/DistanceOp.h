@@ -37,11 +37,14 @@
 // Forward declarations
 namespace geos {
 namespace geom {
+class CircularString;
 class Coordinate;
 class Polygon;
 class LineString;
 class Point;
 class Geometry;
+class SimpleCurve;
+class Surface;
 }
 }
 
@@ -191,7 +194,7 @@ private:
     void computeContainmentDistance();
 
     void computeInside(std::vector<GeometryLocation> & locs,
-                       const std::vector<const geom::Polygon*>& polys,
+                       const std::vector<const geom::Surface*>& polys,
                        std::array<GeometryLocation, 2> & locPtPoly);
 
 
@@ -202,8 +205,8 @@ private:
     void computeFacetDistance();
 
     void computeMinDistanceLines(
-        const std::vector<const geom::LineString*>& lines0,
-        const std::vector<const geom::LineString*>& lines1,
+        const std::vector<const geom::SimpleCurve*>& lines0,
+        const std::vector<const geom::SimpleCurve*>& lines1,
         std::array<GeometryLocation, 2> & locGeom);
 
     void computeMinDistancePoints(
@@ -212,15 +215,31 @@ private:
         std::array<GeometryLocation, 2> & locGeom);
 
     void computeMinDistanceLinesPoints(
-        const std::vector<const geom::LineString*>& lines0,
+        const std::vector<const geom::SimpleCurve*>& lines0,
         const std::vector<const geom::Point*>& points1,
         std::array<GeometryLocation, 2> & locGeom);
+
+    void computeMinDistance(const geom::CircularString* cs0,
+                            const geom::LineString* line1,
+                            std::array<GeometryLocation, 2> & locGeom);
+
+    void computeMinDistance(const geom::LineString* line0,
+                            const geom::CircularString* cs1,
+                            std::array<GeometryLocation, 2> & locGeom);
 
     void computeMinDistance(const geom::LineString* line0,
                             const geom::LineString* line1,
                             std::array<GeometryLocation, 2> & locGeom);
 
+    void computeMinDistance(const geom::CircularString* cs0,
+                            const geom::CircularString* cs1,
+                            std::array<GeometryLocation, 2> & locGeom);
+
     void computeMinDistance(const geom::LineString* line,
+                            const geom::Point* pt,
+                            std::array<GeometryLocation, 2> & locGeom);
+
+    void computeMinDistance(const geom::CircularString* cs,
                             const geom::Point* pt,
                             std::array<GeometryLocation, 2> & locGeom);
 };

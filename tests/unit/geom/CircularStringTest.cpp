@@ -79,7 +79,7 @@ void object::test<2>()
 {
     // Geometry type functions
     ensure_equals("getGeometryType", cs_->getGeometryType(), "CircularString");
-    ensure_equals("getGeometryTypdId", cs_->getGeometryTypeId(), geos::geom::GEOS_CIRCULARSTRING);
+    ensure_equals("getGeometryTypeId", cs_->getGeometryTypeId(), geos::geom::GEOS_CIRCULARSTRING);
     ensure("isCollection", !cs_->isCollection());
 
     // Geometry size functions
@@ -144,8 +144,8 @@ void object::test<3>()
     ensure_THROW(cs_->symDifference(cs_.get()), geos::util::UnsupportedOperationException);
 
     // Distance
-    ensure_THROW(cs_->distance(cs_.get()), geos::util::UnsupportedOperationException);
-    ensure_THROW(cs_->isWithinDistance(cs_.get(), 1), geos::util::UnsupportedOperationException);
+    ensure_equals(cs_->distance(cs_.get()), 0);
+    ensure(cs_->isWithinDistance(cs_.get(), 1));
 
     // Valid / Simple
     ensure_THROW(cs_->isSimple(), geos::util::UnsupportedOperationException);

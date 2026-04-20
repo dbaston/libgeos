@@ -130,19 +130,6 @@ private:
     void addArcSegmentIntersectionPoint(const CoordinateXY& computedIntPt, const CircularArc& lhs,
         const geom::CoordinateSequence& seq, std::size_t pos0, std::size_t pos1, bool useSegEndpoints);
 
-    /** Determines whether and where two circles intersect a line segment.
-     *
-     * @param center The center point of the circle
-     * @param r The radius of the circle
-     * @param p0 The first point of the line segment
-     * @param p1 The second point of the line segment
-     * @param isect0 Set to the first intersection point, if it exists
-     * @param isect1 Set to the second intersection point, if it exists
-     * @return The number of intersection points
-     */
-    static int
-    circleIntersects(const CoordinateXY& center, double r, const CoordinateXY& p0, const CoordinateXY& p1, CoordinateXY& isect0, CoordinateXY& isect1);
-
     void computeCocircularIntersection(const CircularArc& arc1, const CircularArc& arc2);
 
     /** Checks whether the provided point has already been recorded as an intersection point. */

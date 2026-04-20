@@ -159,8 +159,8 @@ void object::test<3>()
     ensure_THROW(mc_->symDifference(mc_.get()), geos::util::UnsupportedOperationException);
 
     // Distance
-    ensure_THROW(mc_->distance(mc_.get()), geos::util::UnsupportedOperationException);
-    ensure_THROW(mc_->isWithinDistance(mc_.get(), 1), geos::util::UnsupportedOperationException);
+    ensure_equals(mc_->distance(mc_.get()), 0);
+    ensure(mc_->isWithinDistance(mc_.get(), 1));
 
     // Valid / Simple
     ensure_THROW(mc_->isSimple(), geos::util::UnsupportedOperationException);

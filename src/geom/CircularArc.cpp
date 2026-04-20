@@ -12,9 +12,12 @@
  *
  **********************************************************************/
 
+#include <geos/algorithm/CircularArcs.h>
 #include <geos/geom/CircularArc.h>
 #include <geos/triangulate/quadedge/TrianglePredicate.h>
 #include <sstream>
+
+using geos::algorithm::CircularArcs;
 
 namespace geos::geom {
 
@@ -192,29 +195,12 @@ CircularArc::~CircularArc()
 }
 
 bool
-CircularArc::containsAngle(double theta) const {
+CircularArc::containsAngle(double theta) const
+{
     auto t0 = theta0();
     auto t2 = theta2();
 
-    if (theta == t0 || theta == t2) {
-        return true;
-    }
-
-    if (getOrientation() == algorithm::Orientation::COUNTERCLOCKWISE) {
-        std::swap(t0, t2);
-    }
-
-    t2 -= t0;
-    theta -= t0;
-
-    if (t2 < 0) {
-        t2 += 2*MATH_PI;
-    }
-    if (theta < 0) {
-        theta += 2*MATH_PI;
-    }
-
-    return theta >= t2;
+    return CircularArcs::containsAngle(t0, t2, isCCW(), theta);
 }
 
 bool
@@ -236,6 +222,46 @@ CircularArc::containsPoint(const CoordinateXY& q) const
 
     return containsPointOnCircle(q);
 }
+
+CoordinateXY
+CircularArc::closestPoint(const CoordinateXY &q) const
+{
+    return CircularArcs::closestPointArcPoint(getCenter(), getRadius(), p0(), p2(), isCCW(), q);
+}
+
+std::array<CoordinateXY, 2>
+CircularArc::closestPoints(const CoordinateXY& q0, const CoordinateXY& q1) const
+{
+    return CircularArcs::closestPointsArcSegment(getCenter(), getRadius(), p0(), p2(), isCCW(), q0, q1);
+}
+
+std::array<CoordinateXY, 2>
+CircularArc::closestPoints(const CircularArc &other) const
+{
+    return CircularArcs::closestPointsArcArc(getCenter(), getRadius(), p0(), p2(), isCCW(),
+        other.getCenter(), other.getRadius(), other.p0(), other.p2(), other.isCCW());
+}
+
+double
+CircularArc::distance(const CoordinateXY &q) const
+{
+    return CircularArcs::distanceArcPoint(getCenter(), getRadius(), p0(), p2(), isCCW(), q);
+}
+
+double
+CircularArc::distance(const CoordinateXY& q0, const CoordinateXY& q1) const
+{
+    return CircularArcs::distanceArcSegment(getCenter(), getRadius(), p0(), p2(), isCCW(), q0, q1);
+}
+
+double
+CircularArc::distance(const CircularArc &other) const
+{
+    return CircularArcs::distanceArcArc(
+        getCenter(), getRadius(), p0(), p2(), isCCW(),
+        other.getCenter(), other.getRadius(), other.p0(), other.p2(), other.isCCW());
+}
+
 
 double
 CircularArc::getAngle() const
@@ -277,19 +303,22 @@ CircularArc::getArea() const {
 }
 
 CoordinateXY
-CircularArc::getDirectionPoint() const {
-    return algorithm::CircularArcs::getDirectionPoint(getCenter(), getRadius(), theta0(), getOrientation() == algorithm::Orientation::COUNTERCLOCKWISE);
+CircularArc::getDirectionPoint() const
+{
+    return CircularArcs::getDirectionPoint(getCenter(), getRadius(), theta0(), getOrientation() == algorithm::Orientation::COUNTERCLOCKWISE);
 }
 
 Envelope
-CircularArc::getEnvelope() const {
+CircularArc::getEnvelope() const
+{
     Envelope env;
-    algorithm::CircularArcs::expandEnvelope(env, p0(), p1(), p2());
+    CircularArcs::expandEnvelope(env, p0(), p1(), p2());
     return env;
 }
 
 double
-CircularArc::getLength() const {
+CircularArc::getLength() const
+{
     if (isLinear()) {
         return p0().distance(p2());
     }
@@ -298,7 +327,8 @@ CircularArc::getLength() const {
 }
 
 bool
-CircularArc::isUpwardAtPoint(const CoordinateXY& q) const {
+CircularArc::isUpwardAtPoint(const CoordinateXY& q) const
+{
     auto quad = geom::Quadrant::quadrant(getCenter(), q);
     bool isUpward;
 

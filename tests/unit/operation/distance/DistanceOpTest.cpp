@@ -16,10 +16,17 @@
 #include <geos/io/WKTReader.h>
 #include <geos/io/WKBReader.h>
 #include <geos/geom/CoordinateSequence.h>
+#include <geos/operation/distance/DistanceOp.h>
 #include <geos/util.h>
 // std
 #include <memory>
 #include <string>
+
+#include "utility.h"
+
+using XY = geos::geom::CoordinateXY;
+using geos::operation::distance::DistanceOp;
+using geos::operation::distance::GeometryLocation;
 
 namespace tut {
 //
@@ -36,6 +43,35 @@ struct test_distanceop_data {
     test_distanceop_data()
         : wktreader()
     {}
+
+    static void checkDistance(const Geometry& g1, const Geometry& g2, double expected, double tol = 0)
+    {
+        ensure_equals("distance is incorrect", g1.distance(&g2), expected, tol);
+        ensure("unexpected isWithinDistance result for distance + tol", DistanceOp::isWithinDistance(g1, g2, expected + tol));
+        if (expected > tol) {
+            ensure("unexpected isWithinDistance result for distance - tol", !DistanceOp::isWithinDistance(g1, g2, expected - tol));
+        }
+
+        ensure_equals("reverse distance is incorrect", g2.distance(&g1), expected, tol);
+    }
+
+    static void checkLocation(const GeometryLocation& loc, const Geometry* component, std::size_t index, const geos::geom::CoordinateXY& c, double tol = 0)
+    {
+        ensure_equals("incorrect component", loc.getGeometryComponent(), component);
+        ensure_equals("incorrect position", loc.getSegmentIndex(), index);
+        ensure_equals_xy(loc.getCoordinate(), c, tol);
+    }
+
+    static void printLocs(const std::array<geos::operation::distance::GeometryLocation, 2>& locs)
+    {
+        if (locs[0].getCoordinate().equals2D(locs[1].getCoordinate())) {
+            std::cout << "POINT (" << locs[0].getCoordinate() << ")" << std::endl;
+
+        } else {
+            std::cout << "LINESTRING (" << locs[0].getCoordinate() << ", " << locs[1].getCoordinate() << ")" << std::endl;
+        }
+        std::cout << locs[0].getCoordinate().distance(locs[1].getCoordinate()) << std::endl;
+    }
 };
 
 typedef test_group<test_distanceop_data> group;
@@ -639,6 +675,332 @@ void object::test<27>()
     ensure(g1 != nullptr && g2 != nullptr);
     ensure(std::isinf(g1->distance(g2.get())));
     ensure(std::isinf(g2->distance(g1.get())));
+}
+
+template<>
+template<>
+void object::test<28>()
+{
+    set_test_name("CircularString / LineString (disjoint)");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (-7 0, -6 -1, -5 0, 0 5, 4 -3)");
+    auto g2 = wktreader.read("LINESTRING (4 -5, 7 0, 13 0)");
+
+    checkDistance(*g1, *g2, 1.0024502, 1e-6);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 2, XY(4.28746, -2.57248), 1e-5);
+    checkLocation(locs[1], g2.get(), 0, XY(5.14706, -3.08824), 1e-5);
+}
+
+template<>
+template<>
+void object::test<29>()
+{
+    set_test_name("CircularString / LineString (intersecting)");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (-6 1, -6 -1, -5 0, 0 5, 4 -3)");
+    auto g2 = wktreader.read("LINESTRING (-4 2, 4 -2, 6 0)");
+
+    checkDistance(*g1, *g2, 0);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 2, XY(4.87083, -1.12917), 1e-5);
+    checkLocation(locs[1], g2.get(), 1, XY(4.87083, -1.12917), 1e-5);
+}
+
+template<>
+template<>
+void object::test<30>()
+{
+    set_test_name("CircularString / MultiPoint (disjoint)");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (-7 0, -6 -1, -5 0, 0 5, 4 -3)");
+    auto g2 = wktreader.read("MULTIPOINT (3.5 -5, 0 2, 6 4)");
+
+    checkDistance(*g1, *g2, 2.061553, 1e-6);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 2, XY(4, -3), 1e-5);
+    checkLocation(locs[1], g2->getGeometryN(0), 0, XY(3.5, -5), 1e-5);
+}
+
+template<>
+template<>
+void object::test<31>()
+{
+    set_test_name("CircularString / MultiPoint (intersecting)");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (-7 0, -6 -1, -5 0, 0 5, 4 -3)");
+    auto g2 = wktreader.read("MULTIPOINT (-6 15, -6 -1)");
+
+    checkDistance(*g1, *g2, 0);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 0u, XY{-6, -1}, 1e-5);
+    checkLocation(locs[1], g2->getGeometryN(1), 0u, XY{-6, -1}, 1e-5);
+}
+
+template<>
+template<>
+void object::test<32>()
+{
+    set_test_name("CircularString / CircularString (disjoint)");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (-5 0, 4 3, 4 -3, 3 0, 0 2, -2 0, -5 0)");
+    auto g2 = wktreader.read("CIRCULARSTRING (0 -2, -1 -1.5, -2 -2, 1 -1, 2 -2)");
+
+    checkDistance(*g1, *g2, 1.33846, 1e-5);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 4, XY{-1.69468, 0.147266}, 1e-5);
+    checkLocation(locs[1], g2.get(), 2, XY{-1.06012, -1.03121}, 1e-5);
+}
+
+template<>
+template<>
+void object::test<33>()
+{
+    set_test_name("CircularString / CircularString (intersecting)");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (-5 0, 4 3, 4 -3, 3 0, 0 2, -2 0, -5 0)");
+    auto g2 = wktreader.read("CIRCULARSTRING (0 -2, -1 -2.5, -2 -2, 1 -1, 4 -2)");
+
+    checkDistance(*g1, *g2, 0);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 2, XY{3.86825, -1.9045}, 1e-5);
+    checkLocation(locs[1], g2.get(), 2, XY{3.86825, -1.9045}, 1e-5);
+}
+
+template<>
+template<>
+void object::test<34>()
+{
+    set_test_name("CircularString / CompoundCurve (disjoint)");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (-5 0, 4 3, 4 -3, 3 0, 0 2, -2 0, -5 0)");
+    auto g2 = wktreader.read<geos::geom::CompoundCurve>("COMPOUNDCURVE(CIRCULARSTRING (0 -2, -1 -2.5, -2 -2), (-2 -2, -10 0, -5 5))");
+
+    checkDistance(*g1, *g2, 1.16409, 1e-5);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 4, XY{-4.42355, -0.194193}, 1e-5);
+    checkLocation(locs[1], g2->getCurveN(1), 0, XY{-4.70588, -1.32353}, 1e-5);
+}
+
+template<>
+template<>
+void object::test<35>()
+{
+    set_test_name("MultiPoint partially in CurvePolygon");
+
+    auto g1 = wktreader.read("CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING(-5 0, 0 5, 5 0), (5 0, -5 0)))");
+    auto g2 = wktreader.read("MULTIPOINT (5 5, 1 1)");
+
+    checkDistance(*g1, *g2, 0);
+}
+
+template<>
+template<>
+void object::test<36>()
+{
+    set_test_name("CurvePolygon contained in CurvePolygon");
+
+    auto g1 = wktreader.read("CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING(-5 0, 0 5, 5 0), (5 0, 0 -5, -5 0)))");
+    auto g2 = wktreader.read("CURVEPOLYGON (CIRCULARSTRING (-1 0, 0 1, 1 0, 0 -1, -1 0))");
+
+    checkDistance(*g1, *g2, 0);
+}
+
+template<>
+template<>
+void object::test<40>()
+{
+    set_test_name("CurvePolygon and point, PostGIS issue #5989");
+
+    auto g1 = wktreader.read("CURVEPOLYGON(COMPOUNDCURVE((129296 142584,94722 100435,91618 97138,57306 60686,26874 28357,13059 34228,14572 65506,14593 65948,14616 66389),CIRCULARSTRING(14616 66389,17955 101124,24417 135415,24655 136418,24895 137421),(24895 137421,25472 139809,19354 141285,0 0,148000 142000,129296 142584)))");
+    auto g2 = wktreader.read("POINT(19925 112376)");
+
+    checkDistance(*g1, *g2, 199.655, 0.001);
+}
+
+template<>
+template<>
+void object::test<41>()
+{
+    set_test_name("CircularString and Point; PostGIS");
+
+    auto g1 = wktreader.read("CIRCULARSTRING(-1 0, 0 1, 1 0)");
+    auto g2 = wktreader.read("POINT (0 0)");
+
+    checkDistance(*g1, *g2, 1, 1e-6);
+}
+
+template<>
+template<>
+void object::test<42>()
+{
+    set_test_name("CircularString and Point (2); PostGIS");
+
+    auto g1 = wktreader.read("CIRCULARSTRING(-3 0, -2 0, -1 0, 0 1, 1 0)");
+    auto g2 = wktreader.read("POINT (0 0)");
+
+    checkDistance(*g1, *g2, 1, 1e-6);
+}
+
+template<>
+template<>
+void object::test<43>()
+{
+    set_test_name("CircularString and CircularString; PostGIS");
+
+    auto g1 = wktreader.read("CIRCULARSTRING(-1 0, 0 1, 1 0)");
+    auto g2 = wktreader.read( "CIRCULARSTRING(0 0, 1 -1, 2 0)");
+
+    checkDistance(*g1, *g2, 1, 1e-6);
+}
+
+template<>
+template<>
+void object::test<44>()
+{
+    set_test_name("CurvePolygon and Point; PostGIS");
+
+    auto g1 = wktreader.read( "CURVEPOLYGON(COMPOUNDCURVE(CIRCULARSTRING(1 6, 6 1, 9 7),(9 7, 3 13, 1 6)),COMPOUNDCURVE((3 6, 5 4, 7 4, 7 6),CIRCULARSTRING(7 6,5 8,3 6)))");
+
+    auto p1 = wktreader.read("POINT(3 14)");
+    auto p2 = wktreader.read("POINT(3 8)");
+    auto p3 = wktreader.read("POINT(6 5)");
+    auto p4 = wktreader.read("POINT(6 4)");
+
+    checkDistance(*g1, *p1, 1, 1e-6);
+    checkDistance(*g1, *p2, 0, 1e-6);
+    checkDistance(*g1, *p3, 1, 1e-6);
+    checkDistance(*g1, *p4, 0, 1e-6);
+}
+
+template<>
+template<>
+void object::test<45>()
+{
+    set_test_name("CurvePolygon and LineString; PostGIS");
+
+    auto g1 = wktreader.read( "CURVEPOLYGON(COMPOUNDCURVE(CIRCULARSTRING(1 6, 6 1, 9 7),(9 7, 3 13, 1 6)),COMPOUNDCURVE((3 6, 5 4, 7 4, 7 6),CIRCULARSTRING(7 6,5 8,3 6)))");
+
+    auto ls1 = wktreader.read("LINESTRING(0 0, 50 0)");
+    auto ls2 = wktreader.read( "LINESTRING(6 0, 10 7)");
+    auto ls3 = wktreader.read( "LINESTRING(4 4, 4 8)");
+    auto ls4 = wktreader.read( "LINESTRING(4 7, 5 6, 6 7)");
+    auto ls5 = wktreader.read( "LINESTRING(10 0, 10 2, 10 0)");
+
+    checkDistance(*g1, *ls1, 0.917484, 1e-6);
+    checkDistance(*g1, *ls2, 0, 1e-6);
+    checkDistance(*g1, *ls3, 0, 1e-6);
+    checkDistance(*g1, *ls4, 0.585786, 1e-6);
+    checkDistance(*g1, *ls5, 1.52913, 1e-6);
+}
+    
+template<>
+template<>
+void object::test<46>()
+{
+    set_test_name("CurvePolygon and Polygon; PostGIS");
+
+    auto g1 = wktreader.read( "CURVEPOLYGON(COMPOUNDCURVE(CIRCULARSTRING(1 6, 6 1, 9 7),(9 7, 3 13, 1 6)),COMPOUNDCURVE((3 6, 5 4, 7 4, 7 6),CIRCULARSTRING(7 6,5 8,3 6)))");
+    
+    auto p1 = wktreader.read( "POLYGON((10 4, 10 8, 13 8, 13 4, 10 4))");
+    auto p2 = wktreader.read( "POLYGON((9 4, 9 8, 12 8, 12 4, 9 4))");
+    auto p3 = wktreader.read( "POLYGON((1 4, 1 8, 4 8, 4 4, 1 4))");
+    
+    checkDistance(*g1, *p1, 0.58415, 1e-6);
+    checkDistance(*g1, *p2, 0);
+    checkDistance(*g1, *p3, 0);
+}
+
+template<>
+template<>
+void object::test<47>()
+{
+    set_test_name("CurvePolygon and CurvePolygon; PostGIS");
+
+    auto g1 = wktreader.read( "CURVEPOLYGON(COMPOUNDCURVE(CIRCULARSTRING(1 6, 6 1, 9 7),(9 7, 3 13, 1 6)),COMPOUNDCURVE((3 6, 5 4, 7 4, 7 6),CIRCULARSTRING(7 6,5 8,3 6)))");
+
+    auto cp1 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(-1 4, 0 5, 1 4, 0 3, -1 4))");
+    auto cp2 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(1 4, 2 5, 3 4, 2 3, 1 4))");
+
+    checkDistance(*g1, *cp1, 0.0475666, 1e-6);
+    checkDistance(*g1, *cp2, 0);
+}
+
+template<>
+template<>
+void object::test<48>()
+{
+    set_test_name("MultiSurface and CurvePolygon; PostGIS");
+
+    auto g1 = wktreader.read( "MULTISURFACE(POLYGON((0 0,0 4,4 4,4 0,0 0)),CURVEPOLYGON(CIRCULARSTRING(8 2,10 4,12 2,10 0,8 2)))");
+
+    auto cp1 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(5 2,6 3,7 2,6 1,5 2))");
+    auto cp2 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(4 2,5 3,6 2,5 1,4 2))");
+    auto cp3 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(5 3,6 2,5 1,4 2,5 3))");
+    auto cp4 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(4.5 3,5.5 2,4.5 1,3.5 2,4.5 3))");
+    auto cp5 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(5.5 3,6.5 2,5.5 1,4.5 2,5.5 3))");
+    auto cp6 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(10 3,11 2,10 1,9 2,10 3))");
+    auto cp7 = wktreader.read( "CURVEPOLYGON(CIRCULARSTRING(2 3,3 2,2 1,1 2,2 3))");
+    auto cp8 = wktreader.read("CURVEPOLYGON(CIRCULARSTRING(5 7,6 8,7 7,6 6,5 7))");
+
+    checkDistance(*g1, *cp1, 1, 1e-6);
+    checkDistance(*g1, *cp2, 0);
+    checkDistance(*g1, *cp3, 0);
+    checkDistance(*g1, *cp4, 0);
+    checkDistance(*g1, *cp5, 0.5, 1e-6);
+    checkDistance(*g1, *cp6, 0);
+    checkDistance(*g1, *cp7, 0);
+    checkDistance(*g1, *cp8, 2.605551, 1e-6);
+}
+
+template<>
+template<>
+void object::test<49>()
+{
+    set_test_name("MultiCurve and LineString; PostGIS");
+
+    auto g1 = wktreader.read("LINESTRING(0.5 1,0.5 3)");
+    auto g2 = wktreader.read( "MULTICURVE(CIRCULARSTRING(2 3,3 2,2 1,1 2,2 3),(0 0, 0 5))");
+
+    checkDistance(*g1, *g2, 0.5, 1e-6);
+}
+
+template<>
+template<>
+void object::test<50>()
+{
+    set_test_name("CurvePolygon and Point; PostGIS ticket #4326");
+
+    auto g1 = wktreader.read("CURVEPOLYGON(CIRCULARSTRING(7874821 8715927,8907663 8715927,8844683 7750316,7937800 7750316,7874821 8715927))");
+    auto g2 = wktreader.read("POINT(5433865 8243495)");
+
+    checkDistance(*g1, *g2, 2271704.2698450615, 1e-6);
+}
+
+template<>
+template<>
+void object::test<51>()
+{
+    set_test_name("CurvePolygon and Point; PostGIS ticket #5989");
+
+    auto g1 = wktreader.read("CURVEPOLYGON(COMPOUNDCURVE(CIRCULARSTRING(0 0, -1 5, 0 10), (0 10, -10 10, -10 0, 0 0)))");
+    auto g2 = wktreader.read("POINT(-0.5 5)");
+
+    checkDistance(*g1, *g2, 0.5, 1e-6);
 }
 
 

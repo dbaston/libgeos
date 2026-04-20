@@ -47,10 +47,16 @@ void
 ConnectedElementLocationFilter::filter_ro(const Geometry* geom)
 {
     if (geom->isEmpty()) return;
-    if((typeid(*geom) == typeid(Point)) ||
-            (typeid(*geom) == typeid(LineString)) ||
-            (typeid(*geom) == typeid(LinearRing)) ||
-            (typeid(*geom) == typeid(Polygon))) {
+
+    const auto type = geom->getGeometryTypeId();
+
+    if (type == GEOS_POINT ||
+        type == GEOS_LINESTRING ||
+        type == GEOS_LINEARRING ||
+        type == GEOS_POLYGON ||
+        type == GEOS_CIRCULARSTRING ||
+        type == GEOS_COMPOUNDCURVE ||
+        type == GEOS_CURVEPOLYGON) {
         locations.emplace_back(geom, 0, *(geom->getCoordinate()));
     }
 }
@@ -60,10 +66,16 @@ ConnectedElementLocationFilter::filter_rw(Geometry* geom)
 {
     // empty geometries do not provide a location
     if (geom->isEmpty()) return;
-    if((typeid(*geom) == typeid(Point)) ||
-            (typeid(*geom) == typeid(LineString)) ||
-            (typeid(*geom) == typeid(LinearRing)) ||
-            (typeid(*geom) == typeid(Polygon))) {
+
+    const auto type = geom->getGeometryTypeId();
+
+    if (type == GEOS_POINT ||
+        type == GEOS_LINESTRING ||
+        type == GEOS_LINEARRING ||
+        type == GEOS_POLYGON ||
+        type == GEOS_CIRCULARSTRING ||
+        type == GEOS_COMPOUNDCURVE ||
+        type == GEOS_CURVEPOLYGON) {
         locations.emplace_back(geom, 0, *(geom->getCoordinate()));
     }
 }

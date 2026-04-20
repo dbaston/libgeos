@@ -23,6 +23,7 @@
 #include <geos/operation/distance/GeometryLocation.h>
 #include <geos/operation/distance/ConnectedElementLocationFilter.h>
 #include <geos/algorithm/Distance.h>
+#include <geos/geom/CircularString.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/LineString.h>
@@ -30,8 +31,8 @@
 #include <geos/geom/Polygon.h>
 #include <geos/geom/Envelope.h>
 #include <geos/geom/LineSegment.h>
-#include <geos/geom/util/PolygonExtracter.h>
-#include <geos/geom/util/LinearComponentExtracter.h>
+#include <geos/geom/util/SimpleCurveExtracter.h>
+#include <geos/geom/util/SurfaceExtracter.h>
 #include <geos/geom/util/PointExtracter.h>
 #include <geos/util/IllegalArgumentException.h>
 #include <geos/util.h>
@@ -112,9 +113,6 @@ double
 DistanceOp::distance()
 {
     using geos::util::IllegalArgumentException;
-
-    util::ensureNoCurvedComponents(geom[0]);
-    util::ensureNoCurvedComponents(geom[1]);
 
     if(geom[0] == nullptr || geom[1] == nullptr) {
         throw IllegalArgumentException("null geometries are not supported");
@@ -208,14 +206,11 @@ DistanceOp::computeMinDistance()
 void
 DistanceOp::computeContainmentDistance()
 {
-    using geom::util::PolygonExtracter;
-
-    Polygon::ConstVect polys1;
-    PolygonExtracter::getPolygons(*(geom[1]), polys1);
-
+    std::vector<const Surface*> polys1;
+    geom::util::SurfaceExtracter::getSurfaces(*(geom[1]), polys1);
 
 #if GEOS_DEBUG
-    std::cerr << "PolygonExtracter found " << polys1.size() << " polygons in geometry 2" << std::endl;
+    std::cerr << "SurfaceExtracter found " << polys1.size() << " polygons in geometry 2" << std::endl;
 #endif
 
     // NOTE:
@@ -239,11 +234,11 @@ DistanceOp::computeContainmentDistance()
         }
     }
 
-    Polygon::ConstVect polys0;
-    PolygonExtracter::getPolygons(*(geom[0]), polys0);
+    std::vector<const Surface*> polys0;
+    geom::util::SurfaceExtracter::getSurfaces(*(geom[0]), polys0);
 
 #if GEOS_DEBUG
-    std::cerr << "PolygonExtracter found " << polys0.size() << " polygons in geometry 1" << std::endl;
+    std::cerr << "SurfaceExtracter found " << polys0.size() << " polygons in geometry 1" << std::endl;
 #endif
 
 
@@ -267,7 +262,7 @@ DistanceOp::computeContainmentDistance()
 /*private*/
 void
 DistanceOp::computeInside(std::vector<GeometryLocation> & locs,
-                          const Polygon::ConstVect& polys,
+                          const std::vector<const Surface*>& polys,
                           std::array<GeometryLocation, 2> & locPtPoly)
 {
     for(auto& loc : locs) {
@@ -276,7 +271,7 @@ DistanceOp::computeInside(std::vector<GeometryLocation> & locs,
 
 			if (Location::EXTERIOR != ptLocator.locate(pt, static_cast<const Geometry*>(poly))) {
 				minDistance = 0.0;
-				locPtPoly[0] = std::move(loc);
+				locPtPoly[0] = loc;
                 locPtPoly[1] = GeometryLocation(poly, pt);
 				return;
 			}
@@ -288,7 +283,7 @@ DistanceOp::computeInside(std::vector<GeometryLocation> & locs,
 void
 DistanceOp::computeFacetDistance()
 {
-    using geom::util::LinearComponentExtracter;
+    using geom::util::SimpleCurveExtracter;
     using geom::util::PointExtracter;
 
     std::array<GeometryLocation, 2> locGeom;
@@ -297,13 +292,13 @@ DistanceOp::computeFacetDistance()
      * Geometries are not wholly inside, so compute distance from lines
      * and points of one to lines and points of the other
      */
-    LineString::ConstVect lines0;
-    LineString::ConstVect lines1;
-    LinearComponentExtracter::getLines(*(geom[0]), lines0);
-    LinearComponentExtracter::getLines(*(geom[1]), lines1);
+    std::vector<const SimpleCurve*> lines0;
+    std::vector<const SimpleCurve*> lines1;
+    SimpleCurveExtracter::getCurves(*(geom[0]), lines0);
+    SimpleCurveExtracter::getCurves(*(geom[1]), lines1);
 
 #if GEOS_DEBUG
-    std::cerr << "LinearComponentExtracter found "
+    std::cerr << "SimpleCurveExtracter found "
               << lines0.size() << " lines in geometry 1 and "
               << lines1.size() << " lines in geometry 2 "
               << std::endl;
@@ -368,17 +363,36 @@ DistanceOp::computeFacetDistance()
 /*private*/
 void
 DistanceOp::computeMinDistanceLines(
-    const LineString::ConstVect& lines0,
-    const LineString::ConstVect& lines1,
+    const std::vector<const SimpleCurve*>& lines0,
+    const std::vector<const SimpleCurve*>& lines1,
     std::array<GeometryLocation, 2> & locGeom)
 {
-    for(const LineString* line0 : lines0) {
-        for(const LineString* line1 : lines1) {
+    for(const SimpleCurve* line0 : lines0) {
+        const bool isCurved0 = line0->getGeometryTypeId() == GEOS_CIRCULARSTRING;
+
+        for(const SimpleCurve* line1 : lines1) {
+            const bool isCurved1 = line1->getGeometryTypeId() == GEOS_CIRCULARSTRING;
 
             if (line0->isEmpty() || line1->isEmpty())
                 continue;
 
-            computeMinDistance(line0, line1, locGeom);
+            if (isCurved0) {
+                const CircularString* cs0 = detail::down_cast<const CircularString*>(line0);
+                if (isCurved1) {
+                    const CircularString* cs1 = detail::down_cast<const CircularString*>(line1);
+                    computeMinDistance(cs0, cs1, locGeom);
+                } else {
+                    computeMinDistance(cs0, detail::down_cast<const LineString*>(line1), locGeom);
+                }
+            } else {
+                if (isCurved1) {
+                    const CircularString* cs1 = detail::down_cast<const CircularString*>(line1);
+                    computeMinDistance(detail::down_cast<const LineString*>(line0), cs1, locGeom);
+                } else {
+                    computeMinDistance(detail::down_cast<const LineString*>(line0), detail::down_cast<const LineString*>(line1), locGeom);
+                }
+            }
+
             if(minDistance <= terminateDistance) {
                 return;
             }
@@ -426,17 +440,23 @@ DistanceOp::computeMinDistancePoints(
 /*private*/
 void
 DistanceOp::computeMinDistanceLinesPoints(
-    const LineString::ConstVect& lines,
-    const Point::ConstVect& points,
+    const std::vector<const SimpleCurve*>& lines,
+    const std::vector<const Point*>& points,
     std::array<GeometryLocation, 2> & locGeom)
 {
-    for(const LineString* line : lines) {
+    for(const SimpleCurve* sc : lines) {
         for(const Point* pt : points) {
-
-            if (line->isEmpty() || pt->isEmpty())
+            if (sc->isEmpty() || pt->isEmpty())
                 continue;
 
-            computeMinDistance(line, pt, locGeom);
+            if (sc->getGeometryTypeId() == GEOS_CIRCULARSTRING) {
+                const CircularString* cs = detail::down_cast<const CircularString*>(sc);
+                computeMinDistance(cs, pt, locGeom);
+            } else {
+                const LineString* line = detail::down_cast<const LineString*>(sc);
+                computeMinDistance(line, pt, locGeom);
+            }
+
             if(minDistance <= terminateDistance) {
                 return;
             }
@@ -503,6 +523,113 @@ DistanceOp::computeMinDistance(
 
 /*private*/
 void
+DistanceOp::computeMinDistance(
+    const CircularString* cs0,
+    const LineString* line1,
+    std::array<GeometryLocation, 2> & locGeom)
+{
+    const Envelope* lineEnv0 = cs0->getEnvelopeInternal();
+    const Envelope* lineEnv1 = line1->getEnvelopeInternal();
+    if(lineEnv0->distance(*lineEnv1) > minDistance) {
+        return;
+    }
+
+    const CoordinateSequence* coord1 = line1->getCoordinatesRO();
+    std::size_t npts1 = coord1->getSize();
+
+    // brute force approach!
+    for(const auto& arc : cs0->getArcs()) {
+        const Envelope arcEnv = arc.getEnvelope();
+
+        if (arcEnv.distanceSquared(*lineEnv1) > minDistance*minDistance) {
+            continue;
+        }
+
+        for(std::size_t j = 0; j < npts1 - 1; ++j) {
+            const CoordinateXY& q0 = coord1->getAt<CoordinateXY>(j);
+            const CoordinateXY& q1 = coord1->getAt<CoordinateXY>(j+1);
+
+            Envelope segEnv(q0, q1);
+
+            if (arcEnv.distanceSquared(segEnv) > minDistance*minDistance) {
+                continue;
+            }
+
+            const auto closestPts = arc.closestPoints(q0, q1);
+
+            const double dist = closestPts[0].distance(closestPts[1]);
+            if(dist < minDistance) {
+                minDistance = dist;
+
+                locGeom[0] = GeometryLocation(cs0, arc.getCoordinatePosition(), closestPts[0]);
+                locGeom[1] = GeometryLocation(line1, j, closestPts[1]);
+            }
+
+            if(minDistance <= terminateDistance) {
+                return;
+            }
+        }
+    }
+}
+
+/*private*/
+void
+DistanceOp::computeMinDistance(
+    const LineString* line0,
+    const CircularString* cs1,
+    std::array<GeometryLocation, 2> & locGeom)
+{
+    computeMinDistance(cs1, line0, locGeom);
+    std::swap(locGeom[0], locGeom[1]);
+}
+
+/*private*/
+void
+DistanceOp::computeMinDistance(
+    const CircularString* cs0,
+    const CircularString* cs1,
+    std::array<GeometryLocation, 2> & locGeom)
+{
+    const Envelope* geomEnv0 = cs0->getEnvelopeInternal();
+    const Envelope* geomEnv1 = cs1->getEnvelopeInternal();
+
+    if(geomEnv0->distance(*geomEnv1) > minDistance) {
+        return;
+    }
+
+    // brute force approach!
+    for(const auto& arc0 : cs0->getArcs()) {
+        const Envelope arcEnv0 = arc0.getEnvelope();
+
+        if (arcEnv0.distanceSquared(*geomEnv1) > minDistance*minDistance) {
+            continue;
+        }
+
+        for (const auto& arc1 : cs1->getArcs()) {
+            const Envelope arcEnv1 = arc1.getEnvelope();
+
+            if (arcEnv0.distanceSquared(arcEnv1) > minDistance*minDistance) {
+                continue;
+            }
+
+            const auto closestPoints = arc0.closestPoints(arc1);
+
+            const double dist = closestPoints[0].distance(closestPoints[1]);
+            if(dist < minDistance) {
+                minDistance = dist;
+                locGeom[0] = GeometryLocation(cs0, arc0.getCoordinatePosition(), closestPoints[0]);
+                locGeom[1] = GeometryLocation(cs1, arc1.getCoordinatePosition(), closestPoints[1]);
+            }
+
+            if(minDistance <= terminateDistance) {
+                return;
+            }
+        }
+    }
+}
+
+/*private*/
+void
 DistanceOp::computeMinDistance(const LineString* line,
                                const Point* pt,
                                std::array<GeometryLocation, 2> & locGeom)
@@ -532,6 +659,36 @@ DistanceOp::computeMinDistance(const LineString* line,
             locGeom[0] = GeometryLocation(line, i, segClosestPoint);
             locGeom[1] = GeometryLocation(pt, 0, *coord);
         }
+        if(minDistance <= terminateDistance) {
+            return;
+        }
+    }
+}
+
+/*private*/
+void
+DistanceOp::computeMinDistance(const CircularString* cs,
+                               const Point* pt,
+                               std::array<GeometryLocation, 2> & locGeom)
+{
+    const Envelope* env0 = cs->getEnvelopeInternal();
+    const Envelope* env1 = pt->getEnvelopeInternal();
+    if(env0->distance(*env1) > minDistance) {
+        return;
+    }
+
+    // brute force approach!
+    const CoordinateXY& coord = *pt->getCoordinate();
+    for (const auto& arc : cs->getArcs()) {
+        CoordinateXY closestPt = arc.closestPoint(coord);
+        const double dist = coord.distance(closestPt);
+
+        if(dist < minDistance) {
+            minDistance = dist;
+            locGeom[0] = GeometryLocation(cs, arc.getCoordinatePosition(), closestPt);
+            locGeom[1] = GeometryLocation(pt, 0, coord);
+        }
+
         if(minDistance <= terminateDistance) {
             return;
         }

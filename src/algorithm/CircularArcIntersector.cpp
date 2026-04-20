@@ -190,72 +190,7 @@ interpolateZM(const CircularArc& arc0,
     }
 }
 
-int
-CircularArcIntersector::circleIntersects(const CoordinateXY& center,
-                                         double r,
-                                         const CoordinateXY& p0,
-                                         const CoordinateXY& p1,
-                                         CoordinateXY& ret0,
-                                         CoordinateXY& ret1)
-{
-    const double& x0 = center.x;
-    const double& y0 = center.y;
 
-    Envelope segEnv(p0, p1);
-
-    CoordinateXY isect0, isect1;
-    int n = 0;
-
-    if (p1.x == p0.x) {
-        // vertical line
-        double x = p1.x;
-
-        double A = 1;
-        double B = 2*y0;
-        double C = x*x - 2*x*x0 + x0*x0 + y0*y0 - r*r;
-
-        double d = std::sqrt(B*B - 4*A*C);
-        double Y1 = (-B + d)/(2*A);
-        double Y2 = (-B - d)/(2*A);
-
-        isect0 = {x, Y1};
-        isect1 = {x, Y2};
-    }
-    else {
-        double m = (p1.y - p0.y) / (p1.x - p0.x);
-        double b = p1.y - p1.x*m;
-
-        // Ax^2 + Bx + C = 0
-        double A = 1 + m*m;
-        double B = -2*x0 + 2*m*b - 2*m*y0;
-        double C = x0*x0 + b*b - 2*b*y0 + y0*y0 - r*r;
-
-        double d = std::sqrt(B*B - 4*A*C);
-        double X1 = (-B + d)/(2*A);
-        double X2 = (-B - d)/(2*A);
-
-        // TODO use robust quadratic solver such as https://github.com/archermarx/quadratic ?
-        // auto [X1, X2] = quadratic::solve(A, B, C);
-
-        isect0 = {X1, m* X1 + b};
-        isect1 = {X2, m* X2 + b};
-    }
-
-    if (segEnv.intersects(isect0)) {
-        ret0 = isect0;
-        if (segEnv.intersects(isect1) && !isect1.equals2D(isect0)) {
-            ret1 = isect1;
-            n = 2;
-        } else {
-            n = 1;
-        }
-    } else if (segEnv.intersects(isect1)) {
-        ret0 = isect1;
-        n = 1;
-    }
-
-    return n;
-}
 
 bool
 CircularArcIntersector::hasIntersection(const geom::CoordinateXY &p) const {
@@ -287,7 +222,7 @@ CircularArcIntersector::intersects(const CircularArc& arc, const CoordinateSeque
     const double r = arc.getRadius();
 
     CoordinateXYZM isect0, isect1;
-    auto n = circleIntersects(c, r, seq.getAt<CoordinateXY>(segPos0), seq.getAt<CoordinateXY>(segPos1), isect0, isect1);
+    auto n = CircularArcs::circleIntersectsSegment(c, r, seq.getAt<CoordinateXY>(segPos0), seq.getAt<CoordinateXY>(segPos1), isect0, isect1);
 
     if (n > 0 && arc.containsPointOnCircle(isect0)) {
         addArcSegmentIntersectionPoint(isect0, arc, seq, segPos0, segPos1, useSegEndpoints);
