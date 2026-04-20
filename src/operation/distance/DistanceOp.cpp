@@ -489,12 +489,7 @@ DistanceOp::computeMinDistance(
             if(dist < minDistance) {
                 minDistance = dist;
 
-                // TODO avoid copy from constructing segs, maybe
-                // by making a static closestPoints that takes four
-                // coordinate references
-                LineSegment seg0{Coordinate(p00), Coordinate(p01)};
-                LineSegment seg1{Coordinate(p10), Coordinate(p11)};
-                auto closestPt = seg0.closestPoints(seg1);
+                auto closestPt = LineSegment::closestPoints(p00, p01, p10, p11);
 
                 locGeom[0] = GeometryLocation(line0, i, closestPt[0]);
                 locGeom[1] = GeometryLocation(line1, j, closestPt[1]);
@@ -529,12 +524,10 @@ DistanceOp::computeMinDistance(const LineString* line,
         if(dist < minDistance) {
             minDistance = dist;
 
-            // TODO avoid copy from constructing segs, maybe
-            // by making a static closestPoints that takes three
-            // coordinate references
-            LineSegment seg{Coordinate(coord0->getAt<CoordinateXY>(i)), Coordinate(coord0->getAt<CoordinateXY>(i + 1))};
-            Coordinate segClosestPoint;
-            seg.closestPoint(*coord, segClosestPoint);
+            const auto& p0 = coord0->getAt<CoordinateXY>(i);
+            const auto& p1 = coord0->getAt<CoordinateXY>(i+1);
+
+            CoordinateXY segClosestPoint = LineSegment::closestPoint(p0, p1, *coord);
 
             locGeom[0] = GeometryLocation(line, i, segClosestPoint);
             locGeom[1] = GeometryLocation(pt, 0, *coord);

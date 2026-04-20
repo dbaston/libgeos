@@ -417,6 +417,8 @@ public:
      */
     double projectionFactor(const CoordinateXY& p) const;
 
+    static double projectionFactor(const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& q);
+
     /** \brief
      * Computes the fraction of distance (in <tt>[0.0, 1.0]</tt>)
      * that the projection of a point occurs along this line segment.
@@ -446,6 +448,8 @@ public:
 
     CoordinateXY project(const CoordinateXY& p) const;
 
+    static CoordinateXY project(const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& q);
+
     /** \brief
      * Project a line segment onto this line segment and return the resulting
      * line segment.
@@ -471,6 +475,9 @@ public:
     ///
     void closestPoint(const CoordinateXY& p, CoordinateXY& ret) const;
 
+    static CoordinateXY closestPoint(const CoordinateXY& p0, const CoordinateXY& p1,
+                                     const CoordinateXY& q);
+
     /** \brief
      *  Returns <code>true</code> if <code>other</code> is
      *  topologically equal to this LineSegment (e.g. irrespective
@@ -495,6 +502,11 @@ public:
         assert(line);
         return closestPoints(*line);
     }
+
+    static std::array<CoordinateXY, 2> closestPoints(const CoordinateXY& p0,
+                                                     const CoordinateXY& p1,
+                                                     const CoordinateXY& q0,
+                                                     const CoordinateXY& q1);
 
     /**
      * Computes an intersection point between two segments,
@@ -592,6 +604,8 @@ public:
 
 
 private:
+    static CoordinateXY project(const CoordinateXY& p0, const CoordinateXY& p1, double factor);
+
     void project(double factor, CoordinateXY& ret) const;
 
 };

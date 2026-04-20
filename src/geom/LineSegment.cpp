@@ -45,14 +45,20 @@ LineSegment::reverse()
     std::swap(p0, p1);
 }
 
-/*public*/
 double
 LineSegment::projectionFactor(const CoordinateXY& p) const
 {
-    if(p == p0) {
+    return projectionFactor(p0, p1, p);
+}
+
+/*public*/
+double
+LineSegment::projectionFactor(const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& q)
+{
+    if(q == p0) {
         return 0.0;
     }
-    if(p == p1) {
+    if(q == p1) {
         return 1.0;
     }
     if(p0 == p1) {
@@ -72,7 +78,7 @@ LineSegment::projectionFactor(const CoordinateXY& p) const
     double dx = p1.x - p0.x;
     double dy = p1.y - p0.y;
     double len2 = dx * dx + dy * dy;
-    double r = ((p.x - p0.x) * dx + (p.y - p0.y) * dy) / len2;
+    double r = ((q.x - p0.x) * dx + (q.y - p0.y) * dy) / len2;
     return r;
 }
 
@@ -103,27 +109,38 @@ LineSegment::project(const Coordinate& p, Coordinate& ret) const
 }
 
 CoordinateXY
-LineSegment::project(const CoordinateXY& p) const
+LineSegment::project(const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& q)
 {
-    if(p == p0 || p == p1) {
-        return p;
+    if(q == p0 || q == p1) {
+        return q;
     }
-    double r = projectionFactor(p);
+    double r = projectionFactor(p0, p1, q);
     double x = p0.x + r * (p1.x - p0.x);
     double y = p0.y + r * (p1.y - p0.y);
     return CoordinateXY(x, y);
 }
 
-
+CoordinateXY
+LineSegment::project(const CoordinateXY& p) const
+{
+    return project(p0, p1, p);
+}
 
 /*private*/
+CoordinateXY
+LineSegment::project(const CoordinateXY& p0, const CoordinateXY& p1, double factor)
+{
+    if(factor == 1.0) {
+        return p1;
+    }
+
+    return CoordinateXY(p0.x + factor * (p1.x - p0.x), p0.y + factor * (p1.y - p0.y));
+}
+
 void
 LineSegment::project(double factor, CoordinateXY& ret) const
 {
-    if( factor == 1.0 )
-        ret = p1;
-    else
-        ret = CoordinateXY(p0.x + factor * (p1.x - p0.x), p0.y + factor * (p1.y - p0.y));
+    ret = project(p0, p1, factor);
 }
 
 bool
@@ -154,6 +171,23 @@ LineSegment::project(const LineSegment& seg, LineSegment& ret) const
     ret.setCoordinates(newp0, newp1);
 
     return true;
+}
+
+CoordinateXY
+LineSegment::closestPoint(const CoordinateXY& p0, const CoordinateXY& p1, const CoordinateXY& q)
+{
+    double factor = projectionFactor(p0, p1, q);
+    if(factor > 0 && factor < 1) {
+        return project(p0, p1, factor);
+    }
+
+    double dist0 = p0.distance(q);
+    double dist1 = p1.distance(q);
+    if(dist0 < dist1) {
+        return p0;
+    }
+
+    return p1;
 }
 
 //Coordinate*
@@ -243,6 +277,56 @@ LineSegment::closestPoints(const LineSegment& line)
 
     Coordinate close11;
     line.closestPoint(p1, close11);
+    dist = close11.distance(p1);
+    if(dist < minDistance) {
+        closestPt[0] = p1;
+        closestPt[1] = close11;
+    }
+
+    return closestPt;
+}
+
+std::array<CoordinateXY, 2>
+LineSegment::closestPoints(const CoordinateXY& p0, const CoordinateXY& p1,
+                           const CoordinateXY& q0, const CoordinateXY& q1)
+{
+    // test for intersection
+    algorithm::LineIntersector li;
+    li.computeIntersection(p0, p1, q0, q1);
+    if(li.hasIntersection()) {
+        return {CoordinateXY{li.getIntersection(0)},
+                   CoordinateXY{li.getIntersection(0)}};
+    }
+
+    /*
+     * if no intersection closest pair contains at least one endpoint.
+     * Test each endpoint in turn.
+     */
+    std::array<CoordinateXY, 2> closestPt;
+
+    CoordinateXY close00 = closestPoint(p0, p1, q0);
+    double minDistance = close00.distance(q0);
+
+    closestPt[0] = close00;
+    closestPt[1] = q0;
+
+    CoordinateXY close01 = closestPoint(p0, p1, q1);
+    double dist = close01.distance(q1);
+    if(dist < minDistance) {
+        minDistance = dist;
+        closestPt[0] = close01;
+        closestPt[1] = q1;
+    }
+
+    CoordinateXY close10 = closestPoint(q0, q1, p0);
+    dist = close10.distance(p0);
+    if(dist < minDistance) {
+        minDistance = dist;
+        closestPt[0] = p0;
+        closestPt[1] = close10;
+    }
+
+    CoordinateXY close11 = closestPoint(q0, q1, p1);
     dist = close11.distance(p1);
     if(dist < minDistance) {
         closestPt[0] = p1;
