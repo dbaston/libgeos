@@ -721,6 +721,12 @@ extern "C" {
     }
 
     Geometry*
+    GEOSSplit(const Geometry* g, const Geometry* edge)
+    {
+        return GEOSSplit_r(handle, g, edge);
+    }
+
+    Geometry*
     GEOSUnionCascaded(const Geometry* g)
     {
         return GEOSUnionCascaded_r(handle, g);

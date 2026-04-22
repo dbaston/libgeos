@@ -1168,6 +1168,12 @@ extern GEOSGeometry GEOS_DLL *GEOSNode_r(
     GEOSContextHandle_t handle,
     const GEOSGeometry* g);
 
+/** \see GEOSSplit */
+extern GEOSGeometry GEOS_DLL *GEOSSplit_r(
+    GEOSContextHandle_t handle,
+    const GEOSGeometry* g,
+    const GEOSGeometry* edge);
+
 /** \see GEOSClipByRect */
 extern GEOSGeometry GEOS_DLL *GEOSClipByRect_r(
     GEOSContextHandle_t handle,
@@ -5258,6 +5264,24 @@ extern GEOSGeometry GEOS_DLL * GEOSVoronoiDiagram(
 * \since 3.4
 */
 extern GEOSGeometry GEOS_DLL *GEOSNode(const GEOSGeometry* g);
+
+
+/** Split a linear or polygonal input 
+* 
+* Linear inputs can be split with points, lines, and/or polygons.
+* Polygons can be split with lines and/or polygons.
+*
+* The returned geometry will be a GeometryCollection containing the
+* split elements.
+*
+* \param g The geometry to split
+* \param edge the geometry containing splitting edges/points
+* \return the split geometry or NULL on exception.
+*  Caller is responsible for freeing with GEOSGeom_destroy().
+*
+* \since 3.15
+*/
+extern GEOSGeometry GEOS_DLL *GEOSSplit(const GEOSGeometry* g, const GEOSGeometry* edge);
 
 /**
 * Polygonizes a set of Geometries which contain linework that

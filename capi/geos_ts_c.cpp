@@ -86,6 +86,7 @@
 #include <geos/operation/grid/GridIntersection.h>
 #include <geos/operation/linemerge/LineMerger.h>
 #include <geos/operation/spanning/SpanningTree.h>
+#include <geos/operation/split/GeometrySplitter.h>
 #include <geos/operation/intersection/Rectangle.h>
 #include <geos/operation/intersection/RectangleIntersection.h>
 #include <geos/operation/overlay/snap/GeometrySnapper.h>
@@ -1813,6 +1814,16 @@ extern "C" {
     {
         return execute(extHandle, [&]() {
             auto g3 = geos::noding::GeometryNoder::node(*g);
+            g3->setSRID(g->getSRID());
+            return g3.release();
+        });
+    }
+
+    Geometry*
+    GEOSSplit_r(GEOSContextHandle_t extHandle, const Geometry* g, const Geometry* edge)
+    {
+        return execute(extHandle, [&]() {
+            auto g3 = geos::operation::split::GeometrySplitter::split(*g, *edge);
             g3->setSRID(g->getSRID());
             return g3.release();
         });
