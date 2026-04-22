@@ -44,6 +44,7 @@
 #include <geos/operation/buffer/OffsetCurve.h>
 #include <geos/operation/cluster/GeometryDistanceClusterFinder.h>
 #include <geos/operation/cluster/GeometryIntersectsClusterFinder.h>
+#include <geos/operation/split/GeometrySplitter.h>
 #include <geos/coverage/CoverageCleaner.h>
 #include <geos/coverage/CoverageSimplifier.h>
 #include <geos/coverage/CoverageValidator.h>
@@ -917,6 +918,13 @@ std::vector<GeometryOpCreator> opRegistry {
     "compute fully noded geometry",
     [](const Geometry& geom) {
         return new Result( geos::noding::GeometryNoder::node( geom ) );
+});
+}},
+{"split", [](std::string name) { return GeometryOp::create(name,
+    catOverlay,
+    "split a geometry using another geometry",
+    [](const Geometry& geomA, const Geometry& geomB) {
+        return new Result( operation::split::GeometrySplitter::split(geomA, geomB));
 });
 }},
 {"clipRect", [](std::string name) { return GeometryOp::create(name,
