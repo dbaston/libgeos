@@ -37,12 +37,14 @@
 using geos::geom::CircularString;
 using geos::geom::CoordinateXY;
 using geos::geom::Curve;
+using geos::geom::CurvePolygon;
 using geos::geom::Geometry;
 using geos::geom::GeometryCollection;
 using geos::geom::Point;
 using geos::geom::LineString;
 using geos::geom::MultiLineString;
 using geos::geom::MultiPoint;
+using geos::geom::Polygon;
 using geos::geom::prep::PreparedGeometryFactory;
 using geos::geom::util::GeometryCombiner;
 using geos::geom::util::GeometryTransformer;
@@ -77,6 +79,18 @@ public:
     transformMultiLineString(const MultiLineString* mls, const Geometry* parent) override
     {
         return transformGeometryCollection(mls, parent);
+    }
+
+    std::unique_ptr<Geometry>
+    transformPolygon(const Polygon*, const Geometry*) override
+    {
+        throw geos::util::IllegalArgumentException("Splitting a Polygon with a point is not supported.");
+    }
+
+    std::unique_ptr<Geometry>
+    transformCurvePolygon(const CurvePolygon*, const Geometry*) override
+    {
+        throw geos::util::IllegalArgumentException("Splitting a CurvePolygon with a point is not supported.");
     }
 
     std::unique_ptr<Geometry>
@@ -248,7 +262,7 @@ std::unique_ptr<Geometry>
 GeometrySplitter::splitLinealWithEdge(const Geometry &geom, const Geometry &edge)
 {
     if (!geom.isDimensionStrict(geom::Dimension::L)) {
-        throw util::IllegalArgumentException("Input geometry must be linear.");
+        throw util::IllegalArgumentException("Input geometry must be linear or polygonal.");
     }
 
     if (geom.isEmpty()) {

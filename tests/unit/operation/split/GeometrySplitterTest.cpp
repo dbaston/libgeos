@@ -747,4 +747,28 @@ void object::test<60>()
               "GEOMETRYCOLLECTION (LINESTRING (0 1, 1 0), LINESTRING (0 2, 1 1), LINESTRING (1 1, 2 0))");
 }
 
+template<>
+template<>
+void object::test<61>()
+{
+    set_test_name("cannot split Polygon with point");
+
+    auto geom = reader_.read("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))");
+    auto splitGeom = reader_.read("POINT (5 0)");
+
+    ensure_THROW(GeometrySplitter::split(*geom, *splitGeom), geos::util::IllegalArgumentException);
+}
+
+template<>
+template<>
+void object::test<62>()
+{
+    set_test_name("cannot split CurvePolygon with point");
+
+    auto geom = reader_.read("CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (-5 0, 0 5, 5 0), (5 0, -5 0)))");
+    auto splitGeom = reader_.read("POINT (0 0)");
+
+    ensure_THROW(GeometrySplitter::split(*geom, *splitGeom), geos::util::IllegalArgumentException);
+}
+
 }
