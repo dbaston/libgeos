@@ -139,6 +139,10 @@ CircularArc::CircularArc(CircularArc&& other) noexcept {
 CircularArc&
 CircularArc::operator=(const CircularArc& other)
 {
+    if (this == &other) {
+        return *this;
+    }
+
     if (m_own_coordinates) {
         delete m_seq;
     }
