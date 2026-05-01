@@ -148,4 +148,32 @@ void object::test<6>() {
     ensure_equals(c1, c2);
 }
 
+template<>
+template<>
+void object::test<7>() {
+    set_test_name("self-assignment");
+
+    CoordinateXY p0(0.0, 0.0);
+    CoordinateXY p1(1.0, 1.0);
+    CoordinateXY p2(2.0, 0.0);
+
+    CircularArc arc = CircularArc::create(p0, p1, p2);
+
+    const auto radius = arc.getRadius();
+    const auto center = arc.getCenter();
+    const auto orientation = arc.getOrientation();
+
+    CircularArc* arcPtr = &arc;
+    *arcPtr = arc;
+
+    ensure_equals(arc.p0(), p0);
+    ensure_equals(arc.p1(), p1);
+    ensure_equals(arc.p2(), p2);
+
+    ensure_equals(arc.getRadius(), radius);
+    ensure_equals(arc.getCenter(), center);
+    ensure_equals(arc.getOrientation(), orientation);
+}
+
+
 }
