@@ -1885,6 +1885,10 @@ extern "C" {
     GEOSGridIntersectionFractions_r(GEOSContextHandle_t extHandle, const Geometry* g, double xmin, double ymin,
                                     double xmax, double ymax, unsigned nx, unsigned ny, float* buf)
     {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
         return execute(extHandle, 0, [&]() {
             Envelope env(xmin, xmax, ymin, ymax);
             double dx = env.getWidth() / static_cast<double>(nx);
@@ -1900,6 +1904,9 @@ extern "C" {
 
             return 1;
         });
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
     }
 
     Geometry*
