@@ -64,6 +64,8 @@ private:
     bool hasProperInterior;
     bool hasInterior;
 
+    bool ignoreSelfIntersections;
+
     // the proper intersection point found
     geom::CoordinateXYZM properIntersectionPoint;
 
@@ -99,6 +101,7 @@ public:
         hasProper(false),
         hasProperInterior(false),
         hasInterior(false),
+        ignoreSelfIntersections(false),
         properIntersectionPoint(),
         li(newLi),
         numIntersections(0),
@@ -193,6 +196,11 @@ public:
     isDone() const override
     {
         return false;
+    }
+
+    void setIgnoreSelfIntersections(bool ignore)
+    {
+        ignoreSelfIntersections = ignore;
     }
 };
 

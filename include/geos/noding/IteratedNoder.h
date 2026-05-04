@@ -59,6 +59,7 @@ private:
     algorithm::LineIntersector li;
     std::vector<std::unique_ptr<SegmentString>> nodedSegStrings;
     int maxIter;
+    bool m_ignoreSelfIntersections{false};
 
     /**
      * Node the input segment strings once
@@ -113,6 +114,8 @@ public:
      * @throws TopologyException if the iterated noding fails to converge.
      */
     void computeNodes(const std::vector<SegmentString*>& inputSegmentStrings) override; // throw(GEOSException);
+
+    void setIgnoreSelfIntersections(bool);
 
     // Declare type as noncopyable
     IteratedNoder(IteratedNoder const&) = delete;

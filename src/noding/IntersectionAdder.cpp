@@ -69,6 +69,10 @@ IntersectionAdder::processIntersections(
         return;
     }
 
+    if (ignoreSelfIntersections && e0->getData() == e1->getData()) {
+        return;
+    }
+
     numTests++;
 
     const CoordinateSequence& seq0 = *e0->getCoordinates();
@@ -98,6 +102,7 @@ IntersectionAdder::processIntersections(
 
         NodedSegmentString* ee0 = detail::down_cast<NodedSegmentString*>(e0);
         NodedSegmentString* ee1 = detail::down_cast<NodedSegmentString*>(e1);
+
         ee0->addIntersections(&li, segIndex0, 0);
         ee1->addIntersections(&li, segIndex1, 1);
 

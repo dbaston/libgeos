@@ -26,6 +26,10 @@ ArcIntersectionAdder::processIntersections(ArcString& e0, std::size_t segIndex0,
         return;
     }
 
+    if (m_ignoreSelfIntersections && e0.getData() == e1.getData()) {
+        return;
+    }
+
     const geom::CircularArc& arc0 = e0.getArc(segIndex0);
     const geom::CircularArc& arc1 = e1.getArc(segIndex1);
 
@@ -114,6 +118,10 @@ ArcIntersectionAdder::processIntersections(SegmentString& e0, std::size_t segInd
         return;
     }
 
+    if (m_ignoreSelfIntersections && e0.getData() == e1.getData()) {
+        return;
+    }
+
     m_intersector.intersects(*e0.getCoordinates(), segIndex0, segIndex0 + 1,
                              *e1.getCoordinates(), segIndex1, segIndex1 + 1);
 
@@ -130,4 +138,9 @@ ArcIntersectionAdder::processIntersections(SegmentString& e0, std::size_t segInd
     static_cast<NodedSegmentString&>(e0).addIntersection(m_intersector.getPoint(0), segIndex0);
 }
 
+void
+ArcIntersectionAdder::setIgnoreSelfIntersections(bool ignore)
+{
+    m_ignoreSelfIntersections = ignore;
+}
 }

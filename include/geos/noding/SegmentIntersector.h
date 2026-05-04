@@ -61,7 +61,7 @@ public:
      * Reports whether the client of this class
      * needs to continue testing all intersections in an arrangement.
      *
-     * @return true if there is not need to continue testing segments
+     * @return true if there is no need to continue testing segments
      *
      * The default implementation always return false (process all intersections).
      */

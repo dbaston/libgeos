@@ -25,8 +25,6 @@ class GEOS_DLL NodableArcString : public ArcString, public NodablePath {
 public:
     NodableArcString(std::vector<geom::CircularArc> arcs, const std::shared_ptr<const geom::CoordinateSequence>& coords, bool constructZ, bool constructM, const void* context);
 
-    std::unique_ptr<ArcString> clone() const;
-
     using NodablePath::addIntersection;
 
     void addIntersection(const geom::CoordinateXYZM& intPt, size_t segmentIndex) override {

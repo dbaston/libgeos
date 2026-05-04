@@ -43,9 +43,12 @@ IteratedNoder::node(const std::vector<SegmentString*>& segStrings,
                     CoordinateXY& intersectionPoint)
 {
     IntersectionAdder si(li);
+    si.setIgnoreSelfIntersections(m_ignoreSelfIntersections);
+
     MCIndexNoder noder;
     noder.setSegmentIntersector(&si);
     noder.computeNodes(segStrings);
+
     auto updatedSegStrings = noder.getNodedSubstrings();
     nodedSegStrings = std::move(updatedSegStrings);
     numInteriorIntersections = si.numInteriorIntersections;
@@ -99,6 +102,11 @@ IteratedNoder::computeNodes(const std::vector<SegmentString*>& segStrings)
     //cerr<<"# nodings = "<<nodingIterationCount<<endl;
 }
 
+void
+IteratedNoder::setIgnoreSelfIntersections(bool ignoreSelfIntersections)
+{
+    m_ignoreSelfIntersections = ignoreSelfIntersections;
+}
 
 } // namespace geos.noding
 } // namespace geos

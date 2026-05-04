@@ -14,7 +14,7 @@ namespace tut {
 struct test_geometrysplitter_data {
     const geos::io::WKTReader reader_;
 
-    void testSplit(const std::string& wktGeom, const std::string& wktEdge, const std::string& wktExpected) const
+    void testSplit(const std::string& wktGeom, const std::string& wktEdge, const std::string& wktExpected, double tol = 0) const
     {
         auto geom = reader_.read(wktGeom);
         auto edge = reader_.read(wktEdge);
@@ -25,7 +25,7 @@ struct test_geometrysplitter_data {
         writer.setRoundingPrecision(-1);
         //std::cout << writer.write(split.get()) << std::endl;
 
-        ensure_equals_geometry_xyzm(split.get(), expected.get());
+        ensure_equals_geometry_xyzm(split.get(), expected.get(), tol);
     }
 };
 
@@ -691,24 +691,17 @@ void object::test<56>()
               "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 0, 10 1), LINESTRING (10 1, 10 2, 6 2, 6 1), LINESTRING (6 1, 6 -1), LINESTRING (6 -1, 6 -2, 3 -2, 3 -1), LINESTRING (3 -1, 3 1), LINESTRING (3 1, 3 2, 0 2, 0 1), LINESTRING (0 1, 0 0))");
 }
 
-#if 0
 template<>
 template<>
 void object::test<57>()
 {
     set_test_name("do not split on self-intersections; QGIS test #4");
 
-    // Need to either
-    // a) do as QGIS does, and use Geometry::intersection to get intersection points, then node on those
-    // b) update GeometryNoder / SegmentIntersector classes with an ignoreSelfIntersections flag that would
-    //    ignore PathStrings with the same context.
-
     // Do not split on self-intersections - https://github.com/qgis/QGIS/issues/14070
     testSplit("LINESTRING (0 0, 10 0, 10 2, 6 2, 6 -2, 3 -2, 3 2, 0 2, 0 0)",
               "LINESTRING (0 1, 11 1, 11 -1, 0 -1)",
               "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 0, 10 1), LINESTRING (10 1, 10 2, 6 2, 6 1), LINESTRING (6 1, 6 -1), LINESTRING (6 -1, 6 -2, 3 -2, 3 -1), LINESTRING (3 -1, 3 1), LINESTRING (3 1, 3 2, 0 2, 0 1), LINESTRING (0 1, 0 0))");
 }
-#endif
 
 template<>
 template<>
@@ -809,6 +802,30 @@ void object::test<66>()
     testSplit("LINESTRING (0 0, 10 0)",
               "POINT (6 NaN)",
               "GEOMETRYCOLLECTION (LINESTRING (0 0, 10 0))");
+}
+
+template<>
+template<>
+void object::test<67>()
+{
+    set_test_name("do not split on CircularString on self-intersections");
+
+    testSplit("CIRCULARSTRING (0 0, 5 5, 10 0, 6 2, 6 8)",
+              "LINESTRING (0 2, 10 2)",
+              "GEOMETRYCOLLECTION (CIRCULARSTRING (0 0, 0.105468 1.021548, 0.417424 2), CIRCULARSTRING (0.417424 2, 5 5, 9.582575 2), CIRCULARSTRING (9.582575 2, 9.894531 1.021548, 10 0, 7.763932 0.527864, 6 2), CIRCULARSTRING (6 2, 5 5, 6 8))",
+              1e-6);
+}
+
+template<>
+template<>
+void object::test<68>()
+{
+    set_test_name("do not split CircularString on self-intersections");
+
+    testSplit("CIRCULARSTRING (0 0, 5 5, 10 0, 6 2, 6 8)",
+              "POINT (2 4)",
+           "GEOMETRYCOLLECTION (CIRCULARSTRING (0 0, 0.527864 2.236068, 2 4), CIRCULARSTRING (2 4, 7.236068 4.472136, 10 0, 6 2, 6 8))",
+              1e-6);
 }
 
 }

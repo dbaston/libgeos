@@ -123,7 +123,8 @@ GeometryNoder::GeometryNoder(const geom::Geometry& g)
     argGeom1(&g),
     argGeom2(nullptr),
     argGeomHasCurves(g.hasCurvedComponents()),
-    onlyFirstGeomEdges(false)
+    onlyFirstGeomEdges(false),
+    ignoreSelfIntersections(false)
 {}
 
 GeometryNoder::GeometryNoder(const geom::Geometry& g1, const geom::Geometry& g2)
@@ -131,7 +132,8 @@ GeometryNoder::GeometryNoder(const geom::Geometry& g1, const geom::Geometry& g2)
     argGeom1(&g1),
     argGeom2(&g2),
     argGeomHasCurves(g1.hasCurvedComponents() || g2.hasCurvedComponents()),
-    onlyFirstGeomEdges(false)
+    onlyFirstGeomEdges(false),
+    ignoreSelfIntersections(false)
 {}
 
 GeometryNoder::~GeometryNoder() = default;
@@ -222,11 +224,15 @@ GeometryNoder::getNoder()
 
             m_cai = std::make_unique<algorithm::CircularArcIntersector>(argGeom1->getPrecisionModel());
             m_aia = std::make_unique<ArcIntersectionAdder>(*m_cai);
+            m_aia->setIgnoreSelfIntersections(ignoreSelfIntersections);
+
             detail::down_cast<SimpleNoder*>(noder.get())->setArcIntersector(*m_aia);
         } else {
             noder = std::make_unique<IteratedNoder>(pm);
+            static_cast<IteratedNoder*>(noder.get())->setIgnoreSelfIntersections(ignoreSelfIntersections);
         }
     }
+
     return *noder;
 }
 
@@ -234,6 +240,12 @@ void
 GeometryNoder::setOnlyFirstGeomEdges(bool p_onlyFirstGeomEdges)
 {
     onlyFirstGeomEdges = p_onlyFirstGeomEdges;
+}
+
+void
+GeometryNoder::setIgnoreSelfIntersections(bool ignore)
+{
+    ignoreSelfIntersections = ignore;
 }
 
 } // namespace geos.noding

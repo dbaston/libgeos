@@ -57,6 +57,8 @@ public:
 
     void setOnlyFirstGeomEdges(bool onlyFirstGeomEdges);
 
+    void setIgnoreSelfIntersections(bool ignoreSelfIntersections);
+
     // Declare type as noncopyable
     GeometryNoder(GeometryNoder const&) = delete;
     GeometryNoder& operator=(GeometryNoder const&) = delete;
@@ -67,6 +69,7 @@ private:
     const geom::Geometry* argGeom2;
     const bool argGeomHasCurves;
     bool onlyFirstGeomEdges;
+    bool ignoreSelfIntersections;
 
     std::unique_ptr<Noder> noder;
     std::unique_ptr<algorithm::CircularArcIntersector> m_cai;

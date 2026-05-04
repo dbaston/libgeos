@@ -287,6 +287,7 @@ GeometrySplitter::splitLinealWithEdge(const Geometry &geom, const Geometry &edge
 
     GeometryNoder noder(geom, edge);
     noder.setOnlyFirstGeomEdges(true);
+    noder.setIgnoreSelfIntersections(true);
 
     auto nodedMLS = noder.getNoded();
 

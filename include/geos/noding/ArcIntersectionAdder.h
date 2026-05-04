@@ -24,13 +24,15 @@ class GEOS_DLL ArcIntersectionAdder : public ArcIntersector {
 
 public:
     explicit ArcIntersectionAdder(algorithm::CircularArcIntersector& cai) :
-        m_intersector(cai) {}
+        m_intersector(cai), m_ignoreSelfIntersections(false) {}
 
     void processIntersections(ArcString& e0, std::size_t segIndex0, ArcString& e1, std::size_t segIndex1) override;
 
     void processIntersections(ArcString& e0, std::size_t segIndex0, SegmentString& e1, std::size_t segIndex1) override;
 
     void processIntersections(SegmentString& e0, std::size_t segIndex0, SegmentString& e1, std::size_t segIndex1) override;
+
+    void setIgnoreSelfIntersections(bool ignore);
 
 private:
     static bool isAdjacentSegments(std::size_t i1, std::size_t i2);
@@ -39,6 +41,7 @@ private:
                                const PathString* e1, std::size_t segIndex1) const;
 
     algorithm::CircularArcIntersector& m_intersector;
+    bool m_ignoreSelfIntersections;
 };
 
 }
