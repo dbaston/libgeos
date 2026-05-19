@@ -20,6 +20,7 @@
 #include <geos/operation/overlayng/EdgeKey.h>
 #include <geos/operation/overlayng/Edge.h>
 #include <geos/operation/overlayng/OverlayLabel.h>
+#include <iomanip>
 
 namespace geos {      // geos
 namespace operation { // geos.operation
@@ -51,6 +52,11 @@ EdgeMerger::merge(std::vector<Edge*>& edges)
             // NOTE: we throw an exception to avoid crashing processes
             // See https://trac.osgeo.org/geos/ticket/1051#comment:29
             //
+            std::cout << std::setprecision(17);
+            std::cout << std::setw(17);
+            std::cout << "BaseEdge: CIRCULARSTRING " << *baseEdge->getCoordinatesRO() << std::endl;
+            std::cout << "Edge: CIRCULARSTRING " << *edge->getCoordinatesRO() << std::endl;
+
             util::Assert::isTrue(
                 baseEdge->size() == edge->size(),
                 "Merge of edges of different sizes - probable noding error."

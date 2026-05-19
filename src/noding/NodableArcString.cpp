@@ -47,6 +47,8 @@ std::vector<CoordinateXYZM> prepareArcPoints(const CircularArc& arc, std::vector
     const bool isCCW = arc.getOrientation() == algorithm::Orientation::COUNTERCLOCKWISE;
     const geom::CoordinateXY& center = arc.getCenter();
 
+    // FIXME: We need to be able to tell if the start/end are actually split points or not.
+
     // Some potential split points may be skipped, for example, if they would create an arc section that is
     // too short to have a constructed midpoint. Because the results of this logic could depend on the
     // direction in which the arc is processed, we reverse clockwise arcs and then reverse the list of
@@ -65,7 +67,17 @@ std::vector<CoordinateXYZM> prepareArcPoints(const CircularArc& arc, std::vector
         double pa0 = geom::Quadrant::pseudoAngle(center, p0);
         double pa1 = geom::Quadrant::pseudoAngle(center, p1);
 
-        return pseudoAngleDiffCCW(paStart, pa0) < pseudoAngleDiffCCW(paStart, pa1);
+        double diff0 = pseudoAngleDiffCCW(paStart, pa0);
+        double diff1 = pseudoAngleDiffCCW(paStart, pa1);
+
+        if (diff0 < diff1) {
+            return true;
+        }
+        if (diff0 > diff1) {
+            return false;
+        }
+
+        return p0 < p1;
     });
 
     // Add ending point of input arc
@@ -75,20 +87,39 @@ std::vector<CoordinateXYZM> prepareArcPoints(const CircularArc& arc, std::vector
         splitPoints.push_back(p2);
     }
 
+    std::cout << std::setprecision(17);
+    std::cout << std::endl;
+    std::cout << "Edge from " << arc.p0() << " to " << arc.p2() << " has " << splitPoints.size() << " potential split points:" << std::endl;
+    std::cout << "Edge is CIRCULARSTRING " << *arc.getCoordinateSequence() << std::endl;
+    std::cout << "Start point is " << retained.back() << " pa " << paStart << std::endl;
+    std::cout << "Potential split points:" << std::endl;
+    for (std::size_t i = 0; i < splitPoints.size(); i++) {
+        std::cout << "  " << splitPoints[i] << " paDiff " << pseudoAngleDiffCCW(paStart, geom::Quadrant::pseudoAngle(center, splitPoints[i]));
+        if (i > 0) {
+            std::cout << "     " << splitPoints[i].distance(splitPoints[i-1]);
+        }
+        std::cout << std::endl;
+    }
+
     for (const auto& p2 : splitPoints) {
         auto& p0 = retained.back();
 
+        std::cout << "p0 = " << p0 << std::endl;
+
         if (p2.equals2D(p0)) {
+            std::cout << "Split point " << p2 << " equal to start point " << p0 << std::endl;
             if (std::isnan(p0.z) && !std::isnan(p2.z)) {
                 p0.z = p2.z;
             }
             if (std::isnan(p0.m) && !std::isnan(p2.m)) {
                 p0.m = p2.m;
             }
+            std::cout << "Start point is now " << p0 << std::endl;
             continue;
         }
 
         if (!arc.containsPointOnCircle(p2)) {
+            std::cout << "Skipping split point " << p2 << " because it is outside of the arc" << std::endl;
             continue;
         }
 
@@ -98,6 +129,7 @@ std::vector<CoordinateXYZM> prepareArcPoints(const CircularArc& arc, std::vector
         const geom::CoordinateXY p1 = algorithm::CircularArcs::getMidpoint(p0, p2, center, arc.getRadius(), true);
 
         if (p1.equals2D(p0) || p1.equals2D(p2)) {
+            std::cout << "Skipping split point " << p2 << " because the calculated arc midpoint " << p1 << " equals one of the endpoints" << std::endl;
             continue;
         }
 
@@ -106,10 +138,12 @@ std::vector<CoordinateXYZM> prepareArcPoints(const CircularArc& arc, std::vector
         const double t1 = algorithm::Angle::normalizePositive(algorithm::CircularArcs::getAngle(p1, center));
         const double t2 = algorithm::Angle::normalizePositive(isCCW ? arc.theta2() : arc.theta0());
 
-        if (!algorithm::Angle::isWithinCCW(t1, t0, t2)) {
+        if (!algorithm::Angle::isWithinCCW(t1, t0, t2)) { // != isCCW) {
+            std::cout << "Skipping split point " << p2 << " because the calculated arc midpoint " << p1 << " does not fall within the arc from " << p0 << " to " << p2 << std::endl;
             continue;
         }
 
+        std::cout << "Keeping split point " << p2 << std::endl;
         retained.push_back(p2);
     }
 
@@ -135,6 +169,22 @@ std::vector<CoordinateXYZM> prepareArcPoints(const CircularArc& arc, std::vector
         std::reverse(retained.begin(), retained.end());
     }
 
+    std::cout << "Retained split points:" << std::endl;
+    for (std::size_t i = 0; i < retained.size(); i++) {
+        std::cout << "  " << retained[i] << " paDiff " << pseudoAngleDiffCCW(paStart, geom::Quadrant::pseudoAngle(center, retained[i]));
+        if (i > 0) {
+            std::cout << "     " << retained[i].distance(retained[i-1]);
+        }
+        std::cout << std::endl;
+    }
+
+    if (!retained.front().equals2D(arc.p0<geom::CoordinateXY>())) {
+        throw util::GEOSException("*** First point of retained arc is not the same as the first point of the original arc");
+    }
+    if (!retained.back().equals2D(arc.p2<geom::CoordinateXY>())) {
+        throw util::GEOSException("*** Last point of retained arc is not the same as the last point of the original arc");
+    }
+
     return retained;
 }
 
@@ -148,6 +198,10 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
         const geom::CoordinateXY& center = toSplit.getCenter();
         const double radius = toSplit.getRadius();
         const int orientation = toSplit.getOrientation();
+
+        std::cout << std::setprecision(17);
+        std::cout << std::endl;
+        std::cout << std::endl << "Arc to split: " << toSplit.p0() << " to " << toSplit.p2() << std::endl;
 
         bool arcIsSplit = true;
         bool createArcString = true;
@@ -175,7 +229,19 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
             std::size_t dstPos = dstSeq->getSize() - 3;
             arcs.emplace_back(*dstSeq, dstPos, center, radius, orientation);
 
+            std::cout << "Adding unsplit from " << arcs.back().p0() << " to " << arcs.back().p2() << std::endl;
+
             if (createArcString) {
+                //if (dstSeq->toString() == "(-0.84333168960872873 -0.12412043858654043, -0.96461319189094641 -0.20729352391791922, -1.1087328289561522 -0.23655946199558511, -1.1087328289561527 -0.2365594619955842, -1.1087328289561535 -0.23655946199558395)") {
+                //    std::cout << "STOP1" << std::endl;
+                //}
+                if (dstSeq->front<geom::CoordinateXY>().equals2D(geom::CoordinateXY{-0.84333168960872873, -0.12412043858654043}) &&
+                    dstSeq->back<geom::CoordinateXY>().equals2D(geom::CoordinateXY{-1.1087328289561535, -0.23655946199558395}))
+                {
+                    std::cout << "STOP1" << std::endl;
+                }
+
+                std::cout << "Finished ArcString CIRCULARSTRING " << *dstSeq << std::endl;
                 splitArcs.push_back(std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, getData()));
                 dstSeq = std::make_unique<geom::CoordinateSequence>(0, m_constructZ, m_constructM);
                 arcs.clear();
@@ -189,6 +255,8 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
         for (std::size_t i = 1; i < arcPoints.size(); i++) {
             const CoordinateXYZM& p0 = arcPoints[i - 1];
             const CoordinateXYZM& p2 = arcPoints[i];
+
+            std::cout << "Adding arc from " << p0 << " to " << p2 << std::endl;
 
             // TODO: Check if control point of original arc falls into this section,
             // and use it instead of calculating a midpoint here?
@@ -207,7 +275,21 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
 
             // Finish the ArcString, start a new one.
             const bool isSplitPoint = i != arcPoints.size() - 1;
+            std::cout << "Finish the arc? " << isSplitPoint << std::endl;
             if (isSplitPoint) {
+                if (dstSeq->front<geom::CoordinateXY>().equals2D(geom::CoordinateXY{-0.84333168960872873, -0.12412043858654043}) &&
+                    dstSeq->back<geom::CoordinateXY>().equals2D(geom::CoordinateXY{-1.1087328289561535, -0.23655946199558395}))
+                {
+                    std::cout << "STOP2" << std::endl;
+                }
+
+//                    , -0.96461319189094641 -0.20729352391791922, -1.1087328289561522 -0.23655946199558511, -1.1087328289561527 -0.2365594619955842, -1.1087328289561535 -0.23655946199558395)") {
+//            std::cout << "STOP3" << std::endl;
+//        }
+//}))
+
+
+                std::cout << "Finished ArcString CIRCULARSTRING " << *dstSeq << std::endl;
                 splitArcs.push_back(std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, getData()));
                 dstSeq = std::make_unique<geom::CoordinateSequence>(0, m_constructZ, m_constructM);
                 arcs.clear();
@@ -216,8 +298,25 @@ NodableArcString::getNoded(std::vector<std::unique_ptr<ArcString>>& splitArcs) {
     }
 
     if (!arcs.empty()) {
+        if (dstSeq->toString() == "(-0.84333168960872873 -0.12412043858654043, -0.96461319189094641 -0.20729352391791922, -1.1087328289561522 -0.23655946199558511, -1.1087328289561527 -0.2365594619955842, -1.1087328289561535 -0.23655946199558395)") {
+            std::cout << "STOP3" << std::endl;
+        }
+        if (dstSeq->front<geom::CoordinateXY>().equals2D(geom::CoordinateXY{-0.84333168960872873, -0.12412043858654043}) &&
+            dstSeq->back<geom::CoordinateXY>().equals2D(geom::CoordinateXY{-1.1087328289561535, -0.23655946199558395}))
+        {
+            std::cout << "STOP3" << std::endl;
+        }
+        std::cout << "Finished ArcString CIRCULARSTRING " << *dstSeq << std::endl;
         splitArcs.push_back(std::make_unique<NodableArcString>(std::move(arcs), std::move(dstSeq), m_constructZ, m_constructM, getData()));
     }
+
+
+    //std::cout << std::setprecision(17);
+    //std::cout << std::setw(17);
+    //std::cout << "Src arc: CIRCULARSTRING " << *getCoordinates() << std::endl;
+    //for (const auto& arc : splitArcs) {
+    //    std::cout << "  Split arc: CIRCULARSTRING " << *arc->getCoordinates() << std::endl;
+    //}
 }
 
 }
