@@ -52,10 +52,6 @@ EdgeMerger::merge(std::vector<Edge*>& edges)
             // NOTE: we throw an exception to avoid crashing processes
             // See https://trac.osgeo.org/geos/ticket/1051#comment:29
             //
-            std::cout << std::setprecision(17);
-            std::cout << std::setw(17);
-            std::cout << "BaseEdge: CIRCULARSTRING " << *baseEdge->getCoordinatesRO() << std::endl;
-            std::cout << "Edge: CIRCULARSTRING " << *edge->getCoordinatesRO() << std::endl;
 
             util::Assert::isTrue(
                 baseEdge->size() == edge->size(),

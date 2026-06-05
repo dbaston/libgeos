@@ -52,7 +52,8 @@ CircularArcs::getDirectionPoint(const geom::CoordinateXY& center, double radius,
     // at radius * sqrt(2). During overlay, this can produce a situation where noded edges originating
     // from the same point have direction points that are in the same direction. Nudging the direction point
     // slightly in the direction of the arc resolves this issue.
-    return createPoint(center, radius * std::sqrt(2) * (1 - 1e-6), theta + dt);
+    auto ret = createPoint(center, radius * std::sqrt(2) * (1 - 1e-6), theta + dt);
+    return ret;
 }
 
 double
