@@ -160,6 +160,16 @@ prepareArcPoints(const CircularArc& arc, std::vector<CoordinateXYZM> splitPoints
             continue;
         }
 
+        if (algorithm::Orientation::index(p1, p0, p2) == algorithm::Orientation::COLLINEAR) {
+#if 0
+            std::cout << "Skipping split point " << p2 << " because the calculated arc midpoint " << p1 << " is collinear with the endpoints" << std::endl;
+#endif
+            if (retained.size() == 1) {
+                splitStart = true;
+            }
+            continue;
+        }
+
         // Reject split point where computed doesn't fall between endpoints
         const double t0 = algorithm::Angle::normalizePositive(isCCW ? arc.theta0() : arc.theta2());
         const double t1 = algorithm::Angle::normalizePositive(algorithm::CircularArcs::getAngle(p1, center));
