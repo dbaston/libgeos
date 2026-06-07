@@ -395,7 +395,22 @@ void object::test<18>()
     expected_ = fromWKT("MULTICURVE (CIRCULARSTRING (-5 0, -4 3, 0 5, 2.1154124423 4.5304558489, 3.8335130689 3.2100120795), CIRCULARSTRING (3.8335130689 3.2100120795, 3.918163858 3.1061216946, 4 3), CIRCULARSTRING (3 5, 3.9016950794 4.3308190803, 3.8335130689 3.2100120795), CIRCULARSTRING (3.8335130689 3.2100120795, 2.9674441042 2.6624775822, 2 3))");
     ensure_equals_exact_geometry_xyzm(reinterpret_cast<Geometry*>(result_),
                                       reinterpret_cast<Geometry*>(expected_), 1e-4);
+}
 
+template<>
+template<>
+void object::test<19>()
+{
+    // ensure CircularArcIntersector does not add spurious intersection points
+
+    input_ = fromWKT("MULTICURVE ("
+    "LINESTRING (-1.277492733105557 0.2899949746553787,  -0.8433316896087282 -0.1241204385865409),"
+    "CIRCULARSTRING (-0.8433316896087282 -0.1241204385865409, -0.9646131918909476 -0.2072935239179199, -1.1087328289561522 -0.2365594619955851))");
+
+    result_ = GEOSNode(input_);
+    ensure(result_);
+
+    ensure_geometry_equals_identical(input_, result_);
 }
 
 } // namespace tut
