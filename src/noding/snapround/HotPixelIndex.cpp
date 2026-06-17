@@ -95,9 +95,9 @@ HotPixelIndex::add(const CoordinateSequence *pts)
     std::shuffle(idxs.begin(), idxs.end(), g);
 
     switch(pts->getCoordinateType()){
-        case CoordinateType::XY:    for (auto i : idxs) { add(CoordinateXYZM(pts->getAt<CoordinateXY>(i)));   } break;
+        case CoordinateType::XY:    for (auto i : idxs) { add(pts->getAt<CoordinateXY>(i));   } break;
         case CoordinateType::XYZ:   for (auto i : idxs) { add(pts->getAt<Coordinate>(i));     } break;
-        case CoordinateType::XYM:   for (auto i : idxs) { add(CoordinateXYZM(pts->getAt<CoordinateXYM>(i)));  } break;
+        case CoordinateType::XYM:   for (auto i : idxs) { add(pts->getAt<CoordinateXYM>(i));  } break;
         case CoordinateType::XYZM:  for (auto i : idxs) { add(pts->getAt<CoordinateXYZM>(i)); } break;
     }
 }
@@ -123,10 +123,12 @@ HotPixelIndex::add(const std::vector<geom::Coordinate>& pts)
 void
 HotPixelIndex::addNodes(const CoordinateSequence* pts)
 {
-    pts->forEach([this](const auto& coord) -> void {
+    for (std::size_t i = 0; i < pts->size(); i++) {
+        CoordinateXYZM coord;
+        pts->getAt(i, coord);
         HotPixel* hp = this->add(coord);
         hp->setToNode();
-    });
+    };
 }
 
 /*public*/
