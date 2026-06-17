@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <iterator>
+#include <type_traits>
 
 namespace geos {
 namespace geom {
@@ -26,9 +27,9 @@ class CoordinateSequenceIterator {
 
 public:
     using iterator_category = std::random_access_iterator_tag;
-    using value_type = CoordinateType;
+    using value_type = std::remove_cv_t<CoordinateType>;
     using reference = CoordinateType&;
-    using pointer = CoordinateType;
+    using pointer = CoordinateType*;
     using difference_type = std::ptrdiff_t;
 
 private:
@@ -36,7 +37,7 @@ private:
     difference_type m_pos;
 
 public:
-    CoordinateSequenceIterator(SequenceType* seq) : m_seq(seq), m_pos(0) {}
+    explicit CoordinateSequenceIterator(SequenceType* seq) : m_seq(seq), m_pos(0) {}
 
     CoordinateSequenceIterator(SequenceType* seq, std::size_t size) : m_seq(seq), m_pos(static_cast<difference_type>(size)) {}
 
@@ -78,7 +79,7 @@ public:
         return CoordinateSequenceIterator(m_seq, static_cast<std::size_t>(m_pos + n));
     }
 
-    CoordinateSequenceIterator operator+=(difference_type n) {
+    CoordinateSequenceIterator& operator+=(difference_type n) {
         this->m_pos += n;
         return *this;
     }
@@ -87,7 +88,7 @@ public:
         return CoordinateSequenceIterator(m_seq, static_cast<std::size_t>(m_pos - n));
     }
 
-    CoordinateSequenceIterator operator-=(difference_type n) {
+    CoordinateSequenceIterator& operator-=(difference_type n) {
         this->m_pos -= n;
         return *this;
     }
@@ -97,7 +98,7 @@ public:
     }
 
     bool operator==(const CoordinateSequenceIterator& other) const {
-        return this->m_pos == other.m_pos;
+        return this->m_seq == other.m_seq && this->m_pos == other.m_pos;
     }
 
     bool operator!=(const CoordinateSequenceIterator& other) const {

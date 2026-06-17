@@ -823,36 +823,36 @@ public:
     template<typename T>
     class Coordinates {
     public:
-        using SequenceType = typename std::conditional<std::is_const<T>::value, const CoordinateSequence, CoordinateSequence>::type;
+        using SequenceType = std::conditional_t<std::is_const_v<T>, const CoordinateSequence, CoordinateSequence>;
 
         explicit Coordinates(SequenceType* seq) : m_seq(seq) {}
 
         CoordinateSequenceIterator<SequenceType, T> begin() {
-            return {m_seq};
+            return CoordinateSequenceIterator<SequenceType, T>{m_seq};
         }
 
         CoordinateSequenceIterator<SequenceType, T> end() {
-            return {m_seq, m_seq->getSize()};
+            return CoordinateSequenceIterator<SequenceType, T>{m_seq, m_seq->getSize()};
         }
 
-        CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>
+        CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>
         begin() const {
-            return CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>{m_seq};
+            return CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>{m_seq};
         }
 
-        CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>
+        CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>
         end() const {
-            return CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>{m_seq, m_seq->getSize()};
+            return CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>{m_seq, m_seq->getSize()};
         }
 
-        CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>
+        CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>
         cbegin() const {
-            return CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>{m_seq};
+            return CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>{m_seq};
         }
 
-        CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>
+        CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>
         cend() const {
-            return CoordinateSequenceIterator<const SequenceType, typename std::add_const<T>::type>{m_seq, m_seq->getSize()};
+            return CoordinateSequenceIterator<const SequenceType, std::add_const_t<T>>{m_seq, m_seq->getSize()};
         }
 
     private:
@@ -860,8 +860,8 @@ public:
     };
 
     template<typename T>
-    Coordinates<typename std::add_const<T>::type> items() const {
-        return Coordinates<typename std::add_const<T>::type>(this);
+    Coordinates<std::add_const_t<T>> items() const {
+        return Coordinates<std::add_const_t<T>>(this);
     }
 
     template<typename T>
