@@ -58,7 +58,7 @@ public:
     /// distance to the polygon boundaries.
     ///
     /// \param g a Geometry, which may be of any type.
-    IndexedFacetDistance(const geom::Geometry* g) :
+    explicit IndexedFacetDistance(const geom::Geometry* g) :
         cachedTree(FacetSequenceTreeBuilder::build(g)),
         baseGeometry(*g)
     {}

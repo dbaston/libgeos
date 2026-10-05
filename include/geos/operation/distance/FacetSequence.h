@@ -41,6 +41,7 @@ private:
     const geom::CoordinateSequence* pts;
     const std::size_t start;
     const std::size_t end;
+    bool curved;
 
     /*
     * Unlike JTS, we store the envelope in the FacetSequence so
@@ -52,9 +53,21 @@ private:
     double computeDistanceLineLine(const FacetSequence& facetSeq,
                                    std::vector<geom::CoordinateXY> *locs) const;
 
+    double computeDistanceArcArc(const FacetSequence& facetSeq,
+                                 std::vector<geom::CoordinateXY> *locs) const;
+
+    double computeDistanceArcLine(const FacetSequence& facetSeq,
+                                  std::vector<geom::CoordinateXY> *locs) const;
+
     static double computeDistancePointLine(const geom::CoordinateXY& pt,
                                            const FacetSequence& facetSeq,
                                            std::vector<geom::CoordinateXY> *locs);
+
+    static double computeDistancePointArc(const geom::CoordinateXY& pt,
+                                          const FacetSequence& facetSeq,
+                                          std::vector<geom::CoordinateXY> *locs);
+
+    static void updateNearestLocations(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1, std::vector<geom::CoordinateXY> *locs);
 
     static void updateNearestLocationsPointLine(const geom::CoordinateXY& pt,
                                                 const geom::CoordinateXY& q0, const geom::CoordinateXY& q1,
@@ -70,6 +83,8 @@ private:
 
     void computeEnvelope();
 
+    double nearestLocations(const FacetSequence& facetSeq, std::vector<geom::CoordinateXY>* locs) const;
+
 public:
 
     const geom::Envelope* getEnvelope() const;
@@ -78,11 +93,13 @@ public:
 
     std::size_t size() const;
 
+    bool isCurved() const;
+
     bool isPoint() const;
 
     double distance(const FacetSequence& facetSeq) const;
 
-    FacetSequence(const geom::CoordinateSequence* pts, std::size_t start, std::size_t end);
+    FacetSequence(const geom::CoordinateSequence* pts, bool isCurved, std::size_t start, std::size_t end);
 
     /**
      * Computes the locations of the nearest points between this sequence
