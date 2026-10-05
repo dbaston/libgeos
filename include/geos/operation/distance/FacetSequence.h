@@ -50,19 +50,19 @@ private:
     geom::Envelope env;
 
     double computeDistanceLineLine(const FacetSequence& facetSeq,
-                                   std::vector<geom::Coordinate> *locs) const;
+                                   std::vector<geom::CoordinateXY> *locs) const;
 
-    double computeDistancePointLine(const geom::Coordinate& pt,
-                                    const FacetSequence& facetSeq,
-                                    std::vector<geom::Coordinate> *locs) const;
+    static double computeDistancePointLine(const geom::CoordinateXY& pt,
+                                           const FacetSequence& facetSeq,
+                                           std::vector<geom::CoordinateXY> *locs);
 
-    void updateNearestLocationsPointLine(const geom::Coordinate& pt,
-                                         const geom::Coordinate& q0, const geom::Coordinate &q1,
-                                         std::vector<geom::Coordinate> *locs) const;
+    static void updateNearestLocationsPointLine(const geom::CoordinateXY& pt,
+                                                const geom::CoordinateXY& q0, const geom::CoordinateXY& q1,
+                                                std::vector<geom::CoordinateXY> *locs);
 
-    void updateNearestLocationsLineLine(const geom::Coordinate& p0, const geom::Coordinate& p1,
-                                        const geom::Coordinate& q0, const geom::Coordinate &q1,
-                                        std::vector<geom::Coordinate> *locs) const;
+    static void updateNearestLocationsLineLine(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1,
+                                               const geom::CoordinateXY& q0, const geom::CoordinateXY& q1,
+                                               std::vector<geom::CoordinateXY> *locs);
 
     CoordinateSequenceLocation nearestLocationOnLine(const geom::CoordinateXY& pt) const;
 
@@ -74,7 +74,7 @@ public:
 
     const geom::Envelope* getEnvelope() const;
 
-    const geom::Coordinate* getCoordinate(std::size_t index) const;
+    const geom::CoordinateXY* getCoordinate(std::size_t index) const;
 
     std::size_t size() const;
 
@@ -91,7 +91,7 @@ public:
      *
      * @return a pair of Coordinates for the nearest points
      */
-    std::vector<geom::Coordinate> nearestLocations(const FacetSequence& facetSeq) const;
+    std::vector<geom::CoordinateXY> nearestLocations(const FacetSequence& facetSeq) const;
 
     /**
      * Computes the location of the nearest point of this sequence

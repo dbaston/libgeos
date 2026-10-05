@@ -58,25 +58,23 @@ MinimumClearance::compute()
     class MinClearanceDistance {
     private:
         double minDist;
-        std::vector<Coordinate> minPts;
+        std::vector<CoordinateXY> minPts;
 
         void
-        updatePts(const Coordinate& p, const Coordinate& seg0, const Coordinate& seg1)
+        updatePts(const CoordinateXY& p, const CoordinateXY& seg0, const CoordinateXY& seg1)
         {
-            LineSegment seg(seg0, seg1);
-
             minPts[0] = p;
-            seg.closestPoint(p, minPts[1]);
+            minPts[1] = LineSegment::closestPoint(seg0, seg1, p);
         }
 
     public:
         MinClearanceDistance() :
             minDist(DoubleInfinity),
-            minPts(std::vector<Coordinate>(2))
+            minPts(std::vector<CoordinateXY>(2))
         {}
 
-        const std::vector<Coordinate>*
-        getCoordinates()
+        const std::vector<CoordinateXY>*
+        getCoordinates() const
         {
             return &minPts;
         }
@@ -114,8 +112,8 @@ MinimumClearance::compute()
         {
             for(std::size_t i1 = 0; i1 < fs1->size(); i1++) {
                 for(std::size_t i2 = 0; i2 < fs2->size(); i2++) {
-                    const Coordinate* p1 = fs1->getCoordinate(i1);
-                    const Coordinate* p2 = fs2->getCoordinate(i2);
+                    const CoordinateXY* p1 = fs1->getCoordinate(i1);
+                    const CoordinateXY* p2 = fs2->getCoordinate(i2);
                     if(!p1->equals2D(*p2)) {
                         double d = p1->distance(*p2);
                         if(d < minDist) {
@@ -137,10 +135,10 @@ MinimumClearance::compute()
         {
             for(std::size_t i1 = 0; i1 < fs1->size(); i1++) {
                 for(std::size_t i2 = 1; i2 < fs2->size(); i2++) {
-                    const Coordinate* p = fs1->getCoordinate(i1);
+                    const CoordinateXY* p = fs1->getCoordinate(i1);
 
-                    const Coordinate* seg0 = fs2->getCoordinate(i2 - 1);
-                    const Coordinate* seg1 = fs2->getCoordinate(i2);
+                    const CoordinateXY* seg0 = fs2->getCoordinate(i2 - 1);
+                    const CoordinateXY* seg1 = fs2->getCoordinate(i2);
 
                     if(!(p->equals2D(*seg0) || p->equals2D(*seg1))) {
                         double d = geos::algorithm::Distance::pointToSegment(*p, *seg0, *seg1);
@@ -182,7 +180,7 @@ MinimumClearance::compute()
 
     minClearance = mcd.distance(nearest.first, nearest.second);
 
-    const std::vector<Coordinate>* minClearancePtsVec = mcd.getCoordinates();
+    const std::vector<CoordinateXY>* minClearancePtsVec = mcd.getCoordinates();
     minClearancePts->setAt((*minClearancePtsVec)[0], 0);
     minClearancePts->setAt((*minClearancePtsVec)[1], 1);
 }

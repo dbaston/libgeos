@@ -56,16 +56,16 @@ FacetSequence::distance(const FacetSequence& facetSeq) const
     bool isPointOther = facetSeq.isPoint();
 
     if (isPointThis && isPointOther) {
-        const Coordinate& pt = pts->getAt(start);
-        const Coordinate& seqPt = facetSeq.pts->getAt(facetSeq.start);
+        const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
+        const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
         return pt.distance(seqPt);
     }
     else if (isPointThis) {
-        const Coordinate& pt = pts->getAt(start);
+        const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
         return computeDistancePointLine(pt, facetSeq, nullptr);
     }
     else if (isPointOther) {
-        const Coordinate& seqPt = facetSeq.pts->getAt(facetSeq.start);
+        const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
         return computeDistancePointLine(seqPt, *this, nullptr);
     }
     else {
@@ -78,30 +78,28 @@ FacetSequence::distance(const FacetSequence& facetSeq) const
 * just return the whole mess, since it only ends up holding two
 * locations.
 */
-std::vector<Coordinate>
-FacetSequence::nearestLocations(const FacetSequence& facetSeq)  const
+std::vector<CoordinateXY>
+FacetSequence::nearestLocations(const FacetSequence& facetSeq) const
 {
     bool isPointThis = isPoint();
     bool isPointOther = facetSeq.isPoint();
-    std::vector<Coordinate> locs;
+    std::vector<CoordinateXY> locs;
     if (isPointThis && isPointOther) {
-        const Coordinate& pt = pts->getAt(start);
-        const Coordinate& seqPt = facetSeq.pts->getAt(facetSeq.start);
+        const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
+        const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
         locs.clear();
         locs.push_back(pt);
         locs.push_back(seqPt);
     }
     else if (isPointThis) {
-        const Coordinate& pt = pts->getAt(start);
+        const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
         computeDistancePointLine(pt, facetSeq, &locs);
     }
     else if (isPointOther) {
-        const Coordinate& seqPt = facetSeq.pts->getAt(facetSeq.start);
+        const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
         computeDistancePointLine(seqPt, *this, &locs);
         // unflip the locations
-        Coordinate tmp = locs[0];
-        locs[0] = locs[1];
-        locs[1] = tmp;
+        std::swap(locs[0], locs[1]);
     }
     else {
         computeDistanceLineLine(facetSeq, &locs);
@@ -110,15 +108,15 @@ FacetSequence::nearestLocations(const FacetSequence& facetSeq)  const
 }
 
 double
-FacetSequence::computeDistancePointLine(const Coordinate& pt,
+FacetSequence::computeDistancePointLine(const CoordinateXY& pt,
                                         const FacetSequence& facetSeq,
-                                        std::vector<Coordinate> *locs) const
+                                        std::vector<CoordinateXY> *locs)
 {
     double minDistance = DoubleInfinity;
 
     for (std::size_t i = facetSeq.start; i < facetSeq.end - 1; i++) {
-        const Coordinate& q0 = facetSeq.pts->getAt(i);
-        const Coordinate& q1 = facetSeq.pts->getAt(i + 1);
+        const CoordinateXY& q0 = facetSeq.pts->getAt<CoordinateXY>(i);
+        const CoordinateXY& q1 = facetSeq.pts->getAt<CoordinateXY>(i + 1);
         double dist = Distance::pointToSegment(pt, q0, q1);
         if (dist < minDistance || (locs != nullptr && locs->empty())) {
             minDistance = dist;
@@ -136,26 +134,23 @@ FacetSequence::computeDistancePointLine(const Coordinate& pt,
 
 void
 FacetSequence::updateNearestLocationsPointLine(
-    const Coordinate& pt, const Coordinate& q0, const Coordinate &q1,
-    std::vector<Coordinate> *locs) const
+    const CoordinateXY& pt, const CoordinateXY& q0, const CoordinateXY& q1,
+    std::vector<CoordinateXY> *locs)
 {
-    LineSegment seg(q0, q1);
-    Coordinate segClosestPoint;
-    seg.closestPoint(pt, segClosestPoint);
+    CoordinateXY segClosestPoint = LineSegment::closestPoint(q0, q1, pt);
     locs->clear();
     locs->push_back(pt);
     locs->push_back(segClosestPoint);
-    return;
 }
 
 double
-FacetSequence::computeDistanceLineLine(const FacetSequence& facetSeq, std::vector<Coordinate> *locs) const
+FacetSequence::computeDistanceLineLine(const FacetSequence& facetSeq, std::vector<CoordinateXY>* locs) const
 {
     double minDistance = DoubleInfinity;
 
     for(std::size_t i = start; i < end - 1; i++) {
-        const Coordinate& p0 = pts->getAt(i);
-        const Coordinate& p1 = pts->getAt(i + 1);
+        const CoordinateXY& p0 = pts->getAt<CoordinateXY>(i);
+        const CoordinateXY& p1 = pts->getAt<CoordinateXY>(i + 1);
 
         // Avoid calculating distance from zero-length segment
         if (p0 == p1)
@@ -167,8 +162,8 @@ FacetSequence::computeDistanceLineLine(const FacetSequence& facetSeq, std::vecto
         }
 
         for(std::size_t j = facetSeq.start; j < facetSeq.end - 1; j++) {
-            const Coordinate& q0 = facetSeq.pts->getAt(j);
-            const Coordinate& q1 = facetSeq.pts->getAt(j + 1);
+            const CoordinateXY& q0 = facetSeq.pts->getAt<CoordinateXY>(j);
+            const CoordinateXY& q1 = facetSeq.pts->getAt<CoordinateXY>(j + 1);
 
             // Avoid calculating distance to zero-length segment
             if (q0 == q1)
@@ -195,14 +190,11 @@ FacetSequence::computeDistanceLineLine(const FacetSequence& facetSeq, std::vecto
 
 void
 FacetSequence::updateNearestLocationsLineLine(
-    const Coordinate& p0, const Coordinate& p1,
-    const Coordinate& q0, const Coordinate &q1,
-    std::vector<Coordinate> *locs) const
+    const CoordinateXY& p0, const CoordinateXY& p1,
+    const CoordinateXY& q0, const CoordinateXY& q1,
+    std::vector<CoordinateXY> *locs)
 {
-    LineSegment seg0(p0, p1);
-    LineSegment seg1(q0, q1);
-
-    auto closestPts = seg0.closestPoints(seg1);
+    const auto closestPts = LineSegment::closestPoints(p0, p1, q0, q1);
 
     locs->clear();
     locs->push_back(closestPts[0]);
@@ -224,10 +216,10 @@ FacetSequence::getEnvelope() const
     return &env;
 }
 
-const Coordinate*
+const CoordinateXY*
 FacetSequence::getCoordinate(std::size_t index) const
 {
-    return &(pts->getAt(start + index));
+    return &(pts->getAt<CoordinateXY>(start + index));
 }
 
 std::size_t
@@ -251,21 +243,19 @@ FacetSequence::nearestLocation(const CoordinateXY& p) const
 }
 
 CoordinateSequenceLocation
-FacetSequence::nearestLocationOnLine(const CoordinateXY& pt) const
+FacetSequence::nearestLocationOnLine(const CoordinateXY& queryPt) const
 {
     double minDistance = DoubleInfinity;
     std::size_t index = start;
-    Coordinate nearestPt;
 
-    const Coordinate queryPt(pt);
+    CoordinateXY nearestPt;
     for (std::size_t i = start; i < end - 1; i++) {
-        const Coordinate& q0 = pts->getAt(i);
-        const Coordinate& q1 = pts->getAt(i + 1);
+        const CoordinateXY& q0 = pts->getAt<CoordinateXY>(i);
+        const CoordinateXY& q1 = pts->getAt<CoordinateXY>(i + 1);
         double dist = Distance::pointToSegment(queryPt, q0, q1);
         if (dist < minDistance) {
             minDistance = dist;
-            LineSegment seg(q0, q1);
-            seg.closestPoint(queryPt, nearestPt);
+            nearestPt = LineSegment::closestPoint(q0, q1, queryPt);
             index = i;
             //-- segments are half-open, so 2nd endpoint belongs to next segment
             //-- except for last segment on non-closed sequence
