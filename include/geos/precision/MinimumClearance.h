@@ -34,7 +34,7 @@ private:
 
     void compute();
 public:
-    MinimumClearance(const geom::Geometry* g);
+    explicit MinimumClearance(const geom::Geometry* g);
 
     /**
      * Gets the Minimum Clearance distance.

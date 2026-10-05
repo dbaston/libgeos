@@ -58,7 +58,7 @@ public:
     /// distance to the polygon boundaries.
     ///
     /// \param g a Geometry, which may be of any type.
-    IndexedFacetDistance(const geom::Geometry* g) :
+    explicit IndexedFacetDistance(const geom::Geometry* g) :
         cachedTree(FacetSequenceTreeBuilder::build(g)),
         baseGeometry(*g)
     {}
@@ -103,21 +103,27 @@ public:
     /// \return the nearest points
     std::unique_ptr<geom::CoordinateSequence> nearestPoints(const geom::Geometry* g) const;
 
-    /**
-     * Computes the nearest point on the target geometry
-     * to a point.
-     *
-     * @param p the point coordinate
-     * @return the nearest point on the target geometry
-     */
+    /// \brief Computes the nearest point on the base geometry to a point.
+    ///
+    /// \param p the point coordinate
+    /// \return the nearest point on the base geometry
     geom::CoordinateXY nearestPoint(const geom::CoordinateXY& p) const;
 
+    /// \brief Computes the distance from the base geometry to a point
+    ///
+    /// \param p the point coordinate
+    /// \return the distance
     double distance(const geom::CoordinateXY& p) const;
 
+
+    /// \brief Computes the distance from the base geometry to a line segment
+    ///
+    /// \param p0 the first endpoint of the line segment
+    /// \param p1 the second endpoint of the line segment
+    /// \return the distance
     double distance(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1) const;
 
     CoordinateSequenceLocation nearestLocation(const geom::CoordinateXY& p) const;
-
 
 private:
     struct FacetDistance {

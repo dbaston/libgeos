@@ -78,7 +78,7 @@ IndexedFacetDistance::nearestPoints(const geom::Geometry* g) const
     auto fs1 = static_cast<const FacetSequence*>(objs.first);
     auto fs2 = static_cast<const FacetSequence*>(objs.second);
     auto nearestPts = fs1->nearestLocations(*fs2);
-    std::unique_ptr<CoordinateSequence> cs(new CoordinateSequence());
+    auto cs = std::make_unique<CoordinateSequence>();
     cs->setPoints(nearestPts);
     return cs;
 }
@@ -113,7 +113,7 @@ IndexedFacetDistance::nearestLocation(const geom::CoordinateXY& p) const
 {
     // JTS wraps p in a CoordinateArraySequence; GEOS CoordinateSequence is the equivalent.
     CoordinateSequence seq{CoordinateXY(p.x, p.y)};
-    FacetSequence query(&seq, 0, 1);
+    FacetSequence query(&seq, false, 0, 1);
     FacetDistance itemDist;
     const FacetSequence* nearest = cachedTree->nearestNeighbour<FacetDistance>(
         *query.getEnvelope(), &query, itemDist);
@@ -139,7 +139,7 @@ double
 IndexedFacetDistance::distance(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1) const
 {
     CoordinateSequence seq{CoordinateXY(p0.x, p0.y), CoordinateXY(p1.x, p1.y)};
-    FacetSequence query(&seq, 0, 2);
+    FacetSequence query(&seq, false, 0, 2);
     FacetDistance itemDist;
     const FacetSequence* nearest = cachedTree->nearestNeighbour<FacetDistance>(
         *query.getEnvelope(), &query, itemDist);

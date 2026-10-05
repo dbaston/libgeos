@@ -30,7 +30,10 @@ using namespace geos::index::strtree;
 namespace geos {
 namespace precision {
 
-MinimumClearance::MinimumClearance(const Geometry* g) : inputGeom(g) {}
+MinimumClearance::MinimumClearance(const Geometry* g) : inputGeom(g)
+{
+    util::ensureNoCurvedComponents(*g);
+}
 
 double
 MinimumClearance::getDistance()

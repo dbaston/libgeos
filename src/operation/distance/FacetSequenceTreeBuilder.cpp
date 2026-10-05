@@ -17,6 +17,7 @@
  **********************************************************************/
 
 #include <geos/operation/distance/FacetSequenceTreeBuilder.h>
+#include <geos/geom/CompoundCurve.h>
 #include <geos/geom/LineString.h>
 #include <geos/geom/Point.h>
 
@@ -30,9 +31,7 @@ namespace distance {
 std::unique_ptr<TemplateSTRtree<const FacetSequence*>>
 FacetSequenceTreeBuilder::build(const Geometry* g)
 {
-    util::ensureNoCurvedComponents(g);
-
-    std::unique_ptr<TemplateSTRtree<const FacetSequence*>> tree(new FacetSequenceTree(computeFacetSequences(g)));
+    auto tree = std::make_unique<FacetSequenceTree>(computeFacetSequences(g));
 
     tree->build();
     return tree;
@@ -47,18 +46,25 @@ FacetSequenceTreeBuilder::computeFacetSequences(const Geometry* g)
         std::vector<FacetSequence>&  m_sections;
 
         public :
-            FacetSequenceAdder(std::vector<FacetSequence> & p_sections) :
+            explicit FacetSequenceAdder(std::vector<FacetSequence> & p_sections) :
                 m_sections(p_sections) {}
             void
             filter_ro(const Geometry* geom) override
             {
-                if(const LineString* ls = dynamic_cast<const LineString*>(geom)) {
-                    const CoordinateSequence* seq = ls->getCoordinatesRO();
-                    addFacetSequences(seq, m_sections);
+                if(const SimpleCurve* sc = dynamic_cast<const SimpleCurve*>(geom)) {
+                    const CoordinateSequence* seq = sc->getCoordinatesRO();
+                    addFacetSequences(seq, sc->isCurved(), m_sections);
                 }
                 else if(const Point* pt = dynamic_cast<const Point*>(geom)) {
                     const CoordinateSequence* seq = pt->getCoordinatesRO();
-                    addFacetSequences(seq, m_sections);
+                    addFacetSequences(seq, false, m_sections);
+                }
+                else if (const CompoundCurve* cc = dynamic_cast<const CompoundCurve*>(geom)) {
+                    for (std::size_t i = 0; i < cc->getNumCurves(); i++) {
+                        const SimpleCurve* part = cc->getCurveN(i);
+                        const CoordinateSequence* seq = part->getCoordinatesRO();
+                        addFacetSequences(seq, part->isCurved(), m_sections);
+                    }
                 }
             }
     };
@@ -72,20 +78,25 @@ FacetSequenceTreeBuilder::computeFacetSequences(const Geometry* g)
 void
 FacetSequenceTreeBuilder::addFacetSequences(
     const CoordinateSequence* pts,
+    bool isCurved,
     std::vector<FacetSequence>& sections)
 {
     std::size_t i = 0;
     std::size_t size = pts->size();
     if ( size == 0 ) return;
 
+    // FIXME dont break arcs
     while(i <= size - 1) {
         std::size_t end = i + FACET_SEQUENCE_SIZE + 1;
+        if (end % 2 == 0) {
+            end++;
+        }
         // if only one point remains after this section, include it in this
         // section
         if(end >= size - 1) {
             end = size;
         }
-        sections.emplace_back(pts, i, end);
+        sections.emplace_back(pts, isCurved, i, end);
         i += FACET_SEQUENCE_SIZE;
     }
 }

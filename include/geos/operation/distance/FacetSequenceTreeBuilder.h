@@ -44,6 +44,7 @@ private:
     static const std::size_t STR_TREE_NODE_CAPACITY = 4;
 
     static void addFacetSequences(const geom::CoordinateSequence* pts,
+                                  bool isCurved,
                                   std::vector<FacetSequence> & sections);
     static std::vector<FacetSequence> computeFacetSequences(const geom::Geometry* g);
 

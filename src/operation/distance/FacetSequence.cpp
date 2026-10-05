@@ -16,11 +16,14 @@
  *
  **********************************************************************/
 
+#include <geos/geom/CircularArc.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/Geometry.h>
 #include <geos/geom/LineSegment.h>
+#include <geos/algorithm/CircularArcs.h>
 #include <geos/algorithm/Distance.h>
 #include <geos/operation/distance/FacetSequence.h>
+#include <geos/util/IllegalArgumentException.h>
 
 #include <memory>
 
@@ -29,11 +32,14 @@ using namespace geos::operation::distance;
 using namespace geos::algorithm;
 
 
-FacetSequence::FacetSequence(const CoordinateSequence* p_pts, std::size_t p_start, std::size_t p_end)
+FacetSequence::FacetSequence(const CoordinateSequence* p_pts, bool p_isCurved, std::size_t p_start, std::size_t p_end)
     : pts(p_pts)
     , start(p_start)
     , end(p_end)
+    , curved(p_isCurved)
 {
+    if (isCurved() && (size() % 2 == 0)) {
+        throw util::IllegalArgumentException("Curved FacetSequence must have an odd number of vertices."); }
     computeEnvelope();
 }
 
@@ -41,6 +47,12 @@ size_t
 FacetSequence::size() const
 {
     return end - start;
+}
+
+bool
+FacetSequence::isCurved() const
+{
+    return curved;
 }
 
 bool
@@ -52,24 +64,64 @@ FacetSequence::isPoint() const
 double
 FacetSequence::distance(const FacetSequence& facetSeq) const
 {
-    bool isPointThis = isPoint();
-    bool isPointOther = facetSeq.isPoint();
+    return nearestLocations(facetSeq, nullptr);
+}
+
+double
+FacetSequence::nearestLocations(const FacetSequence& facetSeq, std::vector<CoordinateXY>* locs) const
+{
+    const bool isCurvedThis = isCurved();
+    const bool isCurvedOther = facetSeq.isCurved();
+    const bool isPointThis = isPoint();
+    const bool isPointOther = facetSeq.isPoint();
 
     if (isPointThis && isPointOther) {
         const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
         const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
-        return pt.distance(seqPt);
+        double d = pt.distance(seqPt);
+        if (locs) {
+            updateNearestLocations(pt, seqPt, locs);
+        }
+        return d;
     }
     else if (isPointThis) {
         const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
-        return computeDistancePointLine(pt, facetSeq, nullptr);
+        if (isCurvedOther) {
+            return computeDistancePointArc(pt, facetSeq, locs);
+        } else {
+            return computeDistancePointLine(pt, facetSeq, locs);
+        }
     }
     else if (isPointOther) {
         const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
-        return computeDistancePointLine(seqPt, *this, nullptr);
+        if (isCurvedThis) {
+            double d = computeDistancePointArc(seqPt, *this, locs);
+            if (locs) {
+                std::reverse(locs->begin(), locs->end());
+            }
+            return d;
+        } else {
+            double d = computeDistancePointLine(seqPt, *this, locs);
+            if (locs) {
+                std::reverse(locs->begin(), locs->end());
+            }
+            return d;
+        }
     }
-    else {
-        return computeDistanceLineLine(facetSeq, nullptr);
+    else if (isCurvedThis) {
+        if (isCurvedOther) {
+            return computeDistanceArcArc(facetSeq, locs);
+        } else {
+            return computeDistanceArcLine(facetSeq, locs);
+        }
+    } else if (isCurvedOther) {
+        double d = facetSeq.computeDistanceArcLine(*this, locs);
+        if (locs) {
+            std::reverse(locs->begin(), locs->end());
+        }
+        return d;
+    } else {
+        return computeDistanceLineLine(facetSeq, locs);
     }
 }
 
@@ -81,29 +133,8 @@ FacetSequence::distance(const FacetSequence& facetSeq) const
 std::vector<CoordinateXY>
 FacetSequence::nearestLocations(const FacetSequence& facetSeq) const
 {
-    bool isPointThis = isPoint();
-    bool isPointOther = facetSeq.isPoint();
     std::vector<CoordinateXY> locs;
-    if (isPointThis && isPointOther) {
-        const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
-        const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
-        locs.clear();
-        locs.push_back(pt);
-        locs.push_back(seqPt);
-    }
-    else if (isPointThis) {
-        const CoordinateXY& pt = pts->getAt<CoordinateXY>(start);
-        computeDistancePointLine(pt, facetSeq, &locs);
-    }
-    else if (isPointOther) {
-        const CoordinateXY& seqPt = facetSeq.pts->getAt<CoordinateXY>(facetSeq.start);
-        computeDistancePointLine(seqPt, *this, &locs);
-        // unflip the locations
-        std::swap(locs[0], locs[1]);
-    }
-    else {
-        computeDistanceLineLine(facetSeq, &locs);
-    }
+    nearestLocations(facetSeq, &locs);
     return locs;
 }
 
@@ -132,15 +163,130 @@ FacetSequence::computeDistancePointLine(const CoordinateXY& pt,
     return minDistance;
 }
 
+double
+FacetSequence::computeDistancePointArc(const CoordinateXY& pt,
+                                       const FacetSequence& facetSeq,
+                                       std::vector<CoordinateXY>* locs)
+{
+    double minDistance = DoubleInfinity;
+
+    for (std::size_t i = facetSeq.start; i < facetSeq.end - 2; i+= 2) {
+        CircularArc arc(*facetSeq.pts, i);
+        CoordinateXY closestPt = arc.closestPoint(pt);
+        const double dist = pt.distance(closestPt);
+
+        if (dist < minDistance) {
+            minDistance = dist;
+            updateNearestLocations(pt, closestPt, locs);
+
+            if (minDistance <= 0.0) {
+                return minDistance;
+            }
+        }
+    }
+
+    return minDistance;
+}
+
+double
+FacetSequence::computeDistanceArcLine(const FacetSequence& facetSeq, std::vector<CoordinateXY>* locs) const
+{
+    double minDistance = DoubleInfinity;
+    const Envelope* lineEnv1 = facetSeq.getEnvelope();
+
+    // brute force approach!
+    for (std::size_t i = start; i < end - 2; i+= 2) {
+        CircularArc arc(*pts, i);
+        const Envelope arcEnv = arc.getEnvelope();
+
+        if (arcEnv.distanceSquared(*lineEnv1) > minDistance*minDistance) {
+            continue;
+        }
+
+        for(std::size_t j = facetSeq.start; j < facetSeq.end - 1; j++) {
+            const CoordinateXY& q0 = facetSeq.pts->getAt<CoordinateXY>(j);
+            const CoordinateXY& q1 = facetSeq.pts->getAt<CoordinateXY>(j+1);
+
+            Envelope segEnv(q0, q1);
+
+            if (arcEnv.distanceSquared(segEnv) > minDistance*minDistance) {
+                continue;
+            }
+
+            const auto closestPts = arc.closestPoints(q0, q1);
+            const double dist = closestPts[0].distance(closestPts[1]);
+            if(dist < minDistance) {
+                minDistance = dist;
+                updateNearestLocations(closestPts[0], closestPts[1], locs);
+            }
+
+            if(minDistance <= 0) {
+                return minDistance;
+            }
+        }
+    }
+
+    return minDistance;
+}
+
+double
+FacetSequence::computeDistanceArcArc(const FacetSequence& facetSeq, std::vector<CoordinateXY>* locs) const
+{
+    double minDistance = DoubleInfinity;
+
+    for(std::size_t i = start; i < end - 2; i += 2) {
+        CircularArc arc0(*pts, i);
+
+        Envelope pEnv = arc0.getEnvelope();
+        if (pEnv.distanceSquared(*facetSeq.getEnvelope()) > minDistance*minDistance) {
+            continue;
+        }
+
+        for(std::size_t j = facetSeq.start; j < facetSeq.end - 2; j += 2) {
+            CircularArc arc1(*facetSeq.pts, j);
+
+            Envelope qEnv = arc1.getEnvelope();
+            if (pEnv.distanceSquared(qEnv) > minDistance*minDistance) {
+                continue;
+            }
+
+            const auto closestPoints = arc0.closestPoints(arc1);
+            const double dist = closestPoints[0].distance(closestPoints[1]);
+
+            if(dist <= minDistance) {
+                minDistance = dist;
+                updateNearestLocations(closestPoints[0], closestPoints[1], locs);
+
+                if(minDistance <= 0.0) {
+                    return minDistance;
+                }
+            }
+        }
+    }
+
+    return minDistance;
+
+}
+
+void
+FacetSequence::updateNearestLocations(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1, std::vector<geom::CoordinateXY> *locs)
+{
+    if (!locs) {
+        return;
+    }
+
+    locs->clear();
+    locs->push_back(p0);
+    locs->push_back(p1);
+}
+
 void
 FacetSequence::updateNearestLocationsPointLine(
     const CoordinateXY& pt, const CoordinateXY& q0, const CoordinateXY& q1,
     std::vector<CoordinateXY> *locs)
 {
     CoordinateXY segClosestPoint = LineSegment::closestPoint(q0, q1, pt);
-    locs->clear();
-    locs->push_back(pt);
-    locs->push_back(segClosestPoint);
+    updateNearestLocations(pt, segClosestPoint, locs);
 }
 
 double
@@ -195,18 +341,25 @@ FacetSequence::updateNearestLocationsLineLine(
     std::vector<CoordinateXY> *locs)
 {
     const auto closestPts = LineSegment::closestPoints(p0, p1, q0, q1);
-
-    locs->clear();
-    locs->push_back(closestPts[0]);
-    locs->push_back(closestPts[1]);
+    updateNearestLocations(closestPts[0], closestPts[1], locs);
 }
 
 void
 FacetSequence::computeEnvelope()
 {
     env = Envelope();
-    for(std::size_t i = start; i < end; i++) {
-        env.expandToInclude(pts->getAt(i));
+    if (isCurved()) {
+        for (std::size_t i = start; i+2 < end; i+= 2) {
+            algorithm::CircularArcs::expandEnvelope(
+                env,
+                pts->getAt<CoordinateXY>(i),
+                pts->getAt<CoordinateXY>(i+1),
+                pts->getAt<CoordinateXY>(i+2));
+        }
+    } else {
+        for(std::size_t i = start; i < end; i++) {
+            env.expandToInclude(pts->getAt<CoordinateXY>(i));
+        }
     }
 }
 

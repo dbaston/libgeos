@@ -62,8 +62,9 @@ struct test_facetdistanceop_data {
 
     void
     checkDistanceNearestPoints(std::string wkt1, std::string wkt2, double distanceExpected,
-                               const geos::geom::Coordinate& p1, 
-                               const geos::geom::Coordinate& p2)
+                               const geos::geom::CoordinateXY& p1,
+                               const geos::geom::CoordinateXY& p2,
+                               bool reversed = false) const
     {
         using geos::operation::distance::IndexedFacetDistance;
         GeomPtr g1(_wktreader.read(wkt1));
@@ -74,8 +75,12 @@ struct test_facetdistanceop_data {
         double distResult = (*pts)[0].distance((*pts)[1]);
 
         ensure_equals("Distance", distResult, distanceExpected, 1e-4);
-        ensure_equals_xy(p1Actual, p1, 1e-08);
-        ensure_equals_xy(p2Actual, p2, 1e-08);
+        ensure_equals_xy(p1Actual, p1, 1e-05);
+        ensure_equals_xy(p2Actual, p2, 1e-05);
+
+        if (!reversed) {
+            checkDistanceNearestPoints(wkt2, wkt1, distanceExpected, p2, p1, true);
+        }
     }
 
     void
@@ -474,6 +479,35 @@ void object::test<16>
         1.41421, Coordinate{6, 6}, Coordinate{5, 5}
     );
 }
+
+template<>
+template<>
+void object::test<17>()
+{
+    set_test_name("CircularString / CircularString (disjoint)");
+
+    checkDistanceNearestPoints("CIRCULARSTRING (-5 0, 4 3, 4 -3, 3 0, 0 2, -2 0, -5 0)",
+        "CIRCULARSTRING (0 -2, -1 -1.5, -2 -2, 1 -1, 2 -2)",
+        1.3384569996849558,
+        {-1.69468, 0.147266},
+        {-1.06012, -1.03121});
+}
+
+template<>
+template<>
+void object::test<18>()
+{
+    set_test_name("CircularString / LineString (disjoint)");
+
+    checkDistanceNearestPoints("CIRCULARSTRING (-7 0, -6 -1, -5 0, 0 5, 4 -3)",
+    "LINESTRING (4 -5, 7 0, 13 0)",
+    1.0024502,
+    {4.28746, -2.57248},
+    {5.14706, -3.08824});
+}
+
+
+
 
 // TODO: finish the tests by adding:
 // 	LINESTRING - *all*
