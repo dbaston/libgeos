@@ -125,120 +125,91 @@ private:
     std::unique_ptr<IndexedPointInPolygonsLocator> ptInArea;
 };
 
-class DHDSegment {
-public:
-    static DHDSegment create(const CoordinateXY& p0, const CoordinateXY& p1,
-                             DirectedHausdorffDistance::TargetDistance& dist)
-    {
-        DHDSegment seg(p0, p1);
-        seg.init(dist);
-        return seg;
+DirectedHausdorffDistance::DHDSegment
+DirectedHausdorffDistance::DHDSegment::create(const CoordinateXY& p0, const CoordinateXY& p1,
+                         DirectedHausdorffDistance::TargetDistance& dist)
+{
+    DHDSegment seg(p0, p1);
+    seg.init(dist);
+    return seg;
+}
+
+DirectedHausdorffDistance::DHDSegment
+DirectedHausdorffDistance::DHDSegment::create(const DHDSegment& prevSeg, const CoordinateXY& p1,
+                         DirectedHausdorffDistance::TargetDistance& dist)
+{
+    DHDSegment seg(prevSeg.p1, p1);
+    seg.init(prevSeg.nearPt1, dist);
+    return seg;
+}
+
+
+DirectedHausdorffDistance::PointPair
+DirectedHausdorffDistance::DHDSegment::getMaxDistPts() const
+{
+    double dist0 = p0.distance(nearPt0);
+    double dist1 = p1.distance(nearPt1);
+    if (dist0 > dist1) {
+        return DirectedHausdorffDistance::PointPair{p0, nearPt0};
     }
+    return DirectedHausdorffDistance::PointPair{p1, nearPt1};
+}
 
-    static DHDSegment create(const DHDSegment& prevSeg, const CoordinateXY& p1,
-                             DirectedHausdorffDistance::TargetDistance& dist)
-    {
-        DHDSegment seg(prevSeg.p1, p1);
-        seg.init(prevSeg.nearPt1, dist);
-        return seg;
-    }
+std::array<DirectedHausdorffDistance::DHDSegment, 2>
+DirectedHausdorffDistance::DHDSegment::bisect(DirectedHausdorffDistance::TargetDistance& dist) const
+{
+    CoordinateXY mid((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0);
+    CoordinateXY nearPtMid = dist.nearestPoint(mid);
+    return {
+        DHDSegment(p0, nearPt0, mid, nearPtMid),
+        DHDSegment(mid, nearPtMid, p1, nearPt1)
+    };
+}
 
-    CoordinateXY getEndpoint(int index) const
-    {
-        return index == 0 ? p0 : p1;
-    }
 
-    double getLength() const
-    {
-        return p0.distance(p1);
-    }
+DirectedHausdorffDistance::DHDSegment::DHDSegment(const CoordinateXY& p0_, const CoordinateXY& p1_)
+    : p0(p0_)
+    , p1(p1_)
+    , maxDistanceBound(-std::numeric_limits<double>::infinity())
+    , maxDistance(0.0)
+{}
 
-    double getMaxDistance() const
-    {
-        return maxDistance;
-    }
+DirectedHausdorffDistance::DHDSegment::DHDSegment(const CoordinateXY& p0_, const CoordinateXY& nearPt0_,
+           const CoordinateXY& p1_, const CoordinateXY& nearPt1_)
+    : p0(p0_)
+    , nearPt0(nearPt0_)
+    , p1(p1_)
+    , nearPt1(nearPt1_)
+    , maxDistanceBound(-std::numeric_limits<double>::infinity())
+    , maxDistance(0.0)
+{
+    computeMaxDistances();
+}
 
-    double getMaxDistanceBound() const
-    {
-        return maxDistanceBound;
-    }
+void
+DirectedHausdorffDistance::DHDSegment::init(const TargetDistance& dist)
+{
+    nearPt0 = dist.nearestPoint(p0);
+    nearPt1 = dist.nearestPoint(p1);
+    computeMaxDistances();
+}
 
-    DirectedHausdorffDistance::PointPair getMaxDistPts() const
-    {
-        double dist0 = p0.distance(nearPt0);
-        double dist1 = p1.distance(nearPt1);
-        if (dist0 > dist1) {
-            return DirectedHausdorffDistance::PointPair{p0, nearPt0};
-        }
-        return DirectedHausdorffDistance::PointPair{p1, nearPt1};
-    }
+void
+DirectedHausdorffDistance::DHDSegment::init(const CoordinateXY& nearest0, const TargetDistance& dist)
+{
+    nearPt0 = nearest0;
+    nearPt1 = dist.nearestPoint(p1);
+    computeMaxDistances();
+}
 
-    std::array<DHDSegment, 2> bisect(DirectedHausdorffDistance::TargetDistance& dist) const
-    {
-        CoordinateXY mid((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0);
-        CoordinateXY nearPtMid = dist.nearestPoint(mid);
-        return {
-            DHDSegment(p0, nearPt0, mid, nearPtMid),
-            DHDSegment(mid, nearPtMid, p1, nearPt1)
-        };
-    }
-
-    bool operator<(const DHDSegment& other) const
-    {
-        // priority_queue is a max-heap: larger bound first
-        return maxDistanceBound < other.maxDistanceBound;
-    }
-
-    CoordinateXY p0;
-    CoordinateXY nearPt0;
-    CoordinateXY p1;
-    CoordinateXY nearPt1;
-
-private:
-    DHDSegment(const CoordinateXY& p0_, const CoordinateXY& p1_)
-        : p0(p0_)
-        , p1(p1_)
-        , maxDistanceBound(-std::numeric_limits<double>::infinity())
-        , maxDistance(0.0)
-    {}
-
-    DHDSegment(const CoordinateXY& p0_, const CoordinateXY& nearPt0_,
-               const CoordinateXY& p1_, const CoordinateXY& nearPt1_)
-        : p0(p0_)
-        , nearPt0(nearPt0_)
-        , p1(p1_)
-        , nearPt1(nearPt1_)
-        , maxDistanceBound(-std::numeric_limits<double>::infinity())
-        , maxDistance(0.0)
-    {
-        computeMaxDistances();
-    }
-
-    void init(DirectedHausdorffDistance::TargetDistance& dist)
-    {
-        nearPt0 = dist.nearestPoint(p0);
-        nearPt1 = dist.nearestPoint(p1);
-        computeMaxDistances();
-    }
-
-    void init(const CoordinateXY& nearest0, DirectedHausdorffDistance::TargetDistance& dist)
-    {
-        nearPt0 = nearest0;
-        nearPt1 = dist.nearestPoint(p1);
-        computeMaxDistances();
-    }
-
-    void computeMaxDistances()
-    {
-        double dist0 = p0.distance(nearPt0);
-        double dist1 = p1.distance(nearPt1);
-        maxDistance = std::max(dist0, dist1);
-        maxDistanceBound = maxDistance + getLength() / 2.0;
-    }
-
-    double maxDistanceBound;
-    double maxDistance;
-};
+void
+DirectedHausdorffDistance::DHDSegment::computeMaxDistances()
+{
+    double dist0 = p0.distance(nearPt0);
+    double dist1 = p1.distance(nearPt1);
+    maxDistance = std::max(dist0, dist1);
+    maxDistanceBound = maxDistance + getLength() / 2.0;
+}
 
 /* static */
 double
@@ -276,6 +247,16 @@ DirectedHausdorffDistance::isBeyond(
         || envA.getMinY() < envB.getMinY() - maxDistance
         || envA.getMaxX() > envB.getMaxX() + maxDistance
         || envA.getMaxY() > envB.getMaxY() + maxDistance;
+}
+
+bool
+DirectedHausdorffDistance::isInterior(const DHDSegment& seg) const
+{
+    if (seg.getMaxDistance() > 0.0) {
+        return false;
+    }
+
+    return targetDistance->isInterior(seg.getEndpoint(0), seg.getEndpoint(1));
 }
 
 /* static */
@@ -503,67 +484,73 @@ DirectedHausdorffDistance::computeForPoints(
     return maxDistPtsAB;
 }
 
-std::optional<DirectedHausdorffDistance::PointPair>
-DirectedHausdorffDistance::computeForEdges(
-    const Geometry& geom, double tolerance, double maxDistanceLimit) const
+void
+DirectedHausdorffDistance::addSegments(const geom::CoordinateSequence& pts, std::priority_queue<DHDSegment>& segQueue) const
 {
-    std::priority_queue<DHDSegment> segQueue;
+    std::optional<DHDSegment> segMaxDist;
+    std::optional<DHDSegment> prevSeg;
+    for (std::size_t i = 0; i < pts.getSize() - 1; i++) {
+        DHDSegment seg = (i == 0) ? DHDSegment::create(pts[i], pts[i + 1], *targetDistance) :DHDSegment::create(*prevSeg, pts[i + 1], *targetDistance);
+        prevSeg = seg;
+
+        //-- don't add segment if it can't be further away then current max
+        if (!segMaxDist || seg.getMaxDistanceBound() > segMaxDist->getMaxDistance()) {
+            // Don't add interior segments, since their distance must be zero.
+            addNonInterior(seg, segQueue);
+        }
+
+        if (!segMaxDist || seg.getMaxDistance() > segMaxDist->getMaxDistance()) {
+            segMaxDist = seg;
+        }
+    }
+}
+
+void
+DirectedHausdorffDistance::addNonInterior(const DHDSegment& segment, std::priority_queue<DHDSegment>& segQueue) const
+{
+    // discard segment if it is interior to a polygon
+    if (isInterior(segment)) {
+        return;
+    }
+
+    segQueue.push(segment);
+}
+
+std::priority_queue<DirectedHausdorffDistance::DHDSegment>
+DirectedHausdorffDistance::createSegQueue(const Geometry& geom) const
+{
+    std::priority_queue<DHDSegment> priq;
 
     struct LineFilter : public GeometryComponentFilter {
-        LineFilter(std::priority_queue<DHDSegment>& q, TargetDistance& td)
-            : segQueue(q), targetDistance(td)
+        explicit LineFilter(const DirectedHausdorffDistance& dist, std::priority_queue<DHDSegment>& q)
+            : dhd(dist), segQueue(q)
         {}
 
-        void filter_ro(const Geometry* g) override
-        {
+        void filter_ro(const Geometry* g) override {
             const LineString* ls = dynamic_cast<const LineString*>(g);
             if (!ls || ls->isEmpty()) {
                 return;
             }
             const auto* pts = ls->getCoordinatesRO();
-            if (!pts || pts->size() < 2) {
-                return;
-            }
-            DHDSegment prevSeg = DHDSegment::create(pts->getAt<CoordinateXY>(0),
-                                                    pts->getAt<CoordinateXY>(1),
-                                                    targetDistance);
-            consider(prevSeg);
-            for (std::size_t i = 1; i < pts->size() - 1; i++) {
-                DHDSegment seg = DHDSegment::create(prevSeg, pts->getAt<CoordinateXY>(i + 1), targetDistance);
-                consider(seg);
-                prevSeg = seg;
-            }
+            dhd.addSegments(*pts, segQueue);
         }
 
-        void addNonInterior(const DHDSegment& segment) const
-        {
-            if (segment.getMaxDistance() > 0.0) {
-                segQueue.push(segment);
-                return;
-            }
-            if (targetDistance.isInterior(segment.getEndpoint(0), segment.getEndpoint(1))) {
-                return;
-            }
-            segQueue.push(segment);
-        }
-
-        void consider(const DHDSegment& seg)
-        {
-            if (!segMaxDist || seg.getMaxDistanceBound() > segMaxDist->getMaxDistance()) {
-                addNonInterior(seg);
-            }
-            if (!segMaxDist || seg.getMaxDistance() > segMaxDist->getMaxDistance()) {
-                segMaxDist = seg;
-            }
-        }
-
+    private:
+        const DirectedHausdorffDistance& dhd;
         std::priority_queue<DHDSegment>& segQueue;
-        TargetDistance& targetDistance;
-        std::optional<DHDSegment> segMaxDist;
     };
 
-    LineFilter filter(segQueue, *targetDistance);
+    LineFilter filter(*this, priq);
     geom.apply_ro(&filter);
+
+    return priq;
+}
+
+std::optional<DirectedHausdorffDistance::PointPair>
+DirectedHausdorffDistance::computeForEdges(
+    const Geometry& geom, double tolerance, double maxDistanceLimit) const
+{
+    std::priority_queue<DHDSegment> segQueue = createSegQueue(geom);
 
     std::optional<DHDSegment> segMaxDist;
     while (!segQueue.empty()) {
@@ -607,8 +594,8 @@ DirectedHausdorffDistance::computeForEdges(
         // so bisect and keep searching.
         if (tolerance > 0 && segMaxBound.getLength() > tolerance) {
             auto bisects = segMaxBound.bisect(*targetDistance);
-            filter.addNonInterior(bisects[0]);
-            filter.addNonInterior(bisects[1]);
+            addNonInterior(bisects[0], segQueue);
+            addNonInterior(bisects[1], segQueue);
         }
     }
 

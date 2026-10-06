@@ -25,6 +25,9 @@
 #include <array>
 #include <memory>
 #include <optional>
+#include <queue>
+
+#include "geos/geom/CoordinateSequence.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -267,11 +270,80 @@ public:
 
 private:
     class TargetDistance;
-    friend class DHDSegment;
+
+    class DHDSegment {
+    public:
+
+    static DHDSegment create(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1,
+                      TargetDistance& dist);
+
+    static DHDSegment create(const DHDSegment& prevSeg, const geom::CoordinateXY& p1,
+                             TargetDistance& dist);
+
+    geom::CoordinateXY getEndpoint(int index) const
+    {
+        return index == 0 ? p0 : p1;
+    }
+
+    double getLength() const
+    {
+        return p0.distance(p1);
+    }
+
+    double getMaxDistance() const
+    {
+        return maxDistance;
+    }
+
+    double getMaxDistanceBound() const
+    {
+        return maxDistanceBound;
+    }
+
+    DirectedHausdorffDistance::PointPair getMaxDistPts() const;
+
+    std::array<DHDSegment, 2> bisect(DirectedHausdorffDistance::TargetDistance& dist) const;
+
+    bool operator<(const DHDSegment& other) const
+    {
+        // priority_queue is a max-heap: larger bound first
+        return maxDistanceBound < other.maxDistanceBound;
+    }
+
+    private:
+        DHDSegment(const geom::CoordinateXY& p0_, const geom::CoordinateXY& p1_);
+
+        DHDSegment(const geom::CoordinateXY& p0_, const geom::CoordinateXY& nearPt0_,
+               const geom::CoordinateXY& p1_, const geom::CoordinateXY& nearPt1_);
+
+        void init(const TargetDistance& dist);
+        void init(const geom::CoordinateXY& nearest0, const TargetDistance& dist);
+        void computeMaxDistances();
+
+        geom::CoordinateXY p0;
+        geom::CoordinateXY nearPt0;
+        geom::CoordinateXY p1;
+        geom::CoordinateXY nearPt1;
+
+        double maxDistanceBound;
+        double maxDistance;
+    };
+
+    std::priority_queue<DHDSegment> createSegQueue(const geom::Geometry& geom) const;
+    void addSegments(const geom::CoordinateSequence& seq, std::priority_queue<DHDSegment>& segQ) const;
+    void addNonInterior(const DHDSegment& segment, std::priority_queue<DHDSegment>& segQueue) const;
+
+    /** Tests if a segment is fully in the interior of the target geometry polygons (if any)
+     *
+     * @param segment
+     * @return
+     */
+    bool isInterior(const DHDSegment& segment) const;
 
     static double pairDistance(const std::optional<PointPair>& pts);
     static PointPair pair(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1);
     static double computeTolerance(const geom::Geometry& geom);
+
     static bool isBeyond(
         const geom::Envelope& envA, const geom::Envelope& envB, double maxDistance);
     static bool isValidLimit(double limit);
