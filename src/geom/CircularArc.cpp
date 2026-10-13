@@ -347,7 +347,6 @@ CircularArc::getLength() const
     return getAngle()*getRadius();
 }
 
-
 void
 CircularArc::addLinearizedPoints(CoordinateSequence& seq, const algorithm::CurveToLineParams& params) const
 {
@@ -431,6 +430,32 @@ CircularArc::reverse() const
     }
 
     return ret;
+}
+
+std::pair<CircularArc, CircularArc>
+CircularArc::splitAtPoint(const CoordinateXY& pt) const
+{
+    auto seq0 = std::make_unique<CoordinateSequence>(3, m_seq->hasZ(), m_seq->hasM());
+    seq0->setAt(p0(), 0);
+    seq0->setAt(CircularArcs::getMidpoint(p0(), pt, getCenter(), getRadius(), isCCW()), 1);
+    seq0->setAt(pt, 2);
+
+    auto seq1 = std::make_unique<CoordinateSequence>(3, m_seq->hasZ(), m_seq->hasM());
+    seq1->setAt(pt, 0);
+    seq1->setAt(CircularArcs::getMidpoint(pt, p2(), getCenter(), getRadius(), isCCW()), 1);
+    seq1->setAt(p2(), 2);
+
+    return {
+        CircularArc(std::move(seq0), 0, getCenter(), getRadius(), getOrientation()),
+        CircularArc(std::move(seq1), 0, getCenter(), getRadius(), getOrientation())
+    };
+}
+
+std::pair<CircularArc, CircularArc>
+CircularArc::splitAtMidpoint() const
+{
+    const auto midpoint = CircularArcs::getMidpoint(p0(), p2(), getCenter(), getRadius(), isCCW());
+    return splitAtPoint(midpoint);
 }
 
 bool

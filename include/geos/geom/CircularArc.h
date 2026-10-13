@@ -213,7 +213,9 @@ public:
 
     // Split an arc at a specified point.
     // The point is assumed to be on the arc.
-    //std::pair<CircularArc, CircularArc> splitAtPoint(const CoordinateXY& q) const;
+    std::pair<CircularArc, CircularArc> splitAtPoint(const CoordinateXY& q) const;
+
+    std::pair<CircularArc, CircularArc> splitAtMidpoint() const;
 
     bool equals(const CircularArc& other, double tol) const;
 

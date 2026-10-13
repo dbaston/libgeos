@@ -20,14 +20,16 @@
 #pragma once
 
 #include <geos/export.h>
+#include <geos/algorithm/CircularArcs.h>
 #include <geos/geom/Coordinate.h>
+#include <geos/geom/CircularArc.h>
+#include <geos/geom/CoordinateSequence.h>
 
 #include <array>
 #include <memory>
 #include <optional>
 #include <queue>
 
-#include "geos/geom/CoordinateSequence.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -274,20 +276,44 @@ private:
     class DHDSegment {
     public:
 
-    static DHDSegment create(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1,
-                      TargetDistance& dist);
+      static DHDSegment create(const geom::CircularArc& seq, TargetDistance& dist);
 
-    static DHDSegment create(const DHDSegment& prevSeg, const geom::CoordinateXY& p1,
-                             TargetDistance& dist);
+      static DHDSegment create(const geom::CoordinateXY& p0, const geom::CoordinateXY& p1, TargetDistance& dist);
 
-    geom::CoordinateXY getEndpoint(int index) const
+    static DHDSegment create(const DHDSegment& prevSeg, const geom::CoordinateXY& p1, TargetDistance& dist);
+
+    const geom::CoordinateXY& p0() const {
+        if (isCurved()) {
+            return getArc().p0();
+        }
+
+        return std::get<std::array<geom::CoordinateXY, 2>>(m_pts).front();
+    }
+
+    const geom::CoordinateXY& p1() const {
+        if (isCurved()) {
+            return getArc().p2();
+        }
+
+        return std::get<std::array<geom::CoordinateXY, 2>>(m_pts).back();
+    }
+
+    const geom::CoordinateXY& getEndpoint(int index) const
     {
-        return index == 0 ? p0 : p1;
+        return index == 0 ? p0() : p1();
+    }
+
+    bool isCurved() const {
+        return std::holds_alternative<geom::CircularArc>(m_pts);
     }
 
     double getLength() const
     {
-        return p0.distance(p1);
+        if (isCurved()) {
+            return getArc().getLength();
+        }
+
+        return p0().distance(p1());
     }
 
     double getMaxDistance() const
@@ -316,13 +342,36 @@ private:
         DHDSegment(const geom::CoordinateXY& p0_, const geom::CoordinateXY& nearPt0_,
                const geom::CoordinateXY& p1_, const geom::CoordinateXY& nearPt1_);
 
+        explicit DHDSegment(const geom::CircularArc& arc);
+
+        explicit DHDSegment(const geom::CircularArc& arc, const geom::CoordinateXY& nearPt0_, const geom::CoordinateXY& nearPt1_);
+
         void init(const TargetDistance& dist);
         void init(const geom::CoordinateXY& nearest0, const TargetDistance& dist);
         void computeMaxDistances();
 
-        geom::CoordinateXY p0;
+        const geom::CircularArc& getArc() const {
+            return std::get<geom::CircularArc>(m_pts);
+        }
+
+        // For arc case:
+        std::variant<
+            geom::CircularArc,
+            std::array<geom::CoordinateXY, 2>> m_pts;
+
+        //geom::CoordinateSequence m_seq;
+        //std::size_t m_pos;
+        //bool m_seqOwned;
+        //bool m_seqCurved;
+
+        // For seg case:
+
+        //geom::CoordinateXY p0;
+        //geom::CoordinateXY p1;
+
+
         geom::CoordinateXY nearPt0;
-        geom::CoordinateXY p1;
+        //geom::CoordinateXY arcPt;
         geom::CoordinateXY nearPt1;
 
         double maxDistanceBound;
@@ -330,6 +379,7 @@ private:
     };
 
     std::priority_queue<DHDSegment> createSegQueue(const geom::Geometry& geom) const;
+    void addArcs(const std::vector<geom::CircularArc>& arcs, std::priority_queue<DHDSegment>& segQueue) const;
     void addSegments(const geom::CoordinateSequence& seq, std::priority_queue<DHDSegment>& segQ) const;
     void addNonInterior(const DHDSegment& segment, std::priority_queue<DHDSegment>& segQueue) const;
 

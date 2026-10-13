@@ -21,6 +21,8 @@
 
 #include <geos/algorithm/construct/IndexedPointInPolygonsLocator.h>
 #include <geos/algorithm/construct/LargestEmptyCircle.h>
+#include <geos/geom/CircularArc.h>
+#include <geos/geom/CircularString.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/Dimension.h>
@@ -41,6 +43,9 @@
 
 using geos::algorithm::construct::IndexedPointInPolygonsLocator;
 using geos::algorithm::construct::LargestEmptyCircle;
+using geos::geom::CircularArc;
+using geos::geom::CircularString;
+using geos::geom::CoordinateSequence;
 using geos::geom::CoordinateXY;
 using geos::geom::Dimension;
 using geos::geom::Envelope;
@@ -49,6 +54,7 @@ using geos::geom::GeometryComponentFilter;
 using geos::geom::LineString;
 using geos::geom::Location;
 using geos::geom::Point;
+using geos::geom::SimpleCurve;
 using geos::operation::distance::IndexedFacetDistance;
 
 namespace geos {
@@ -71,6 +77,7 @@ public:
         , isArea(geom.getDimension() >= Dimension::A)
     {
         if (isArea) {
+            util::ensureNoCurvedComponents(geom);
             ptInArea = std::make_unique<IndexedPointInPolygonsLocator>(geom);
         }
     }
@@ -126,8 +133,15 @@ private:
 };
 
 DirectedHausdorffDistance::DHDSegment
-DirectedHausdorffDistance::DHDSegment::create(const CoordinateXY& p0, const CoordinateXY& p1,
-                         DirectedHausdorffDistance::TargetDistance& dist)
+DirectedHausdorffDistance::DHDSegment::create(const CircularArc& arc, TargetDistance& dist)
+{
+    DHDSegment seg(arc);
+    seg.init(dist);
+    return seg;
+}
+
+DirectedHausdorffDistance::DHDSegment
+DirectedHausdorffDistance::DHDSegment::create(const CoordinateXY& p0, const CoordinateXY& p1, TargetDistance& dist)
 {
     DHDSegment seg(p0, p1);
     seg.init(dist);
@@ -135,50 +149,75 @@ DirectedHausdorffDistance::DHDSegment::create(const CoordinateXY& p0, const Coor
 }
 
 DirectedHausdorffDistance::DHDSegment
-DirectedHausdorffDistance::DHDSegment::create(const DHDSegment& prevSeg, const CoordinateXY& p1,
-                         DirectedHausdorffDistance::TargetDistance& dist)
+DirectedHausdorffDistance::DHDSegment::create(const DHDSegment& prevSeg, const CoordinateXY& p1, TargetDistance& dist)
 {
-    DHDSegment seg(prevSeg.p1, p1);
+    DHDSegment seg(prevSeg.p1(), p1);
     seg.init(prevSeg.nearPt1, dist);
     return seg;
 }
 
-
 DirectedHausdorffDistance::PointPair
 DirectedHausdorffDistance::DHDSegment::getMaxDistPts() const
 {
-    double dist0 = p0.distance(nearPt0);
-    double dist1 = p1.distance(nearPt1);
+    double dist0 = p0().distance(nearPt0);
+    double dist1 = p1().distance(nearPt1);
     if (dist0 > dist1) {
-        return DirectedHausdorffDistance::PointPair{p0, nearPt0};
+        return DirectedHausdorffDistance::PointPair{p0(), nearPt0};
     }
-    return DirectedHausdorffDistance::PointPair{p1, nearPt1};
+    return DirectedHausdorffDistance::PointPair{p1(), nearPt1};
 }
 
 std::array<DirectedHausdorffDistance::DHDSegment, 2>
 DirectedHausdorffDistance::DHDSegment::bisect(DirectedHausdorffDistance::TargetDistance& dist) const
 {
-    CoordinateXY mid((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0);
+    if (isCurved()) {
+
+        const auto splitArcs = getArc().splitAtPoint(getArc().p1());
+
+        const CoordinateXY& mid = splitArcs.first.p2();
+        CoordinateXY nearPtMid = dist.nearestPoint(mid);
+
+        return {
+            DHDSegment(splitArcs.first, nearPt0, nearPtMid),
+            DHDSegment(splitArcs.second, nearPtMid, nearPt1)
+        };
+    }
+
+    CoordinateXY mid((p0().x + p1().x) / 2.0, (p0().y + p1().y) / 2.0);
     CoordinateXY nearPtMid = dist.nearestPoint(mid);
+
     return {
-        DHDSegment(p0, nearPt0, mid, nearPtMid),
-        DHDSegment(mid, nearPtMid, p1, nearPt1)
+        DHDSegment(p0(), nearPt0, mid, nearPtMid),
+        DHDSegment(mid, nearPtMid, p1(), nearPt1)
     };
 }
 
-
 DirectedHausdorffDistance::DHDSegment::DHDSegment(const CoordinateXY& p0_, const CoordinateXY& p1_)
-    : p0(p0_)
-    , p1(p1_)
+    : m_pts{std::array<CoordinateXY, 2>{p0_, p1_}}
     , maxDistanceBound(-std::numeric_limits<double>::infinity())
     , maxDistance(0.0)
 {}
 
 DirectedHausdorffDistance::DHDSegment::DHDSegment(const CoordinateXY& p0_, const CoordinateXY& nearPt0_,
            const CoordinateXY& p1_, const CoordinateXY& nearPt1_)
-    : p0(p0_)
+    : m_pts{std::array<CoordinateXY, 2>{p0_, p1_}}
     , nearPt0(nearPt0_)
-    , p1(p1_)
+    , nearPt1(nearPt1_)
+    , maxDistanceBound(-std::numeric_limits<double>::infinity())
+    , maxDistance(0.0)
+{
+    computeMaxDistances();
+}
+
+DirectedHausdorffDistance::DHDSegment::DHDSegment(const CircularArc& arc)
+    : m_pts{arc}
+    , maxDistanceBound(-std::numeric_limits<double>::infinity())
+    , maxDistance(0.0)
+{}
+
+DirectedHausdorffDistance::DHDSegment::DHDSegment(const CircularArc& arc, const CoordinateXY& nearPt0_, const CoordinateXY& nearPt1_)
+    : m_pts{arc}
+    , nearPt0(nearPt0_)
     , nearPt1(nearPt1_)
     , maxDistanceBound(-std::numeric_limits<double>::infinity())
     , maxDistance(0.0)
@@ -189,8 +228,8 @@ DirectedHausdorffDistance::DHDSegment::DHDSegment(const CoordinateXY& p0_, const
 void
 DirectedHausdorffDistance::DHDSegment::init(const TargetDistance& dist)
 {
-    nearPt0 = dist.nearestPoint(p0);
-    nearPt1 = dist.nearestPoint(p1);
+    nearPt0 = dist.nearestPoint(p0());
+    nearPt1 = dist.nearestPoint(p1());
     computeMaxDistances();
 }
 
@@ -198,15 +237,15 @@ void
 DirectedHausdorffDistance::DHDSegment::init(const CoordinateXY& nearest0, const TargetDistance& dist)
 {
     nearPt0 = nearest0;
-    nearPt1 = dist.nearestPoint(p1);
+    nearPt1 = dist.nearestPoint(p1());
     computeMaxDistances();
 }
 
 void
 DirectedHausdorffDistance::DHDSegment::computeMaxDistances()
 {
-    double dist0 = p0.distance(nearPt0);
-    double dist1 = p1.distance(nearPt1);
+    double dist0 = p0().distance(nearPt0);
+    double dist1 = p1().distance(nearPt1);
     maxDistance = std::max(dist0, dist1);
     maxDistanceBound = maxDistance + getLength() / 2.0;
 }
@@ -416,6 +455,9 @@ DirectedHausdorffDistance::computeDistancePoints(
     if (geom.getDimension() == Dimension::P) {
         return computeForPoints(geom, maxDistanceLimit);
     }
+    if (geom.getDimension() == Dimension::A) {
+        util::ensureNoCurvedComponents(geom);
+    }
 
     auto maxDistPtsEdge = computeForEdges(geom, tolerance, maxDistanceLimit);
     if (isBeyondLimit(pairDistance(maxDistPtsEdge), maxDistanceLimit)) {
@@ -485,6 +527,29 @@ DirectedHausdorffDistance::computeForPoints(
 }
 
 void
+DirectedHausdorffDistance::addArcs(const std::vector<CircularArc>& arcs, std::priority_queue<DHDSegment>& segQueue) const
+{
+    std::optional<DHDSegment> segMaxDist;
+    //std::optional<DHDSegment> prevSeg;
+
+    // TODO: add prevSeg optimization to avoid repeated distance calculation
+    for (const auto& arc : arcs) {
+        DHDSegment seg = DHDSegment::create(arc, *targetDistance);
+        //prevSeg = seg;
+
+        //-- don't add segment if it can't be further away then current max
+        if (!segMaxDist || seg.getMaxDistanceBound() > segMaxDist->getMaxDistance()) {
+            // Don't add interior segments, since their distance must be zero.
+            addNonInterior(seg, segQueue);
+        }
+
+        if (!segMaxDist || seg.getMaxDistance() > segMaxDist->getMaxDistance()) {
+            segMaxDist = seg;
+        }
+    }
+}
+
+void
 DirectedHausdorffDistance::addSegments(const geom::CoordinateSequence& pts, std::priority_queue<DHDSegment>& segQueue) const
 {
     std::optional<DHDSegment> segMaxDist;
@@ -527,12 +592,19 @@ DirectedHausdorffDistance::createSegQueue(const Geometry& geom) const
         {}
 
         void filter_ro(const Geometry* g) override {
-            const LineString* ls = dynamic_cast<const LineString*>(g);
-            if (!ls || ls->isEmpty()) {
-                return;
+            if (const auto* sc = dynamic_cast<const SimpleCurve*>(g)) {
+                if (sc->isEmpty()) {
+                    return;
+                }
+                const auto* pts = sc->getCoordinatesRO();
+
+                if (sc->isCurved()) {
+                    const auto* cs = detail::down_cast<const CircularString*>(sc);
+                    dhd.addArcs(cs->getArcs(), segQueue);
+                } else {
+                    dhd.addSegments(*pts, segQueue);
+                }
             }
-            const auto* pts = ls->getCoordinatesRO();
-            dhd.addSegments(*pts, segQueue);
         }
 
     private:
