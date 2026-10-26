@@ -526,14 +526,16 @@ CircularArcs::closestPointsArcSegment(const CoordinateXY& c, double r,
             return {isect1, isect1};
         }
 
-        // Closest point is one of the segment endpoints.
-        const auto e0 = closestPointArcPoint(c, r, p0, p2, isCCW, q0);
-        const auto e1 = closestPointArcPoint(c, r, p0, p2, isCCW, q1);
-        if (e0.distance(q0) < e1.distance(q1)) {
-            return {e0, q0};
-        }
+        // Closest point is a segment or arc endpoint
+        std::array<std::array<CoordinateXY, 2>, 4> candidates;
+        candidates[0] = {closestPointArcPoint(c, r, p0, p2, isCCW, q0), q0};
+        candidates[1] = {closestPointArcPoint(c, r, p0, p2, isCCW, q1), q1};
+        candidates[2] = {p0, LineSegment::closestPoint(q0, q1, p0)};
+        candidates[3] = {p2, LineSegment::closestPoint(q0, q1, p2)};
 
-        return {e1, q1};
+        return *std::min_element(candidates.begin(), candidates.end(), [](const auto& a, const auto& b) {
+            return a[0].distance(a[1]) < b[0].distance(b[1]);
+        });
     }
 
     // Find closest point on circle
