@@ -526,12 +526,14 @@ CircularArcs::closestPointsArcSegment(const CoordinateXY& c, double r,
             return {isect1, isect1};
         }
 
-        // Closest point is a segment or arc endpoint
-        std::array<std::array<CoordinateXY, 2>, 4> candidates;
+        // Closest point is a segment or arc endpoint, or the segment is
+        // tangent to the arc but the intersection was missed due to roundoff.
+        std::array<std::array<CoordinateXY, 2>, 5> candidates;
         candidates[0] = {closestPointArcPoint(c, r, p0, p2, isCCW, q0), q0};
         candidates[1] = {closestPointArcPoint(c, r, p0, p2, isCCW, q1), q1};
         candidates[2] = {p0, LineSegment::closestPoint(q0, q1, p0)};
         candidates[3] = {p2, LineSegment::closestPoint(q0, q1, p2)};
+        candidates[4] = {closestPointArcPoint(c, r, p0, p2, isCCW, d), d};
 
         return *std::min_element(candidates.begin(), candidates.end(), [](const auto& a, const auto& b) {
             return a[0].distance(a[1]) < b[0].distance(b[1]);
