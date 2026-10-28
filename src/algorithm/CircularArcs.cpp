@@ -555,10 +555,10 @@ CircularArcs::closestPointsArcSegment(const CoordinateXY& c, double r,
     const auto e1 = LineSegment::closestPoint(q0, q1, p2);
 
     if (e0.distance(p0) < e1.distance(p2)) {
-        return {e0, p0};
+        return {p0, e0};
     }
 
-    return {e1, p2};
+    return {p2, e1};
 }
 
 double
