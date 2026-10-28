@@ -1015,6 +1015,23 @@ void object::test<52>()
     checkDistance(*g1, *g2, 14.5, 1.0);
 }
 
+template<>
+template<>
+void object::test<53>()
+{
+    set_test_name("CircularString / LineString, closest to arc endpoint");
+
+    auto g1 = wktreader.read("CIRCULARSTRING (5 0, 3 4, 0 5)");
+    auto g2 = wktreader.read("LINESTRING (10 -10, 10 -1)");
+
+    checkDistance(*g1, *g2, std::sqrt(26), 1e-12);
+
+    auto locs = DistanceOp(*g1, *g2).nearestLocations();
+
+    checkLocation(locs[0], g1.get(), 0, XY(5, 0), 1e-12);
+    checkLocation(locs[1], g2.get(), 0, XY(10, -1), 1e-12);
+}
+
 
 // TODO: finish the tests by adding:
 // 	LINESTRING - *all*
