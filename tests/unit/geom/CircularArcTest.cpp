@@ -3,6 +3,7 @@
 #include <geos/algorithm/Orientation.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CircularArc.h>
+#include <geos/geom/Envelope.h>
 #include <geos/constants.h>
 
 using geos::geom::CoordinateXY;
@@ -173,6 +174,34 @@ void object::test<7>() {
     ensure_equals(arc.getRadius(), radius);
     ensure_equals(arc.getCenter(), center);
     ensure_equals(arc.getOrientation(), orientation);
+}
+
+template<>
+template<>
+void object::test<8>()
+{
+    set_test_name("arc with repeated points is considered linear");
+
+    {
+        CircularArc arc = CircularArc::create(CoordinateXY{0, 0}, CoordinateXY{0, 0}, CoordinateXY{2, 3});
+        ensure("isLinear, p0=p1", arc.isLinear());
+        ensure_equals("getEnvelope, p0=p1", arc.getEnvelope(), geos::geom::Envelope{0, 2, 0, 3});
+        ensure_equals("getLength, p0=p1", arc.getLength(), std::hypot(2, 3));
+    }
+
+    {
+        CircularArc arc = CircularArc::create(CoordinateXY{0, 0}, CoordinateXY{2, 3}, CoordinateXY{2, 3});
+        ensure("isLinear, p1=p2", arc.isLinear());
+        ensure_equals("getEnvelope, p1=p2", arc.getEnvelope(), geos::geom::Envelope{0, 2, 0, 3});
+        ensure_equals("getLength, p1=p2", arc.getLength(), std::hypot(2, 3));
+    }
+
+    {
+        CircularArc arc = CircularArc::create(CoordinateXY{2, 3}, CoordinateXY{2, 3}, CoordinateXY{2, 3});
+        ensure("isLinear, p0=p1=p2", arc.isLinear());
+        ensure_equals("getEnvelope, p0=p1=p2",arc.getEnvelope(), geos::geom::Envelope{2, 2, 3, 3});
+        ensure_equals("getLength, p0=p1=p2",arc.getLength(), 0);
+    }
 }
 
 

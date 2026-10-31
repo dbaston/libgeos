@@ -169,7 +169,7 @@ public:
 
     /// Returns whether this arc forms a straight line (p0, p1, and p2 are collinear)
     bool isLinear() const {
-        return !std::isfinite(getRadius());
+        return !std::isfinite(getRadius()) || getRadius() == 0;
     }
 
     /// Return the angle of p0
