@@ -1108,7 +1108,56 @@
   <test><op name="within"     arg1="A" arg2="B"> false </op></test>
 </case>
 
+<case>
+  <!-- https://github.com/libgeos/geos/issues/1594 -->
+  <desc>P/GC - point vs GC with empty linestring and point</desc>
+  <a>
+    POINT EMPTY
+  </a>
+  <b>
+    GEOMETRYCOLLECTION(LINESTRING EMPTY, POINT(1 1))
+  </b>
+  <test><op name="intersects" arg1="A" arg2="B"> false </op></test>
+  <test><op name="relate" arg1="A" arg2="B" arg3="FFFFFF0F2"> true </op></test>
+</case>
 
+<case>
+  <!-- https://github.com/libgeos/geos/issues/1594 -->
+  <desc>P/GC - point vs GC with empty polygon and point</desc>
+  <a>
+    POINT EMPTY
+  </a>
+  <b>
+    GEOMETRYCOLLECTION(POLYGON EMPTY, POINT(1 1))
+  </b>
+  <test><op name="intersects" arg1="A" arg2="B"> false </op></test>
+  <test><op name="relate" arg1="A" arg2="B" arg3="FFFFFF0F2"> true </op></test>
+</case>
 
+<case>
+  <!-- https://github.com/libgeos/geos/issues/1594 -->
+  <desc>P/GC - point vs GC with empty linestring and point</desc>
+  <a>
+    POINT EMPTY
+  </a>
+  <b>
+    GEOMETRYCOLLECTION(LINESTRING EMPTY, POINT(1 1))
+  </b>
+  <test><op name="intersects" arg1="A" arg2="B"> false </op></test>
+  <test><op name="relate" arg1="A" arg2="B" arg3="FFFFFF0F2"> true </op></test>
+</case>
+
+<case>
+  <!-- https://github.com/libgeos/geos/issues/1594 -->
+  <desc>GC/GC - linestring with point vs empty polygon and linestring</desc>
+  <a>
+    GEOMETRYCOLLECTION(LINESTRING(0 0,10 0), POINT(50 50))
+  </a>
+  <b>
+   GEOMETRYCOLLECTION(LINESTRING(0 0,10 0), POLYGON EMPTY)
+  </b>
+  <test><op name="covers" arg1="A" arg2="B"> true </op></test>
+  <test><op name="relate" arg1="A" arg2="B" arg3="1F0F0FFF2"> true </op></test>
+</case>
 
 </run>

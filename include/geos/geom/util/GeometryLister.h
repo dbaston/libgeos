@@ -38,8 +38,8 @@ class GEOS_DLL GeometryLister {
 public:
 
     /**
-     * Extracts the components from a {@link Geometry}
-     * and adds them to the provided container.
+     * Recursively extracts the non-collection components from a
+     * {@link Geometry} and adds them to the provided container.
      *
      * Useful for iterating over components of a collection.
      *
