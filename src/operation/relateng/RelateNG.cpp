@@ -581,7 +581,7 @@ RelateNG::computeAreaVertex(RelateGeometry& geom, bool isA, RelateGeometry& geom
         return false;
     }
     //-- evaluate for line and area targets only, since points are handled in the reverse direction
-    if (geomTarget.getDimension() < Dimension::L)
+    if (geomTarget.getDimensionReal() < Dimension::L)
         return false;
 
     bool hasExteriorIntersection = false;

@@ -35,7 +35,7 @@ struct test_relategeometry_data {
     {
         std::unique_ptr<Geometry> geom = r.read(wkt);
         RelateGeometry rgeom(geom.get());
-        ensure_equals("checkNodeLocation 1", rgeom.getDimension(), expectedDim);
+        ensure_equals("checkNodeLocation 1", rgeom.getGeometry()->getDimension(), expectedDim);
         ensure_equals("checkNodeLocation 2", rgeom.getDimensionReal(), expectedDimReal);
     }
 

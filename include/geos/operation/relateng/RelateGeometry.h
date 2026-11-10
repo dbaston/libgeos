@@ -71,8 +71,7 @@ private:
     bool m_isPrepared = false;
     const Envelope* geomEnv;
     const BoundaryNodeRule& boundaryNodeRule;
-    int geomDim = Dimension::False;
-    bool isLineZeroLen = false;
+    int geomDimReal = Dimension::False;
     bool isGeomEmpty = false;
 
     Coordinate::ConstXYSet uniquePoints;
@@ -104,12 +103,7 @@ private:
 
     static bool isZeroLength(const LineString* line);
 
-    bool isZeroLengthLine(const Geometry* g) const {
-        // avoid expensive zero-length calculation if not linear
-        if (getDimension() != Dimension::L)
-            return false;
-        return isZeroLength(g);
-    };
+    static bool isZeroLengthLine(const Geometry* g);
 
     RelatePointLocator* getLocator();
 
@@ -167,10 +161,6 @@ public:
         return geomEnv;
     }
 
-    inline int getDimension() const {
-        return geomDim;
-    }
-
     bool hasDimension(int dim) const {
         switch (dim) {
             case Dimension::P: return hasPoints;
@@ -186,7 +176,8 @@ public:
 
     /**
     * Gets the actual non-empty dimension of the geometry.
-    * Zero-length LineStrings are treated as Points.
+    * Zero-length LineStrings are treated as Points, and
+    * empty GeometryCollection members are ignored.
     *
     * @return the real (non-empty) dimension
     */

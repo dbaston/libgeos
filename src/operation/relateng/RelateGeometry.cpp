@@ -59,7 +59,6 @@ RelateGeometry::RelateGeometry(const Geometry* input, bool isPrepared, const Bou
     , isGeomEmpty(input->isEmpty())
 {
     analyzeDimensions();
-    isLineZeroLen = isZeroLengthLine(input); // reads fields written by analyzeDimensions()
 }
 
 
@@ -81,17 +80,23 @@ RelateGeometry::analyzeDimensions()
     GeometryTypeId typeId = geom->getGeometryTypeId();
     if (typeId == GEOS_POINT || typeId == GEOS_MULTIPOINT) {
         hasPoints = true;
-        geomDim = Dimension::P;
+        geomDimReal = Dimension::P;
         return;
     }
     if (typeId == GEOS_LINESTRING || typeId == GEOS_LINEARRING || typeId == GEOS_MULTILINESTRING) {
+        if (isZeroLength(geom)) {
+            hasPoints = true;
+            geomDimReal = Dimension::P;
+            return;
+        }
+
         hasLines = true;
-        geomDim = Dimension::L;
+        geomDimReal = Dimension::L;
         return;
     }
     if (typeId == GEOS_POLYGON || typeId == GEOS_MULTIPOLYGON) {
         hasAreas = true;
-        geomDim = Dimension::A;
+        geomDimReal = Dimension::A;
         return;
     }
     //-- analyze a (possibly mixed type) collection
@@ -103,16 +108,22 @@ RelateGeometry::analyzeDimensions()
             continue;
         if (elem->getGeometryTypeId() == GEOS_POINT) {
             hasPoints = true;
-            if (geomDim < Dimension::P) geomDim = Dimension::P;
+            if (geomDimReal < Dimension::P) geomDimReal = Dimension::P;
         }
         if (elem->getGeometryTypeId() == GEOS_LINESTRING ||
             elem->getGeometryTypeId() == GEOS_LINEARRING) {
-            hasLines = true;
-            if (geomDim < Dimension::L) geomDim = Dimension::L;
+
+            if (isZeroLengthLine(detail::down_cast<const LineString*>(elem))) {
+                hasPoints = true;
+                if (geomDimReal < Dimension::P) geomDimReal = Dimension::P;
+            } else {
+                hasLines = true;
+                if (geomDimReal < Dimension::L) geomDimReal = Dimension::L;
+            }
         }
         if (elem->getGeometryTypeId() == GEOS_POLYGON) {
             hasAreas = true;
-            if (geomDim < Dimension::A) geomDim = Dimension::A;
+            if (geomDimReal < Dimension::A) geomDimReal = Dimension::A;
         }
     }
 }
@@ -133,6 +144,16 @@ RelateGeometry::isZeroLength(const Geometry* geom)
         }
     }
     return true;
+}
+
+/* private static */
+bool
+RelateGeometry::isZeroLengthLine(const Geometry* g)
+{
+    // avoid expensive zero-length calculation if not linear
+    if (g->getDimension() != Dimension::L)
+        return false;
+    return isZeroLength(g);
 }
 
 /* private static */
@@ -158,15 +179,7 @@ RelateGeometry::isZeroLength(const LineString* line) {
 int
 RelateGeometry::getDimensionReal() const
 {
-    if (isGeomEmpty)
-        return Dimension::False;
-    if (getDimension() == Dimension::L && isLineZeroLen)
-        return Dimension::P;
-    if (hasAreas)
-        return Dimension::A;
-    if (hasLines)
-        return Dimension::L;
-    return Dimension::P;
+    return geomDimReal;
 }
 
 

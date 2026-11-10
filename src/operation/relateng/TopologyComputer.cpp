@@ -124,7 +124,7 @@ TopologyComputer::isAreaArea() const
 int
 TopologyComputer::getDimension(bool isA) const
 {
-    return getGeometry(isA).getDimension();
+    return getGeometry(isA).getDimensionReal();
 }
 
 
